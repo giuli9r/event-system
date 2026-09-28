@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Allow: /viajes/
+Allow: /sobre-nosotros
+Allow: /contacto
+Allow: /terminos-y-condiciones
+Allow: /politica-de-privacidad
+
+# Prohibir rastreo de áreas privadas y APIs
+Disallow: /admin/
+Disallow: /api/
+Disallow: /server/
+
+Sitemap: https://www.tripu.com.ar/sitemap.xml
