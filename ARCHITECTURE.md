@@ -151,8 +151,15 @@ event-system/
 │
 ├── app/                              # Directorio raíz de aplicación (Convención Nuxt 4)
 │   ├── app.vue                       # Entrada raíz: proveedor <UApp> y renderizador <NuxtPage>
+│   ├── layouts/                      # Layouts reutilizables de interfaz
+│   │   └── admin.vue                 # Shell administrativo con barra de operador y logout
+│   ├── middleware/                   # Middlewares de ruteo
+│   │   └── auth.ts                   # Route guard que protege rutas /admin/* contra accesos anónimos
 │   ├── pages/                        # Sistema de ruteo automático por archivos
-│   │   └── index.vue                 # Portada principal y catálogo de viajes
+│   │   ├── index.vue                 # Portada principal y catálogo de viajes
+│   │   └── admin/                    # Superficie administrativa protegida
+│   │       ├── index.vue             # Dashboard operativo con KPIs y estado de infraestructura
+│   │       └── login.vue             # Pantalla de inicio de sesión con Supabase Auth y Zod
 │   └── types/                        # Tipado estricto consumido por la aplicación
 │       └── database.types.ts         # Definiciones TypeScript de tablas y enums de Supabase
 │
@@ -239,14 +246,16 @@ El panel administrativo constituye una superficie de alta sensibilidad operativa
 1. **Control de Acceso:** Protegido mediante middleware de navegación que intercepta toda petición a `/admin/*` y valida la existencia de una sesión activa con Supabase Auth.
 2. **Defensa en Profundidad:** Aún si un usuario malicioso intentase eludir el middleware del frontend, las políticas de Row Level Security (RLS) en PostgreSQL rechazan en la base de datos cualquier operación de inserción, actualización o eliminación que no provenga de un token JWT firmado para el rol `authenticated`.
 
-### Módulos y Estructura Prevista del Panel
-* `/admin/login`: Pantalla de autenticación por correo electrónico y contraseña.
-* `/admin/index`: Tablero principal con métricas de viajes y tabla de salidas activas.
-* `/admin/viajes/nuevo`: Asistente de publicación de salidas, asignación de coordinador, recintos y transporte.
-* `/admin/transportes`: Maestro de flota de combis (19 pax) y colectivos (56 pax).
-* `/admin/choferes`: Directorio de choferes profesionales, empresas titulares y licencias.
-* `/admin/recintos`: Maestro de estadios y arenas con registro de capacidad oficial y tipología.
-* `QuickPriceModal`: Componente modal ágil para actualizar tarifas fijas y condiciones de pago en menos de 10 segundos.
+### Módulos y Estado de Implementación del Panel
+* **`/admin/login` (✅ Implementado):** Pantalla de autenticación por correo electrónico y contraseña con validación Zod, feedback `useToast` y redirección contextual post-login.
+* **`/admin/index` (✅ Implementado):** Tablero principal con métricas de viajes y recuentos de flota, choferes y recintos consumidos en tiempo real desde Supabase.
+* **`app/layouts/admin.vue` (✅ Implementado):** Shell con barra de navegación por módulos, indicador de sesión de operador y acción de logout (`supabase.auth.signOut()`).
+* **`app/middleware/auth.ts` (✅ Implementado):** Route guard activo en cliente y servidor para control de acceso estricto.
+* **`/admin/viajes/nuevo` (⏳ Planificado Sprint 2):** Asistente de publicación de salidas, asignación de coordinador, recintos y transporte.
+* **`/admin/transportes` (⏳ Planificado Sprint 2):** Maestro de flota de combis (19 pax) y colectivos (56 pax).
+* **`/admin/choferes` (⏳ Planificado Sprint 2):** Directorio de choferes profesionales, empresas titulares y licencias.
+* **`/admin/recintos` (⏳ Planificado Sprint 2):** Maestro de estadios y arenas con registro de capacidad oficial y tipología.
+* **`QuickPriceModal` (⏳ Planificado Sprint 2):** Componente modal ágil para actualizar tarifas fijas y condiciones de pago en menos de 10 segundos.
 
 ---
 

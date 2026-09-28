@@ -3,6 +3,53 @@ Historial técnico y cronológico del proyecto.
 
 ---
 
+## [2026-09-28 18:10] - v0.4.1
+
+### Summary
+Corrección de inyección de estilos de Nuxt UI y Tailwind CSS, activación de layouts en la aplicación mediante `<NuxtLayout>`, instalación de colección local de iconos Heroicons y creación de vistas placeholder para las rutas del menú administrativo.
+
+### Changes
+- Se creó `app/assets/css/main.css` con las directivas `@import "tailwindcss";` y `@import "@nuxt/ui";` requeridas por Nuxt UI v4, vinculándolo en `nuxt.config.ts` mediante `css: ['~/assets/css/main.css']`.
+- Se actualizó `app/app.vue` envolviendo `<NuxtPage />` dentro del componente `<NuxtLayout>`, permitiendo el renderizado efectivo de `app/layouts/admin.vue` y visualización del botón de cierre de sesión.
+- Se instaló la dependencia `tailwindcss` y la colección de iconos `@iconify-json/heroicons` para soporte offline/local de iconos en Nuxt Icon.
+- Se crearon las páginas placeholder para las rutas del panel administrativo (`/admin/viajes`, `/admin/viajes/nuevo`, `/admin/transportes`, `/admin/choferes`, `/admin/recintos`, `/admin/mensajes`) eliminando las advertencias `[VUE_ROUTER_R0004]`.
+
+### Dependencies
+- Se instaló `tailwindcss`.
+- Se instaló `@iconify-json/heroicons`.
+
+### Bug Fixes
+- Se corrigió la falta de estilos (pantalla HTML en blanco y negro sin colores) provocada por la ausencia del archivo CSS principal de Nuxt UI.
+- Se corrigió la advertencia `[NUXT_E4007]` y la no visualización de la barra de navegación y el botón de logout debido a la ausencia de `<NuxtLayout>` en `app.vue`.
+- Se corrigieron las advertencias de rutas inexistentes en el router de Vue (`VUE_ROUTER_R0004`).
+
+---
+
+## [2026-09-28 17:35] - v0.4.0
+
+### Summary
+Implementación de la infraestructura de autenticación de operadores, protección de rutas administrativas mediante middleware, pantalla de inicio de sesión con validación Zod y shell administrativo con dashboard de métricas operativas (Sprint 1 - US-02).
+
+### Changes
+- Creación de middleware de autenticación `app/middleware/auth.ts` para restringir el acceso a rutas `/admin/*` y gestionar redirecciones según la presencia de sesión activa en Supabase Auth.
+- Creación de la vista de login para operadores en `app/pages/admin/login.vue` con componentes Nuxt UI, formulario validado con Zod, feedback visual de errores (`UAlert`, `useToast`) e integración con `supabase.auth.signInWithPassword()`.
+- Creación del layout administrativo `app/layouts/admin.vue` con barra superior institucional, navegación interna por módulos, indicador visual de sesión del operador y acción de logout (`supabase.auth.signOut()`).
+- Creación del dashboard protegido `app/pages/admin/index.vue` con saludo dinámico al operador autenticado, tarjetas de métricas en tiempo real con recuentos exactos (`events`, `transports`, `drivers`, `venues`) y verificación del estado de la infraestructura.
+
+### Frontend
+- Componentes creados y validados:
+  - `app/middleware/auth.ts`: Route guard con preservación de parámetro `redirect` en URL.
+  - `app/pages/admin/login.vue`: Card con paleta Dark Mode (`#0F0F12`, `#1A1A22`, `#E53924`, `#F5EEDC`), estados de carga `:loading` y validación tipada.
+  - `app/layouts/admin.vue`: Shell de operador con menú responsivo para escritorio y móvil.
+  - `app/pages/admin/index.vue`: Dashboard administrativo con grid reactiva y llamadas asíncronas vía cliente tipado `useSupabaseClient<Database>()`.
+- Verificación de compilación limpia de la suite completa mediante `npm run build` con código de salida 0.
+
+### Architecture
+- Se hace efectivo el límite arquitectónico (boundary) entre la navegación pública anónima y el panel de administración protegido bajo `/admin/*`.
+- La autorización de acceso a las vistas de administración ahora se encuentra controlada por el middleware de navegación en cliente y servidor, mientras que las mutaciones sobre datos permanecen protegidas por Row Level Security (RLS) en PostgreSQL.
+
+---
+
 ## [2026-09-28 12:25] - v0.3.1
 
 ### Summary

@@ -9,6 +9,8 @@ export default defineNuxtConfig({
     '@nuxtjs/sitemap'
   ],
 
+  css: ['~/assets/css/main.css'],
+
   // Configuración de Supabase
   // redirect: false es vital para permitir navegación anónima al catálogo y ficha pública
   supabase: {
