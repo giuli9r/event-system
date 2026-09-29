@@ -14,7 +14,27 @@ export default defineNuxtConfig({
   // Configuración de Supabase
   // redirect: false es vital para permitir navegación anónima al catálogo y ficha pública
   supabase: {
-    redirect: false
+    redirect: false,
+    cookieOptions: {
+      name: 'sb',
+      lifetime: 60 * 60 * 8, // 8 horas
+      domain: '',
+      path: '/',
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production'
+    }
+  },
+
+  // Cabeceras HTTP de seguridad global
+  routeRules: {
+    '/**': {
+      headers: {
+        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'Referrer-Policy': 'strict-origin-when-cross-origin'
+      }
+    }
   },
 
   // Configuración de SEO y Sitemap

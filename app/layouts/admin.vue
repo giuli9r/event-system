@@ -17,27 +17,40 @@ const mobileMenuOpen = ref(false)
 
 async function handleLogout() {
   loggingOut.value = true
+  let remoteLogoutFailed = false
+
   try {
     const { error } = await supabase.auth.signOut()
-    if (error) throw error
-
-    toast.add({
-      title: 'Sesión finalizada',
-      description: 'Has cerrado sesión correctamente.',
-      color: 'neutral',
-      icon: 'i-heroicons-check-circle'
-    })
-
-    await navigateTo('/admin/login')
+    if (error) {
+      remoteLogoutFailed = true
+      console.warn('Revocación remota en Supabase falló, procediendo a purga local:', error.message)
+    }
   } catch (err: any) {
-    toast.add({
-      title: 'Error al cerrar sesión',
-      description: err.message || 'No se pudo cerrar la sesión.',
-      color: 'error',
-      icon: 'i-heroicons-exclamation-triangle'
-    })
+    remoteLogoutFailed = true
+    console.warn('Excepción de red al cerrar sesión:', err?.message)
   } finally {
+    // Forzamos la limpieza reactiva en Nuxt
+    user.value = null
     loggingOut.value = false
+
+    if (remoteLogoutFailed) {
+      toast.add({
+        title: 'Sesión cerrada localmente',
+        description: 'No se pudo contactar al servidor, pero tu sesión en este dispositivo fue cerrada de forma segura.',
+        color: 'warning',
+        icon: 'i-heroicons-exclamation-triangle'
+      })
+    } else {
+      toast.add({
+        title: 'Sesión finalizada',
+        description: 'Has cerrado sesión correctamente.',
+        color: 'success',
+        icon: 'i-heroicons-check-circle'
+      })
+    }
+
+    // Redirigir siempre fuera del panel protegido
+    await navigateTo('/admin/login')
   }
 }
 </script>

@@ -249,7 +249,7 @@ El panel administrativo constituye una superficie de alta sensibilidad operativa
 ### Módulos y Estado de Implementación del Panel
 * **`/admin/login` (✅ Implementado):** Pantalla de autenticación por correo electrónico y contraseña con validación Zod, feedback `useToast` y redirección contextual post-login.
 * **`/admin/index` (✅ Implementado):** Tablero principal con métricas de viajes y recuentos de flota, choferes y recintos consumidos en tiempo real desde Supabase.
-* **`app/layouts/admin.vue` (✅ Implementado):** Shell con barra de navegación por módulos, indicador de sesión de operador y acción de logout (`supabase.auth.signOut()`).
+* **`app/layouts/admin.vue` (✅ Implementado):** Shell con barra de navegación por módulos, indicador de sesión de operador y acción de cierre de sesión resiliente (`handleLogout()` con degradación elegante ante caídas de red y purga local incondicional).
 * **`app/middleware/auth.ts` (✅ Implementado):** Route guard activo en cliente y servidor para control de acceso estricto.
 * **`/admin/viajes/nuevo` (⏳ Planificado Sprint 2):** Asistente de publicación de salidas, asignación de coordinador, recintos y transporte.
 * **`/admin/transportes` (⏳ Planificado Sprint 2):** Maestro de flota de combis (19 pax) y colectivos (56 pax).
@@ -419,13 +419,17 @@ El sistema distingue de forma estricta entre **Autenticación** y **Autorizació
 Autenticación (Identidad)
     ↓ ¿Quién es el usuario?
 Validado por Supabase Auth mediante credenciales (email + password).
-Emisión de token JWT con claim auth.role() = 'authenticated'.
+- Normalización: email.trim().toLowerCase() antes de invocar el cliente de autenticación.
+- Endpoint: POST /auth/v1/token?grant_type=password (HTTPS / TLS 1.3).
+- Cifrado en backend: Bcrypt con Salt único por usuario en auth.users.
+- Emisión de token JWT con claim auth.role() = 'authenticated' y refresh token rotativo.
+- Persistencia: Cookie segura configurada en Nuxt (sameSite: 'lax', secure en producción, lifetime: 8h).
 
 Autorización (Permisos y Acceso)
     ↓ ¿Qué puede ver o modificar el usuario?
 Validado en dos barreras:
 1. Capa Frontend: Middleware Nuxt restringe rutas /admin/* a sesiones activas.
-2. Capa Backend: PostgreSQL RLS evalúa permisos a nivel de fila y tabla.
+2. Capa Backend: PostgreSQL RLS evalúa permisos a nivel de fila y tabla en cada petición con Authorization: Bearer <JWT>.
 ```
 
 ### Matriz de Roles y Niveles de Usuario
@@ -542,7 +546,7 @@ Tripu System adopta una estrategia pragmática de gestión de estado sin librer�
 
 ## 20. Error Handling
 
-La gestión de incidencias se estructura en tres niveles:
+La gestión de incidencias se estructura en los siguientes niveles:
 1. **Errores de Base de Datos y Supabase:**
    * Los errores devueltos por el cliente PostgREST son capturados en bloques `try/catch` o inspeccionando la propiedad `error` retornada.
    * Se traducen a mensajes comprensibles para el usuario, evitando exponer errores internos de SQL en la interfaz.
@@ -550,6 +554,9 @@ La gestión de incidencias se estructura en tres niveles:
    * Notificaciones flotantes inmediatas mediante el composable `useToast()` de Nuxt UI (verde para éxito, rojo para error de validación o autenticación).
 3. **Página de Error Personalizada (`error.vue`):**
    * Vista de captura global para errores 404 (viaje no encontrado) y 500 (falla interna), con estética Dark Mode y botón de retorno al catálogo.
+4. **Patrón de Cierre de Sesión Resiliente (Resilient Logout):**
+   * Implementado en `app/layouts/admin.vue`. Ante un intento de cierre de sesión (`supabase.auth.signOut()`), si ocurre un error de red o timeout remoto, la aplicación no bloquea al operador con pantallas de error fatales (`createError` / `showError`).
+   * La sesión local se purga de manera forzada e incondicional (`user.value = null`), se notifica al usuario con un toast de advertencia (`color: warning`) y se redirige a `/admin/login`, garantizando la seguridad en terminales compartidas.
 
 ---
 
@@ -587,11 +594,16 @@ El sistema se parametriza mediante variables de entorno definidas en `.env.examp
 
 Medidas de seguridad implementadas y verificadas:
 1. **Aislamiento en Base de Datos (RLS):** Toda fila está protegida contra escrituras no autorizadas a nivel de motor PostgreSQL.
-2. **Tokens JWT en Cookies `HttpOnly`:** Supabase Auth emite y almacena tokens de sesión protegidos contra ataques de extracción por scripts maliciosos (XSS).
-3. **Sanitización de Entradas:** Validación con Zod que impide inyecciones de datos anómalos.
-4. **Protección de Navegación:** Middleware de Nuxt que intercepta rutas `/admin/*`.
-5. **Navegación Segura en Enlaces Externos:** Enlaces que abren en nuevas pestañas implementan obligatoriamente `rel="noopener noreferrer"`.
-6. **Comunicaciones Forzadas sobre HTTPS:** Conexión encriptada SSL tanto en la plataforma web como en la API de Supabase Cloud.
+2. **Tokens JWT en Cookies Seguras:** Supabase Auth gestiona tokens de sesión a través de cookies configuradas en Nuxt (`sameSite: 'lax'`, `secure: true` en prod, lifetime de 8 horas), evitando el almacenamiento vulnerable en `localStorage`.
+3. **Cabeceras HTTP de Seguridad Global:** Inyectadas en todas las rutas mediante `routeRules`:
+   * `Strict-Transport-Security`: `max-age=31536000; includeSubDomains; preload` (fuerza navegación HTTPS estricta).
+   * `X-Content-Type-Options`: `nosniff` (previene explotación de tipos MIME).
+   * `X-Frame-Options`: `DENY` (inmunidad contra ataques de clickjacking).
+   * `Referrer-Policy`: `strict-origin-when-cross-origin` (protege la privacidad de URLs internas).
+4. **Sanitización y Validación de Entradas:** Validación estricta con Zod y normalización (`email.trim().toLowerCase()`), preservando contraseñas intactas sin alterar espacios intencionales.
+5. **Protección de Navegación:** Middleware de Nuxt que intercepta rutas `/admin/*`.
+6. **Navegación Segura en Enlaces Externos:** Enlaces que abren en nuevas pestañas implementan obligatoriamente `rel="noopener noreferrer"`.
+7. **Comunicaciones Forzadas sobre HTTPS (TLS 1.3):** Conexión encriptada SSL/TLS tanto en la plataforma web como en los endpoints de Supabase Cloud.
 
 ---
 

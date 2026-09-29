@@ -3,6 +3,38 @@ Historial técnico y cronológico del proyecto.
 
 ---
 
+## [2026-09-29 11:55] - v0.4.3
+
+### Summary
+Normalización de entrada de correo electrónico en pantalla de login, configuración explícita de opciones de persistencia segura de cookies en el módulo Supabase e inyección de cabeceras HTTP de seguridad global (HSTS, nosniff, DENY, Referrer-Policy) en la configuración de Nuxt.
+
+### Changes
+- Se actualizó `app/pages/admin/login.vue` aplicando `.trim().toLowerCase()` al correo electrónico ingresado antes de enviarlo a `supabase.auth.signInWithPassword()`, preservando la contraseña intacta sin alterar espacios intencionales y manteniendo la granularidad de los mensajes de error de autenticación.
+- Se configuró la sección `supabase.cookieOptions` en `nuxt.config.ts` estableciendo nombre de cookie (`sb`), tiempo de vida de 8 horas (`lifetime: 28800`), atributo `sameSite: 'lax'` y bandera `secure` condicionada a entornos de producción.
+- Se agregaron reglas globales de cabeceras de seguridad (`routeRules`) en `nuxt.config.ts`: `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` y `Referrer-Policy: strict-origin-when-cross-origin`.
+
+### Security
+- Blindaje del transporte de sesión contra ataques de clickjacking (`X-Frame-Options: DENY`), sniffing de tipos MIME (`nosniff`) y forzado de conexiones cifradas (`HSTS`).
+- Garantía de persistencia de tokens de acceso y refresco en cookies seguras en lugar de almacenamiento vulnerable en `localStorage`.
+
+---
+
+## [2026-09-29 11:15] - v0.4.2
+
+### Summary
+Implementación del patrón de cierre de sesión resiliente (Resilient Logout) en `app/layouts/admin.vue`, garantizando la destrucción incondicional del estado local de autenticación, notificación no bloqueante al operador y redirección segura a la vista de login aún ante fallas remotas o desconexiones de red con Supabase.
+
+### Changes
+- Se actualizó la función `handleLogout()` en `app/layouts/admin.vue` adoptando un bloque `try / catch / finally` resiliente.
+- Se implementó degradación elegante: si `supabase.auth.signOut()` falla por timeout, error HTTP 500 de Supabase o corte de conectividad, se captura el error y se emite una advertencia de consola sin interrumpir el flujo.
+- En el bloque `finally`, se purga reactivamente la sesión del cliente (`user.value = null`), se restablece el indicador `:loading` y se asegura la redirección hacia `/admin/login` mediante `navigateTo()`.
+- Se añadieron notificaciones toast contextuales (`toast.add`) diferenciando cierre exitoso sincronizado (`color: success`) de cierre local forzado por pérdida de red (`color: warning`), protegiendo la privacidad en terminales compartidas.
+
+### Architecture
+- Se resolvió la limitación de manejo de errores de logout: `createError({ fatal: true })` o `showError()` provocarían un bloqueo destructivo con pantalla de error 500 innecesaria, mientras que `sendError()` es una utilidad exclusiva del contexto H3 en servidor Nitro. El patrón de cierre resiliente garantiza la invariante de seguridad: un operador que presione "Cerrar Sesión" nunca quedará atrapado en el panel administrativo.
+
+---
+
 ## [2026-09-28 18:10] - v0.4.1
 
 ### Summary

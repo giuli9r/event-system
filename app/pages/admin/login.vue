@@ -40,7 +40,7 @@ async function handleLogin() {
 
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: state.email.trim(),
+      email: state.email.trim().toLowerCase(),
       password: state.password
     })
 
