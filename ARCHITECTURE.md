@@ -151,6 +151,9 @@ event-system/
 │
 ├── app/                              # Directorio raíz de aplicación (Convención Nuxt 4)
 │   ├── app.vue                       # Entrada raíz: proveedor <UApp> y renderizador <NuxtPage>
+│   ├── composables/                  # Lógica de dominio reactiva y llamadas a Supabase
+│   │   ├── useDrivers.ts             # CRUD tipado para choferes
+│   │   └── useTransports.ts          # CRUD tipado para flota con join relacional
 │   ├── layouts/                      # Layouts reutilizables de interfaz
 │   │   └── admin.vue                 # Shell administrativo con barra de operador y logout
 │   ├── middleware/                   # Middlewares de ruteo
@@ -159,7 +162,11 @@ event-system/
 │   │   ├── index.vue                 # Portada principal y catálogo de viajes
 │   │   └── admin/                    # Superficie administrativa protegida
 │   │       ├── index.vue             # Dashboard operativo con KPIs y estado de infraestructura
-│   │       └── login.vue             # Pantalla de inicio de sesión con Supabase Auth y Zod
+│   │       ├── login.vue             # Pantalla de inicio de sesión con Supabase Auth y Zod
+│   │       ├── choferes/             # Módulo de choferes profesionales
+│   │       │   └── index.vue         # Maestro de choferes con CRUD, Zod y WhatsApp
+│   │       └── transportes/          # Módulo de flota de vehículos
+│   │           └── index.vue         # Maestro de flota con presets, capacidad y asignación
 │   └── types/                        # Tipado estricto consumido por la aplicación
 │       └── database.types.ts         # Definiciones TypeScript de tablas y enums de Supabase
 │
@@ -252,8 +259,8 @@ El panel administrativo constituye una superficie de alta sensibilidad operativa
 * **`app/layouts/admin.vue` (✅ Implementado):** Shell con barra de navegación por módulos, indicador de sesión de operador y acción de cierre de sesión resiliente (`handleLogout()` con degradación elegante ante caídas de red y purga local incondicional).
 * **`app/middleware/auth.ts` (✅ Implementado):** Route guard activo en cliente y servidor para control de acceso estricto.
 * **`/admin/viajes/nuevo` (⏳ Planificado Sprint 2):** Asistente de publicación de salidas, asignación de coordinador, recintos y transporte.
-* **`/admin/transportes` (⏳ Planificado Sprint 2):** Maestro de flota de combis (19 pax) y colectivos (56 pax).
-* **`/admin/choferes` (⏳ Planificado Sprint 2):** Directorio de choferes profesionales, empresas titulares y licencias.
+* **`/admin/transportes` (✅ Implementado Sprint 2 - US-03):** Maestro de flota con CRUD completo, presets de capacidad (19 a 60 pax), filtros rápidos por tipo de unidad, asignación de chofer responsable y conteo en tiempo real.
+* **`/admin/choferes` (✅ Implementado Sprint 2 - US-03):** Directorio de choferes profesionales con validación Zod, empresas titulares, licencias CNRT, enlaces directos a WhatsApp y protección referencial.
 * **`/admin/recintos` (⏳ Planificado Sprint 2):** Maestro de estadios y arenas con registro de capacidad oficial y tipología.
 * **`QuickPriceModal` (⏳ Planificado Sprint 2):** Componente modal ágil para actualizar tarifas fijas y condiciones de pago en menos de 10 segundos.
 

@@ -3,6 +3,27 @@ Historial técnico y cronológico del proyecto.
 
 ---
 
+## [2026-09-29 12:25] - v0.5.0
+
+### Summary
+Implementación completa del Maestro de Flota y Choferes (Sprint 2 - US-03): creación de composables `useDrivers` y `useTransports`, interfaces administrativas con CRUD completo, validación de formularios con Zod, modales reactivos, búsqueda en tiempo real, presets de capacidad y vinculación relacional entre vehículos y choferes.
+
+### Changes
+- Se creó `app/composables/useDrivers.ts`: composable reactivo fuertemente tipado (`Database['public']['Tables']['drivers']`) que expone métodos para listar, crear, editar y eliminar choferes con manejo de errores y estados de carga.
+- Se creó `app/composables/useTransports.ts`: composable reactivo tipado para la gestión de flota con join relacional hacia choferes (`driver:drivers(id, name, lastname, cellphone)`), permitiendo resolver datos de contacto en una única consulta.
+- Se implementó la vista administrativa [`app/pages/admin/choferes/index.vue`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/pages/admin/choferes/index.vue) con tarjetas de métricas (total choferes, empresas aliadas), barra de búsqueda en vivo, tabla Dark Mode, badges de licencias CNRT, enlaces directos a WhatsApp, modal reactivo de alta/edición y modal de confirmación de eliminación con advertencia de integridad referencial.
+- Se implementó la vista administrativa [`app/pages/admin/transportes/index.vue`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/pages/admin/transportes/index.vue) con tarjetas de KPIs (total flota, plazas totales disponibles, desglose de combis vs micros), filtros rápidos por tipo de unidad, buscador en vivo, presets de capacidad ágil (19, 24, 45, 56, 60 pax), selector de chofer asignado y modal de confirmación de baja de unidad.
+
+### Frontend
+- Componentes y vistas creados:
+  - `app/composables/useDrivers.ts`
+  - `app/composables/useTransports.ts`
+  - `app/pages/admin/choferes/index.vue`
+  - `app/pages/admin/transportes/index.vue`
+- Cumplimiento de tokens de diseño Dark Mode (`#0F0F12`, `#1A1A22`, `#E53924`, `#F5EEDC`, `#2A2A38`).
+
+---
+
 ## [2026-09-29 11:55] - v0.4.3
 
 ### Summary
