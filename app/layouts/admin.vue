@@ -33,6 +33,7 @@ async function handleLogout() {
     user.value = null
     useDrivers().clearDriversState()
     useTransports().clearTransportsState()
+    useVenues().clearVenuesState()
     loggingOut.value = false
 
     if (remoteLogoutFailed) {

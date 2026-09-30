@@ -3,6 +3,35 @@ Historial técnico y cronológico del proyecto.
 
 ---
 
+## [2026-09-30 11:00] - v0.6.0
+
+### Summary
+Implementación completa del Maestro de Recintos y Sedes (Sprint 2 - US-04): creación del composable `useVenues` bajo arquitectura de caché en memoria ADR-05 con TTL adaptado a 30 minutos, extensión de tipología y base de datos con los tipos 'predio' y 'complejo' (`venue_type_enum`), interfaz administrativa completa con cálculo dinámico de KPIs de aforo y sedes, buscador predictivo, filtros rápidos por tipología, modal unificado de alta/edición con Zod y presets de aforo, geolocalización directa con Google Maps y confirmación de baja con salvaguarda de integridad referencial.
+
+### Changes
+- **Tipado & Base de Datos:**
+  - Se extendió el enumerado `venue_type_enum` en `types/database.types.ts`, `app/types/database.types.ts` y `DB/schema.sql` incorporando los nuevos tipos `'predio'` y `'complejo'`.
+  - Se agregaron sentencias idempotentes `ALTER TYPE venue_type_enum ADD VALUE IF NOT EXISTS...` en el script DDL de PostgreSQL.
+- **Backend / Composables:**
+  - Se implementó `app/composables/useVenues.ts` adoptando el estándar ADR-05 (`tripu-venues-data`, `tripu-venues-timestamp`, `tripu-venues-loading`), con un TTL adaptado de **30 minutos** (`CACHE_TTL_MS = 1800000`) para datos maestros físicos de baja volatilidad, mutaciones reactivas locales `O(1)`/`O(N)` ordenadas alfabéticamente y purga `clearVenuesState()`.
+  - Se conectó `useVenues().clearVenuesState()` en el manejador `handleLogout()` de `app/layouts/admin.vue`.
+- **Frontend / Vistas & Modales:**
+  - Se implementó la vista operativa [`app/pages/admin/recintos/index.vue`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/pages/admin/recintos/index.vue) con:
+    - Tarjetas superiores de KPIs: Total de Recintos, Aforo Global acumulado (formateado en es-AR), Ciudades Sedes activas y Recintos de Gran Escala.
+    - Motor de búsqueda reactiva predictiva por nombre, localidad y dirección.
+    - Filtros ágiles de categorías por tipología (`Estadio`, `Arena`, `Predio`, `Complejo`, `Campo`, `Club`, etc.).
+    - Tabla catálogo en Dark Mode con renderizado condicional de imágenes y fallback iconográfico temático.
+    - Integración directa con Google Maps (`google_maps_url` o búsqueda automática por coordenadas/nombre).
+    - Modal de Alta / Edición de Recintos con validación Zod (`venueSchema`), presets ágiles de aforo (1.5k a 85k pax) y previsualización de imágenes.
+    - Modal de Baja con advertencia explícita de integridad referencial sobre eventos asociados.
+- **Seguridad & Validación de URLs:**
+  - Se blindó `google_maps_url` mediante un validador de dominios estrictos que admite únicamente URLs oficiales de Google Maps (`maps.app.goo.gl`, `maps.google.com`, `google.com/maps` y variantes regionales), rechazando dominios externos o esquemas maliciosos.
+  - Se forzó el protocolo web seguro (`HTTP`/`HTTPS`) en la URL de imágenes de recintos, descartando esquemas inseguros (`javascript:`, `data:`, `file:`).
+- **Calidad & Compilación:**
+  - Compilación verificada exitosamente en Nuxt 4 (`npm run build`) con código de salida 0.
+
+---
+
 ## [2026-09-29 17:00] - v0.5.2
 
 ### Summary

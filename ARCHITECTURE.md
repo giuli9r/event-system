@@ -152,8 +152,9 @@ event-system/
 ├── app/                              # Directorio raíz de aplicación (Convención Nuxt 4)
 │   ├── app.vue                       # Entrada raíz: proveedor <UApp> y renderizador <NuxtPage>
 │   ├── composables/                  # Lógica de dominio reactiva y llamadas a Supabase
-│   │   ├── useDrivers.ts             # CRUD tipado para choferes
-│   │   └── useTransports.ts          # CRUD tipado para flota con join relacional
+│   │   ├── useDrivers.ts             # CRUD tipado para choferes (Caché ADR-05, TTL 5m)
+│   │   ├── useTransports.ts          # CRUD tipado para flota con join relacional (Caché ADR-05, TTL 5m)
+│   │   └── useVenues.ts              # CRUD tipado para recintos y sedes (Caché ADR-05, TTL 30m)
 │   ├── layouts/                      # Layouts reutilizables de interfaz
 │   │   └── admin.vue                 # Shell administrativo con barra de operador y logout
 │   ├── middleware/                   # Middlewares de ruteo
@@ -165,6 +166,8 @@ event-system/
 │   │       ├── login.vue             # Pantalla de inicio de sesión con Supabase Auth y Zod
 │   │       ├── choferes/             # Módulo de choferes profesionales
 │   │       │   └── index.vue         # Maestro de choferes con CRUD, Zod y WhatsApp
+│   │       ├── recintos/             # Módulo de recintos, estadios y sedes
+│   │       │   └── index.vue         # Maestro de recintos con aforo, filtros y Google Maps
 │   │       └── transportes/          # Módulo de flota de vehículos
 │   │           └── index.vue         # Maestro de flota con presets, capacidad y asignación
 │   └── types/                        # Tipado estricto consumido por la aplicación
@@ -261,7 +264,7 @@ El panel administrativo constituye una superficie de alta sensibilidad operativa
 * **`/admin/viajes/nuevo` (⏳ Planificado Sprint 2):** Asistente de publicación de salidas, asignación de coordinador, recintos y transporte.
 * **`/admin/transportes` (✅ Implementado Sprint 2 - US-03):** Maestro de flota con CRUD completo, presets de capacidad (19 a 60 pax), filtros rápidos por tipo de unidad, asignación de chofer responsable y conteo en tiempo real.
 * **`/admin/choferes` (✅ Implementado Sprint 2 - US-03):** Directorio de choferes profesionales con validación Zod, empresas titulares, licencias CNRT, enlaces directos a WhatsApp y protección referencial.
-* **`/admin/recintos` (⏳ Planificado Sprint 2):** Maestro de estadios y arenas con registro de capacidad oficial y tipología.
+* **`/admin/recintos` (✅ Implementado Sprint 2 - US-04):** Maestro de estadios, arenas, predios y complejos con aforo oficial, geolocalización directa con Google Maps, filtros rápidos por tipología (`venue_type_enum`), validación Zod y protección referencial.
 * **`QuickPriceModal` (⏳ Planificado Sprint 2):** Componente modal ágil para actualizar tarifas fijas y condiciones de pago en menos de 10 segundos.
 
 ---
@@ -563,8 +566,10 @@ Todo composable de entidad en `app/composables/` debe estructurarse bajo las sig
    * `tripu-<entidad>-data`: Almacenamiento tipado en memoria (`Row[]`).
    * `tripu-<entidad>-timestamp`: Marca de tiempo UNIX de la última consulta exitosa.
    * `tripu-<entidad>-loading`: Bloqueo de peticiones concurrentes duplicadas (*request deduplication*).
-2. **TTL Estandarizado de 5 Minutos (`CACHE_TTL_MS = 300000`):**
-   * Se evalúa mediante la propiedad computada `isCacheValid`. Si el tiempo transcurrido es menor a 5 minutos y el array contiene datos, el método `fetch*()` **omite la llamada de red**.
+2. **TTL Estandarizado según Volatilidad de Entidad:**
+   * Entidades dinámicas u operativas (`useDrivers`, `useTransports`, `useEvents`): **5 Minutos** (`CACHE_TTL_MS = 300000`).
+   * Entidades maestras estáticas y de baja rotación (`useVenues`): **30 Minutos** (`CACHE_TTL_MS = 1800000`).
+   * Se evalúa mediante la propiedad computada `isCacheValid`. Si el tiempo transcurrido es menor al TTL y el array contiene datos, el método `fetch*()` **omite la llamada de red** (0 ms de latencia).
 3. **Mecanismo de Recarga Forzada:**
    * El método de consulta acepta un argumento opcional: `fetch*(options: { force?: boolean } = {})`. Si `options.force === true`, se ignora el TTL y se realiza la consulta a Supabase.
    * Las vistas administrativas deben proveer un botón de sincronización manual (`arrow-path`) y enlazar los botones de reintento ante errores con `{ force: true }`.
