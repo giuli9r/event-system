@@ -192,14 +192,25 @@ onMounted(() => {
         </p>
       </div>
 
-      <UButton
-        size="md"
-        class="bg-[#E53924] hover:bg-[#c9321f] text-white font-semibold cursor-pointer shadow-lg shadow-[#E53924]/20"
-        icon="i-heroicons-user-plus"
-        @click="openCreateModal"
-      >
-        Registrar Chofer
-      </UButton>
+      <div class="flex items-center gap-2">
+        <UButton
+          size="md"
+          variant="subtle"
+          color="neutral"
+          icon="i-heroicons-arrow-path"
+          :loading="loading"
+          title="Sincronizar con base de datos (forzar refresco)"
+          @click="fetchDrivers({ force: true })"
+        />
+        <UButton
+          size="md"
+          class="bg-[#E53924] hover:bg-[#c9321f] text-white font-semibold cursor-pointer shadow-lg shadow-[#E53924]/20"
+          icon="i-heroicons-user-plus"
+          @click="openCreateModal"
+        >
+          Registrar Chofer
+        </UButton>
+      </div>
     </div>
 
     <!-- Barra de Métricas y Búsqueda -->
@@ -248,7 +259,7 @@ onMounted(() => {
       icon="i-heroicons-exclamation-triangle"
     >
       <template #actions>
-        <UButton size="xs" variant="solid" color="error" @click="fetchDrivers">
+        <UButton size="xs" variant="solid" color="error" @click="fetchDrivers({ force: true })">
           Reintentar
         </UButton>
       </template>

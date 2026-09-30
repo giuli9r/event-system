@@ -233,14 +233,25 @@ onMounted(async () => {
         </p>
       </div>
 
-      <UButton
-        size="md"
-        class="bg-[#E53924] hover:bg-[#c9321f] text-white font-semibold cursor-pointer shadow-lg shadow-[#E53924]/20"
-        icon="i-heroicons-plus"
-        @click="openCreateModal"
-      >
-        Registrar Vehículo
-      </UButton>
+      <div class="flex items-center gap-2">
+        <UButton
+          size="md"
+          variant="subtle"
+          color="neutral"
+          icon="i-heroicons-arrow-path"
+          :loading="loading"
+          title="Sincronizar con base de datos (forzar refresco)"
+          @click="fetchTransports({ force: true })"
+        />
+        <UButton
+          size="md"
+          class="bg-[#E53924] hover:bg-[#c9321f] text-white font-semibold cursor-pointer shadow-lg shadow-[#E53924]/20"
+          icon="i-heroicons-plus"
+          @click="openCreateModal"
+        >
+          Registrar Vehículo
+        </UButton>
+      </div>
     </div>
 
     <!-- Barra de Métricas y KPIs de Flota -->
@@ -341,7 +352,7 @@ onMounted(async () => {
       icon="i-heroicons-exclamation-triangle"
     >
       <template #actions>
-        <UButton size="xs" variant="solid" color="error" @click="fetchTransports">
+        <UButton size="xs" variant="solid" color="error" @click="fetchTransports({ force: true })">
           Reintentar
         </UButton>
       </template>

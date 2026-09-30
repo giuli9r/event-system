@@ -15,15 +15,41 @@ export type TransportWithDriver = Transport & {
   driver?: DriverSummary | null
 }
 
+// Tiempo de vida de la caché: 5 minutos
+const CACHE_TTL_MS = 5 * 60 * 1000
+
 export function useTransports() {
   const supabase = useSupabaseClient<Database>()
-  const transports = ref<TransportWithDriver[]>([])
-  const loading = ref(false)
+
+  // Estado global compartido vía useState (singleton reactivo por sesión)
+  const transports = useState<TransportWithDriver[]>('tripu-transports-data', () => [])
+  const lastFetched = useState<number | null>('tripu-transports-timestamp', () => null)
+  const loading = useState<boolean>('tripu-transports-loading', () => false)
   const error = ref<string | null>(null)
 
-  async function fetchTransports() {
+  /**
+   * Determina si la caché en memoria es válida y está dentro del periodo TTL.
+   */
+  const isCacheValid = computed(() => {
+    if (!lastFetched.value || transports.value.length === 0) return false
+    return (Date.now() - lastFetched.value) < CACHE_TTL_MS
+  })
+
+  /**
+   * Obtiene la flota con join hacia choferes.
+   * Si la caché es válida y no se fuerza el refresco, omite la llamada de red (0 ms).
+   */
+  async function fetchTransports(options: { force?: boolean } = {}) {
+    if (!options.force && isCacheValid.value) {
+      return
+    }
+
+    // Evitar peticiones concurrentes duplicadas
+    if (loading.value) return
+
     loading.value = true
     error.value = null
+
     try {
       const { data, error: err } = await supabase
         .from('transports')
@@ -31,13 +57,30 @@ export function useTransports() {
         .order('name', { ascending: true })
 
       if (err) throw err
+
       transports.value = (data as unknown as TransportWithDriver[]) || []
+      lastFetched.value = Date.now()
     } catch (err: any) {
       error.value = err?.message || 'Error al cargar flota de transportes'
       console.error('Error fetching transports:', err)
     } finally {
       loading.value = false
     }
+  }
+
+  /**
+   * Invalida explícitamente la caché forzando una recarga en la siguiente lectura.
+   */
+  function invalidateCache() {
+    lastFetched.value = null
+  }
+
+  /**
+   * Purga el estado al cerrar sesión para garantizar aislamiento en terminales compartidas.
+   */
+  function clearTransportsState() {
+    transports.value = []
+    lastFetched.value = null
   }
 
   async function createTransport(payload: Omit<TransportInsert, 'id' | 'created_at'>) {
@@ -51,9 +94,11 @@ export function useTransports() {
         .single()
 
       if (err) throw err
+
       if (data) {
         transports.value.push(data as unknown as TransportWithDriver)
         transports.value.sort((a, b) => a.name.localeCompare(b.name))
+        lastFetched.value = Date.now()
       }
       return { data: data as unknown as TransportWithDriver, error: null }
     } catch (err: any) {
@@ -76,11 +121,13 @@ export function useTransports() {
         .single()
 
       if (err) throw err
+
       if (data) {
         const index = transports.value.findIndex(t => t.id === id)
         if (index !== -1) {
           transports.value[index] = data as unknown as TransportWithDriver
           transports.value.sort((a, b) => a.name.localeCompare(b.name))
+          lastFetched.value = Date.now()
         }
       }
       return { data: data as unknown as TransportWithDriver, error: null }
@@ -102,7 +149,9 @@ export function useTransports() {
         .eq('id', id)
 
       if (err) throw err
+
       transports.value = transports.value.filter(t => t.id !== id)
+      lastFetched.value = Date.now()
       return { error: null }
     } catch (err: any) {
       error.value = err?.message || 'Error al eliminar transporte'
@@ -116,9 +165,12 @@ export function useTransports() {
     transports,
     loading,
     error,
+    isCacheValid,
     fetchTransports,
+    invalidateCache,
     createTransport,
     updateTransport,
-    deleteTransport
+    deleteTransport,
+    clearTransportsState
   }
 }

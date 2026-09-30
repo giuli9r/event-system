@@ -3,6 +3,34 @@ Historial técnico y cronológico del proyecto.
 
 ---
 
+## [2026-09-29 17:00] - v0.5.2
+
+### Summary
+Formalización del estándar arquitectónico de Gestión de Estado (State Management) y aprobación de ADR-05 en `ARCHITECTURE.md`, estableciendo como precedente obligatorio el patrón de Caché Global en Memoria con `useState`, TTL de 5 minutos, deduplicación y bypass forzado para todos los composables de dominio presentes y futuros.
+
+### Architecture
+- Se formalizó en la Sección 19 de [`ARCHITECTURE.md`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/ARCHITECTURE.md) el estándar obligatorio de 5 pilares para composables de datos (`useDrivers`, `useTransports`, `useVenues`, `useEvents`, etc.).
+- Se aprobó **ADR-05: Caché Global en Memoria con useState y TTL como Estándar de Gestión de Estado** en la Sección 26, fundamentado en la premisa operativa de concurrencia acotada ($\le 3$ operadores simultáneos), priorizando la navegación instantánea a 0 ms, la reutilización cruzada de entidades y la reducción radical de consultas a Supabase BaaS.
+
+---
+
+## [2026-09-29 16:35] - v0.5.1
+
+### Summary
+Implementación de arquitectura de Caché Global en memoria con `useState`, Time-To-Live (TTL de 5 minutos), deduplicación de peticiones concurrentes y purga segura al cerrar sesión en los composables `useDrivers` y `useTransports`.
+
+### Changes
+- Se actualizó [`app/composables/useDrivers.ts`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/composables/useDrivers.ts) adoptando `useState` para el almacenamiento reactivo global (`tripu-drivers-data`, `tripu-drivers-timestamp`, `tripu-drivers-loading`). Se implementó verificación de validez de caché con TTL de 5 minutos (`CACHE_TTL_MS`), soporte para recarga forzada `fetchDrivers({ force: true })`, método `invalidateCache()` y método de purga `clearDriversState()`.
+- Se actualizó [`app/composables/useTransports.ts`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/composables/useTransports.ts) aplicando simétricamente el patrón de caché global con `useState` (`tripu-transports-data`, `tripu-transports-timestamp`, `tripu-transports-loading`), TTL de 5 minutos, recarga forzada `{ force: true }`, `invalidateCache()` y `clearTransportsState()`.
+- Se añadieron botones de sincronización manual forzada (icono `i-heroicons-arrow-path`) y actualización de reintentos en [`app/pages/admin/choferes/index.vue`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/pages/admin/choferes/index.vue) y [`app/pages/admin/transportes/index.vue`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/pages/admin/transportes/index.vue).
+- Se actualizó [`app/layouts/admin.vue`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/layouts/admin.vue) invocando `clearDriversState()` y `clearTransportsState()` en la purga incondicional de logout, garantizando la privacidad de datos de negocio en memoria en dispositivos compartidos.
+
+### Performance & UX
+- Tiempo de respuesta inmediato de 0 ms y 0 peticiones de red redundantes al navegar entre las vistas de Choferes y Transportes dentro de la ventana de validez del TTL.
+- Sincronización automática del dropdown de choferes en la vista de flota ante altas o modificaciones de choferes sin requerir consultas de red adicionales.
+
+---
+
 ## [2026-09-29 12:25] - v0.5.0
 
 ### Summary
