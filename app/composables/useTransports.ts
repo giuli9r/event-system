@@ -15,8 +15,8 @@ export type TransportWithDriver = Transport & {
   driver?: DriverSummary | null
 }
 
-// Tiempo de vida de la caché: 5 minutos
-const CACHE_TTL_MS = 5 * 60 * 1000
+// Tiempo de vida de la caché: 30 minutos
+const CACHE_TTL_MS = 30 * 60 * 1000
 
 export function useTransports() {
   const supabase = useSupabaseClient<Database>()

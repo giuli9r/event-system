@@ -154,7 +154,8 @@ event-system/
 │   ├── composables/                  # Lógica de dominio reactiva y llamadas a Supabase
 │   │   ├── useDrivers.ts             # CRUD tipado para choferes (Caché ADR-05, TTL 5m)
 │   │   ├── useTransports.ts          # CRUD tipado para flota con join relacional (Caché ADR-05, TTL 5m)
-│   │   └── useVenues.ts              # CRUD tipado para recintos y sedes (Caché ADR-05, TTL 30m)
+│   │   ├── useVenues.ts              # CRUD tipado para recintos y sedes (Caché ADR-05, TTL 30m)
+│   │   └── useEvents.ts              # CRUD y agenda de viajes con joins relacionales (Caché ADR-05, TTL 5m)
 │   ├── layouts/                      # Layouts reutilizables de interfaz
 │   │   └── admin.vue                 # Shell administrativo con barra de operador y logout
 │   ├── middleware/                   # Middlewares de ruteo
@@ -168,8 +169,11 @@ event-system/
 │   │       │   └── index.vue         # Maestro de choferes con CRUD, Zod y WhatsApp
 │   │       ├── recintos/             # Módulo de recintos, estadios y sedes
 │   │       │   └── index.vue         # Maestro de recintos con aforo, filtros y Google Maps
-│   │       └── transportes/          # Módulo de flota de vehículos
-│   │           └── index.vue         # Maestro de flota con presets, capacidad y asignación
+│   │       ├── transportes/          # Módulo de flota de vehículos
+│   │       │   └── index.vue         # Maestro de flota con presets, capacidad y asignación
+│   │       └── viajes/               # Módulo de salidas, agenda y publicación de viajes
+│   │           ├── index.vue         # Tablero operativo de viajes, KPIs y estados
+│   │           └── nuevo.vue         # Asistente multi-bloque de publicación y tarifas
 │   └── types/                        # Tipado estricto consumido por la aplicación
 │       └── database.types.ts         # Definiciones TypeScript de tablas y enums de Supabase
 │
@@ -261,11 +265,12 @@ El panel administrativo constituye una superficie de alta sensibilidad operativa
 * **`/admin/index` (✅ Implementado):** Tablero principal con métricas de viajes y recuentos de flota, choferes y recintos consumidos en tiempo real desde Supabase.
 * **`app/layouts/admin.vue` (✅ Implementado):** Shell con barra de navegación por módulos, indicador de sesión de operador y acción de cierre de sesión resiliente (`handleLogout()` con degradación elegante ante caídas de red y purga local incondicional).
 * **`app/middleware/auth.ts` (✅ Implementado):** Route guard activo en cliente y servidor para control de acceso estricto.
-* **`/admin/viajes/nuevo` (⏳ Planificado Sprint 2):** Asistente de publicación de salidas, asignación de coordinador, recintos y transporte.
+* **`/admin/viajes` (✅ Implementado Sprint 2 - US-05):** Tablero operativo de agenda con tarjetas de KPIs (salidas activas, cupos en calle, borradores, sold out), filtros por estado, buscador predictivo y selector rápido de estado.
+* **`/admin/viajes/nuevo` (✅ Implementado Sprint 2 - US-05):** Asistente multi-bloque de publicación de salidas, consumo instantáneo de recintos y flota en memoria (ADR-05), generador de slugs canónicos y repetidor dinámico de tarifas (`package_tiers`).
 * **`/admin/transportes` (✅ Implementado Sprint 2 - US-03):** Maestro de flota con CRUD completo, presets de capacidad (19 a 60 pax), filtros rápidos por tipo de unidad, asignación de chofer responsable y conteo en tiempo real.
 * **`/admin/choferes` (✅ Implementado Sprint 2 - US-03):** Directorio de choferes profesionales con validación Zod, empresas titulares, licencias CNRT, enlaces directos a WhatsApp y protección referencial.
 * **`/admin/recintos` (✅ Implementado Sprint 2 - US-04):** Maestro de estadios, arenas, predios y complejos con aforo oficial, geolocalización directa con Google Maps, filtros rápidos por tipología (`venue_type_enum`), validación Zod y protección referencial.
-* **`QuickPriceModal` (⏳ Planificado Sprint 2):** Componente modal ágil para actualizar tarifas fijas y condiciones de pago en menos de 10 segundos.
+* **`QuickPriceModal` (⏳ Planificado Sprint 2 - US-06):** Componente modal ágil para actualizar tarifas fijas y condiciones de pago en menos de 10 segundos.
 
 ---
 

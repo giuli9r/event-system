@@ -34,6 +34,7 @@ async function handleLogout() {
     useDrivers().clearDriversState()
     useTransports().clearTransportsState()
     useVenues().clearVenuesState()
+    useEvents().clearEventsState()
     loggingOut.value = false
 
     if (remoteLogoutFailed) {

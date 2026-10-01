@@ -4,8 +4,8 @@ export type Driver = Database['public']['Tables']['drivers']['Row']
 export type DriverInsert = Database['public']['Tables']['drivers']['Insert']
 export type DriverUpdate = Database['public']['Tables']['drivers']['Update']
 
-// Tiempo de vida de la caché: 5 minutos
-const CACHE_TTL_MS = 5 * 60 * 1000
+// Tiempo de vida de la caché: 30 minutos
+const CACHE_TTL_MS = 30 * 60 * 1000
 
 export function useDrivers() {
   const supabase = useSupabaseClient<Database>()

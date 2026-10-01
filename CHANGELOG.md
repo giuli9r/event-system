@@ -3,6 +3,62 @@ Historial técnico y cronológico del proyecto.
 
 ---
 
+## 📊 Resumen Consolidado de Historias de Usuario (Velocity & Tracking)
+
+> Métricas acumuladas del proyecto basadas en estimaciones por especialidad (UX, Design, Frontend, Backend, QA) en escala Planning Poker / Fibonacci (`0, 1, 2, 3, 5, 8, 10, 13, 20, 40, 70`) con equivalencia **1 Story Point = 1 Hora Ideal de Desarrollo**.
+
+| US ID | Historia de Usuario | Sprint | Estado | UX | Design | Front | Back | QA | Puntos (SP) | Horas Est. |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **US-01** | Setup Inicial, Infraestructura, Supabase DDL & RLS | Sprint 1 | ✅ Done | 1 | 3 | 5 | 20 | 3 | **32 pts** | 32 h |
+| **US-02** | Autenticación, Route Guard, Login Zod y Shell Admin | Sprint 1 | ✅ Done | 3 | 3 | 8 | 8 | 3 | **25 pts** | 25 h |
+| **US-03** | Maestro de Flota y Choferes (useDrivers, useTransports, ADR-05 5m) | Sprint 2 | ✅ Done | 5 | 5 | 13 | 10 | 3 | **36 pts** | 36 h |
+| **US-04** | Maestro de Recintos y Sedes (useVenues, ADR-05 TTL 30m, Maps) | Sprint 2 | ✅ Done | 3 | 3 | 8 | 8 | 3 | **25 pts** | 25 h |
+| **US-05** | Creación, Publicación de Viajes y Tarifas (Events & Package Tiers) | Sprint 2 | ✅ Done | 8 | 5 | 13 | 13 | 5 | **44 pts** | 44 h |
+| **US-06** | Gestión Integral de Edición: QuickPriceModal (<10s) & Edición Completa | Sprint 2 | ✅ Done | 5 | 3 | 13 | 10 | 5 | **36 pts** | 36 h |
+| **TOTAL** | **Total Acumulado Final Sprint 2 (US-01 a US-06)** | — | **Completado** | **25** | **22** | **60** | **69** | **22** | **198 pts** | **198 h** |
+
+---
+
+## [2026-10-01 16:30] - v0.8.0
+
+### Summary
+Implementación completa de la Gestión Integral de Edición de Salidas y Precios (Sprint 2 - US-06): arquitectura de modificación en dos niveles que combina micro-edición de precios ultrarrápida (`QuickPriceModal.vue`) en menos de 10 segundos directamente desde la grilla operativa, y macro-edición en la ruta `/admin/viajes/[id]/editar.vue` para modificación integral de los 4 pasos del viaje (espectáculo, recinto, flota, chofer, políticas y tarifas); extensión de `useEvents` con métodos atómicos `updatePackageTiers`, `fetchEventById` y orquestador transaccional `updateEventWithTiers` con reconciliación en cascada de `package_tiers` (insert, update, delete) y sincronización reactiva in-place de la memoria global ADR-05.
+
+### Changes
+- **Backend / Composables:**
+  - Se extendió [`app/composables/useEvents.ts`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/composables/useEvents.ts) con:
+    - `fetchEventById(id)`: resolución instantánea a 0 ms desde la caché reactiva en memoria con fallback a Supabase.
+    - `updatePackageTiers(eventId, tiers)`: actualización atómica de precios, disponibilidad y preventa por lote en `package_tiers` con mutación reactiva in-place.
+    - `updateEventWithTiers(eventId, eventPayload, tiersPayload)`: orquestador transaccional que actualiza el evento y reconcilia de forma inteligente las opciones de paquetes (detecta nuevos tiers, actualiza existentes y elimina los descartados por el operador), re-consultando y actualizando la entidad en caché.
+- **Frontend / Componentes:**
+  - Se creó el componente [`app/components/QuickPriceModal.vue`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/components/QuickPriceModal.vue): modal reactivo con presets de ajuste rápido (`-$1k`, `+$1k`, `+$5k`), inputs numéricos formateados en ARS, toggles de disponibilidad y preventa, atajo `Enter` para guardar y confirmación en menos de 10 segundos.
+  - Se implementó la vista dinámica [`app/pages/admin/viajes/[id]/editar.vue`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/pages/admin/viajes/[id]/editar.vue): precarga hidratada del viaje y sus 4 pasos, consumo reactivo de recintos y transportes en memoria, repeater dinámico de tarifas, banners de estado y validación Zod con `eventFormSchema`.
+  - Se integraron los disparadores en [`app/pages/admin/viajes/index.vue`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/pages/admin/viajes/index.vue): botón directo en la columna de tarifas (`i-heroicons-banknotes`) para abrir el `QuickPriceModal` y botón de edición completa (`i-heroicons-pencil-square`) en la columna de acciones.
+- **Calidad & Compilación:**
+  - Compilación verificada en Nuxt 4 (`npm run build`) con código de salida 0.
+
+---
+
+## [2026-10-01 11:30] - v0.7.0
+
+### Summary
+Implementación completa del módulo de Gestión y Publicación de Salidas y Viajes (Sprint 2 - US-05): creación del composable `useEvents` bajo arquitectura ADR-05 con consultas relacionales hacia recintos, flota con choferes y tarifas; diseño de tipos compuestos `EventWithRelations`; asistente de publicación multi-bloque en `/admin/viajes/nuevo` con selector instantáneo de recintos y transportes en caché; repetidor reactivo de opciones de paquetes (`package_tiers`); generador algorítmico de slugs canónicos; tablero administrativo en `/admin/viajes` con cálculo dinámico de KPIs de salidas y selector ágil de estado operativo.
+
+### Changes
+- **Backend / Composables:**
+  - Se creó `app/composables/useEvents.ts` implementando el estándar ADR-05 (`tripu-events-data`, `tripu-events-timestamp`, `tripu-events-loading`) con TTL de 5 minutos, consultas relacionales consolidadas (`select('*, venue:venues(*), transport:transports(*, driver:drivers(*)), package_tiers(*)')`), métodos `createEventWithTiers` (inserción atómica evento + tarifas), `updateEvent`, `updateEventStatus`, `deleteEvent` y purga `clearEventsState()`.
+  - Se registró `useEvents().clearEventsState()` en el hook `handleLogout()` de `app/layouts/admin.vue`.
+- **Tipado, Validación & Utilidades:**
+  - Se definió el tipo `EventWithRelations` y los esquemas Zod `eventFormSchema` y `packageTierSchema`.
+  - Se implementó la función algorítmica `generateSlug(artist, venueName, date)` que normaliza diacríticos y genera URLs amigables canónicas en tiempo real.
+- **Frontend / Vistas Operativas:**
+  - Se implementó el tablero de salidas [`app/pages/admin/viajes/index.vue`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/pages/admin/viajes/index.vue) con tarjetas de KPIs (salidas activas, cupos en calle, borradores, sold out), filtros por estado (`published`, `draft`, `sold_out`, `completed`), buscador predictivo, tabla en Dark Mode con rango de precios y selector rápido de estado en 1 clic.
+  - Se implementó el asistente de publicación [`app/pages/admin/viajes/nuevo.vue`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/pages/admin/viajes/nuevo.vue) estructurado en 4 bloques: Show y Recinto (consumo de `useVenues` en memoria), Logística y Flota (consumo de `useTransports` en memoria con plazas y chofer), Gestor dinámico de tarifas (`package_tiers` Repeater con precios en ARS, switch de entradas y preventas), y Flyer promocional con previsualización.
+- **Calidad & Compilación:**
+  - Compilación exitosa en Nuxt 4 (`npm run build`) con código de salida 0.
+
+---
+
 ## [2026-09-30 11:00] - v0.6.0
 
 ### Summary
