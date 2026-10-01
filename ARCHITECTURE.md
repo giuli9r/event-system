@@ -152,8 +152,10 @@ event-system/
 ├── app/                              # Directorio raíz de aplicación (Convención Nuxt 4)
 │   ├── app.vue                       # Entrada raíz: proveedor <UApp> y renderizador <NuxtPage>
 │   ├── composables/                  # Lógica de dominio reactiva y llamadas a Supabase
-│   │   ├── useDrivers.ts             # CRUD tipado para choferes
-│   │   └── useTransports.ts          # CRUD tipado para flota con join relacional
+│   │   ├── useDrivers.ts             # CRUD tipado para choferes (Caché ADR-05, TTL 5m)
+│   │   ├── useTransports.ts          # CRUD tipado para flota con join relacional (Caché ADR-05, TTL 5m)
+│   │   ├── useVenues.ts              # CRUD tipado para recintos y sedes (Caché ADR-05, TTL 30m)
+│   │   └── useEvents.ts              # CRUD y agenda de viajes con joins relacionales (Caché ADR-05, TTL 5m)
 │   ├── layouts/                      # Layouts reutilizables de interfaz
 │   │   └── admin.vue                 # Shell administrativo con barra de operador y logout
 │   ├── middleware/                   # Middlewares de ruteo
@@ -165,8 +167,13 @@ event-system/
 │   │       ├── login.vue             # Pantalla de inicio de sesión con Supabase Auth y Zod
 │   │       ├── choferes/             # Módulo de choferes profesionales
 │   │       │   └── index.vue         # Maestro de choferes con CRUD, Zod y WhatsApp
-│   │       └── transportes/          # Módulo de flota de vehículos
-│   │           └── index.vue         # Maestro de flota con presets, capacidad y asignación
+│   │       ├── recintos/             # Módulo de recintos, estadios y sedes
+│   │       │   └── index.vue         # Maestro de recintos con aforo, filtros y Google Maps
+│   │       ├── transportes/          # Módulo de flota de vehículos
+│   │       │   └── index.vue         # Maestro de flota con presets, capacidad y asignación
+│   │       └── viajes/               # Módulo de salidas, agenda y publicación de viajes
+│   │           ├── index.vue         # Tablero operativo de viajes, KPIs y estados
+│   │           └── nuevo.vue         # Asistente multi-bloque de publicación y tarifas
 │   └── types/                        # Tipado estricto consumido por la aplicación
 │       └── database.types.ts         # Definiciones TypeScript de tablas y enums de Supabase
 │
@@ -258,11 +265,12 @@ El panel administrativo constituye una superficie de alta sensibilidad operativa
 * **`/admin/index` (✅ Implementado):** Tablero principal con métricas de viajes y recuentos de flota, choferes y recintos consumidos en tiempo real desde Supabase.
 * **`app/layouts/admin.vue` (✅ Implementado):** Shell con barra de navegación por módulos, indicador de sesión de operador y acción de cierre de sesión resiliente (`handleLogout()` con degradación elegante ante caídas de red y purga local incondicional).
 * **`app/middleware/auth.ts` (✅ Implementado):** Route guard activo en cliente y servidor para control de acceso estricto.
-* **`/admin/viajes/nuevo` (⏳ Planificado Sprint 2):** Asistente de publicación de salidas, asignación de coordinador, recintos y transporte.
+* **`/admin/viajes` (✅ Implementado Sprint 2 - US-05):** Tablero operativo de agenda con tarjetas de KPIs (salidas activas, cupos en calle, borradores, sold out), filtros por estado, buscador predictivo y selector rápido de estado.
+* **`/admin/viajes/nuevo` (✅ Implementado Sprint 2 - US-05):** Asistente multi-bloque de publicación de salidas, consumo instantáneo de recintos y flota en memoria (ADR-05), generador de slugs canónicos y repetidor dinámico de tarifas (`package_tiers`).
 * **`/admin/transportes` (✅ Implementado Sprint 2 - US-03):** Maestro de flota con CRUD completo, presets de capacidad (19 a 60 pax), filtros rápidos por tipo de unidad, asignación de chofer responsable y conteo en tiempo real.
 * **`/admin/choferes` (✅ Implementado Sprint 2 - US-03):** Directorio de choferes profesionales con validación Zod, empresas titulares, licencias CNRT, enlaces directos a WhatsApp y protección referencial.
-* **`/admin/recintos` (⏳ Planificado Sprint 2):** Maestro de estadios y arenas con registro de capacidad oficial y tipología.
-* **`QuickPriceModal` (⏳ Planificado Sprint 2):** Componente modal ágil para actualizar tarifas fijas y condiciones de pago en menos de 10 segundos.
+* **`/admin/recintos` (✅ Implementado Sprint 2 - US-04):** Maestro de estadios, arenas, predios y complejos con aforo oficial, geolocalización directa con Google Maps, filtros rápidos por tipología (`venue_type_enum`), validación Zod y protección referencial.
+* **`QuickPriceModal` (⏳ Planificado Sprint 2 - US-06):** Componente modal ágil para actualizar tarifas fijas y condiciones de pago en menos de 10 segundos.
 
 ---
 
@@ -544,10 +552,37 @@ La estrategia de posicionamiento orgánico en buscadores comprende:
 
 ## 19. State Management
 
-Tripu System adopta una estrategia pragmática de gestión de estado sin librerías externas pesadas (Pinia no está instalada):
+Tripu System adopta una estrategia pragmática y de ultra alto rendimiento para la gestión de estado sin librerías externas pesadas (Pinia no está instalada):
 * **Estado Local de Componentes:** Variables reactivas creadas con `ref()` y `reactive()` para control de modales, inputs y estados visuales inmediatos.
-* **Lógica Derivada:** Propiedades computadas (`computed()`) para el filtrado en vivo de eventos en el catálogo por texto de búsqueda y ciudad de origen.
+* **Lógica Derivada:** Propiedades computadas (`computed()`) para el filtrado en vivo de eventos en el catálogo y evaluación reactiva de validez de caché (`isCacheValid`).
 * **Estado Compartido y de Sesión:** Manejado a través de composables globales de Nuxt (`useState`) y el estado reactivo provisto por el módulo de Supabase (`useSupabaseUser()`).
+
+### Estándar Arquitectónico Obligatorio: Caché Global en Memoria con `useState` y TTL
+A partir de la versión `v0.5.1`, **todos los composables de dominio en Tripu System deben implementar obligatoriamente la arquitectura de caché en memoria con `useState` y TTL**. Este patrón sienta un precedente formal para todo desarrollo presente y futuro (`useDrivers`, `useTransports`, `useVenues`, `useEvents`, etc.).
+
+#### Justificación de Negocio y Operativa
+1. **Población Cerrada de Usuarios Concurrentes:** La plataforma es operada por un equipo reducido (máximo 3 operadores simultáneos administrando viajes y flota). La probabilidad de conflicto o colisión sincrónica sobre el mismo registro es prácticamente nula.
+2. **Prioridad Absoluta de Velocidad y Reutilización:** La navegación debe priorizar la rapidez y la reutilización de datos ya descargados. Una vez que un operador consulta una entidad, cambiar de pestaña o reutilizarla en selectores cruzados (ej. choferes en el modal de flota, o flota en el creador de viajes) debe responder con **latencia de 0 ms** sin esperar a la red.
+3. **Optimización de Consumo de BaaS:** Evita sobrecargar el límite de peticiones de la capa gratuita de Supabase Cloud.
+
+#### Los 5 Pilares del Estándar para Composables de Dominio
+Todo composable de entidad en `app/composables/` debe estructurarse bajo las siguientes reglas:
+1. **Triple Clave de `useState`:**
+   * `tripu-<entidad>-data`: Almacenamiento tipado en memoria (`Row[]`).
+   * `tripu-<entidad>-timestamp`: Marca de tiempo UNIX de la última consulta exitosa.
+   * `tripu-<entidad>-loading`: Bloqueo de peticiones concurrentes duplicadas (*request deduplication*).
+2. **TTL Estandarizado según Volatilidad de Entidad:**
+   * Entidades dinámicas u operativas (`useDrivers`, `useTransports`, `useEvents`): **5 Minutos** (`CACHE_TTL_MS = 300000`).
+   * Entidades maestras estáticas y de baja rotación (`useVenues`): **30 Minutos** (`CACHE_TTL_MS = 1800000`).
+   * Se evalúa mediante la propiedad computada `isCacheValid`. Si el tiempo transcurrido es menor al TTL y el array contiene datos, el método `fetch*()` **omite la llamada de red** (0 ms de latencia).
+3. **Mecanismo de Recarga Forzada:**
+   * El método de consulta acepta un argumento opcional: `fetch*(options: { force?: boolean } = {})`. Si `options.force === true`, se ignora el TTL y se realiza la consulta a Supabase.
+   * Las vistas administrativas deben proveer un botón de sincronización manual (`arrow-path`) y enlazar los botones de reintento ante errores con `{ force: true }`.
+4. **Sincronización Reactiva Local Inmediata (0 ms post-mutación):**
+   * Las operaciones de creación (`create*`), edición (`update*`) y borrado (`delete*`) modifican directamente el array de `useState` en memoria y renuevan el timestamp tras la confirmación de Supabase, evitando un segundo viaje de red (*refetch*).
+5. **Higiene de Memoria y Purga de Seguridad:**
+   * Todo composable debe exponer `invalidateCache()` y `clear*State()`.
+   * El método `clear*State()` **debe invocarse obligatoriamente** dentro del `finally` de `handleLogout()` en `app/layouts/admin.vue` para garantizar que no queden datos de negocio en memoria en dispositivos compartidos.
 
 ---
 
@@ -663,6 +698,13 @@ Medidas de seguridad implementadas y verificadas:
 * **Decisión:** Prescindir de pasarelas de cobro complejas en el MVP y derivar las reservas a WhatsApp con mensajes contextuales predefinidos.
 * **Motivo:** Elimina fricción al usuario, no requiere registro de pasajeros y concentra la conversión en el canal donde Tripu ya cierra sus ventas con alta efectividad.
 * **Consecuencias:** No hay cobro automatizado en la web; la emisión de comprobantes y cobranza sigue siendo manual por parte del operador.
+
+### ADR-05: Caché Global en Memoria con useState y TTL como Estándar de Gestión de Estado
+* **Estado:** Aceptado (Precedente vinculante obligatorio para todos los composables de dominio).
+* **Contexto:** La plataforma interna de Tripu System es administrada por un grupo cerrado de operadores concurrentes (máximo 3 operadores simultáneos). La navegación entre módulos operativos (viajes, flota, choferes, recintos) generaba consultas de red repetitivas a Supabase, aumentando la latencia percibida y el consumo de peticiones PostgREST.
+* **Decisión:** Establecer como estándar arquitectónico obligatorio que todo composable de datos (`app/composables/use*.ts`) gestione su estado mediante `useState` con un Time-To-Live (TTL) de 5 minutos, recarga forzada manual `{ force: true }`, deduplicación de peticiones y mutaciones reactivas locales.
+* **Motivo:** Con un máximo de 3 operadores concurrentes, la posibilidad de conflicto sincrónico sobre los mismos registros es ínfima. La prioridad arquitectónica es la navegación instantánea (0 ms), la reutilización inmediata de datos entre pantallas (como selectores de choferes en flota o vehículos en viajes) y el ahorro masivo de consultas a la base de datos.
+* **Consecuencias:** Experiencia de usuario ultra rápida y fluida; cualquier nuevo módulo o CRUD debe replicar estrictamente este patrón; se requiere mantener la purga de estados (`clear*State()`) en el cierre de sesión (`admin.vue`).
 
 ---
 

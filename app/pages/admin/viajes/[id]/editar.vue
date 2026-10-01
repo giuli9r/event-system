@@ -4,7 +4,8 @@ import {
   eventFormSchema,
   generateSlug,
   type PackageTierFormInput,
-  type EventStatus
+  type EventStatus,
+  type EventWithRelations
 } from '~/composables/useEvents'
 
 definePageMeta({
@@ -12,12 +13,25 @@ definePageMeta({
   middleware: 'auth'
 })
 
-const toast = useToast()
+const route = useRoute()
 const router = useRouter()
+const toast = useToast()
 
-const { createEventWithTiers, loading: submitting } = useEvents()
+const eventId = computed(() => route.params.id as string)
+
+const {
+  fetchEventById,
+  updateEventWithTiers,
+  loading: composableLoading
+} = useEvents()
+
 const { venues, fetchVenues } = useVenues()
 const { transports, fetchTransports } = useTransports()
+
+const pageLoading = ref(true)
+const submitting = ref(false)
+const loadedEvent = ref<EventWithRelations | null>(null)
+const notFound = ref(false)
 
 // Estado del formulario
 const formState = reactive({
@@ -31,26 +45,33 @@ const formState = reactive({
   departure_time: '',
   departure_location: 'Terminal - San Francisco',
   return_policy: 'Regreso 60 minutos finalizado el show',
-  includes_summary: 'Traslado ida y vuelta en unidad habilitada CNRT, coordinación en viaje, bebidas a bordo y seguro de pasajero.',
+  includes_summary: '',
   full_itinerary: '',
   image_url: '',
   status: 'published' as EventStatus,
   is_featured: false,
-  tiers: [
-    {
-      name: 'Solo Traslado (Ida y Vuelta)',
-      price: 45000,
-      includes_ticket: false,
-      early_bird: false,
-      currency: 'ARS',
-      payment_methods: 'efectivo, transferencia, cuotas, tarjeta',
-      is_available: true
-    }
-  ] as PackageTierFormInput[]
+  tiers: [] as PackageTierFormInput[]
 })
 
 // Control de modificación manual de slug
-const isSlugManual = ref(false)
+const isSlugManual = ref(true)
+
+// Helper para convertir ISO timestamptz a formato input datetime-local (YYYY-MM-DDTHH:mm)
+function toDatetimeLocal(isoStr: string | null | undefined): string {
+  if (!isoStr) return ''
+  try {
+    const d = new Date(isoStr)
+    const pad = (n: number) => n.toString().padStart(2, '0')
+    const year = d.getFullYear()
+    const month = pad(d.getMonth() + 1)
+    const day = pad(d.getDate())
+    const hours = pad(d.getHours())
+    const minutes = pad(d.getMinutes())
+    return `${year}-${month}-${day}T${hours}:${minutes}`
+  } catch {
+    return ''
+  }
+}
 
 // Recinto y transporte seleccionados en memoria
 const selectedVenue = computed(() => {
@@ -60,24 +81,6 @@ const selectedVenue = computed(() => {
 const selectedTransport = computed(() => {
   return transports.value.find(t => t.id === formState.transport_id) || null
 })
-
-// Generador reactivo de slug y título sugerido
-watch(
-  [() => formState.artist_headliner, () => formState.venue_id, () => formState.event_date],
-  ([artist, venueId, date]) => {
-    const venueName = selectedVenue.value?.name || ''
-    
-    // Auto-generación de slug si el operador no lo escribió manualmente
-    if (!isSlugManual.value && (artist || venueName || date)) {
-      formState.slug = generateSlug(artist, venueName, date)
-    }
-
-    // Auto-generación de título sugerido si está vacío
-    if (!formState.title && artist) {
-      formState.title = venueName ? `Viaje a ${artist} en ${venueName}` : `Viaje a ${artist}`
-    }
-  }
-)
 
 function onSlugInput() {
   isSlugManual.value = true
@@ -92,9 +95,9 @@ function resetAutoSlug() {
 // Gestión del Repeater de Tarifas
 function addTier() {
   formState.tiers.push({
-    name: 'Traslado + Entrada',
-    price: 95000,
-    includes_ticket: true,
+    name: 'Opción de Viaje',
+    price: 50000,
+    includes_ticket: false,
     early_bird: false,
     currency: 'ARS',
     payment_methods: 'efectivo, transferencia, cuotas, tarjeta',
@@ -120,12 +123,86 @@ function duplicateTier(index: number) {
   if (!original) return
   formState.tiers.push({
     ...original,
+    id: undefined, // Nueva copia sin ID para que se inserte como nuevo tier
     name: `${original.name} (Copia)`
   })
 }
 
-// Envío del Formulario
+// Carga e hidratación reactiva del viaje
+async function loadData() {
+  pageLoading.value = true
+  notFound.value = false
+
+  try {
+    // 1. Cargar catálogos maestros si no están cargados (ADR-05 resuelve en 0ms si hay caché)
+    await Promise.all([
+      fetchVenues(),
+      fetchTransports()
+    ])
+
+    // 2. Recuperar el viaje por ID
+    const { data: ev, error: err } = await fetchEventById(eventId.value)
+    if (err || !ev) {
+      notFound.value = true
+      return
+    }
+
+    loadedEvent.value = ev
+
+    // 3. Hidratar el formulario
+    formState.title = ev.title
+    formState.slug = ev.slug
+    formState.artist_headliner = ev.artist_headliner
+    formState.venue_id = ev.venue_id
+    formState.transport_id = ev.transport_id
+    formState.coordinator_id = ev.coordinator_id
+    formState.event_date = toDatetimeLocal(ev.event_date)
+    formState.departure_time = toDatetimeLocal(ev.departure_time)
+    formState.departure_location = ev.departure_location || 'Terminal - San Francisco'
+    formState.return_policy = ev.return_policy || 'Regreso 60 minutos finalizado el show'
+    formState.includes_summary = ev.includes_summary || ''
+    formState.full_itinerary = ev.full_itinerary || ''
+    formState.image_url = ev.image_url || ''
+    formState.status = ev.status
+    formState.is_featured = Boolean(ev.is_featured)
+
+    // Hidratar tarifas existentes
+    if (ev.package_tiers && ev.package_tiers.length > 0) {
+      formState.tiers = ev.package_tiers.map(t => ({
+        id: t.id,
+        name: t.name,
+        price: Number(t.price) || 0,
+        includes_ticket: Boolean(t.includes_ticket),
+        early_bird: Boolean(t.early_bird),
+        currency: t.currency || 'ARS',
+        payment_methods: t.payment_methods || 'efectivo, transferencia, cuotas, tarjeta',
+        is_available: Boolean(t.is_available)
+      }))
+    } else {
+      formState.tiers = [
+        {
+          name: 'Solo Traslado (Ida y Vuelta)',
+          price: 45000,
+          includes_ticket: false,
+          early_bird: false,
+          currency: 'ARS',
+          payment_methods: 'efectivo, transferencia, cuotas, tarjeta',
+          is_available: true
+        }
+      ]
+    }
+  } catch (err: any) {
+    console.error('Error cargando viaje para editar:', err)
+    notFound.value = true
+  } finally {
+    pageLoading.value = false
+  }
+}
+
+// Envío del Formulario de Edición
 async function handleSubmit() {
+  submitting.value = true
+
   try {
     // 1. Validación estricta con Zod
     const validated = eventFormSchema.parse(formState)
@@ -152,7 +229,8 @@ async function handleSubmit() {
       is_featured: validated.is_featured
     }
 
-    const tiersPayload = validated.tiers.map(t => ({
+    const tiersPayload: PackageTierFormInput[] = validated.tiers.map(t => ({
+      id: t.id,
       name: t.name.trim(),
       price: Number(t.price) || 0,
       includes_ticket: Boolean(t.includes_ticket),
@@ -162,22 +240,21 @@ async function handleSubmit() {
       is_available: Boolean(t.is_available)
     }))
 
-    const { data, error: err } = await createEventWithTiers(eventPayload, tiersPayload)
+    const { data, error: err } = await updateEventWithTiers(eventId.value, eventPayload, tiersPayload)
     if (err) throw err
 
     toast.add({
-      title: '¡Viaje publicado!',
-      description: `La salida para "${data?.title}" quedó registrada con ${tiersPayload.length} tarifas asociadas.`,
+      title: '¡Viaje actualizado!',
+      description: `Los cambios para "${data?.title}" fueron guardados correctamente.`,
       color: 'success',
       icon: 'i-heroicons-check-circle'
     })
 
     await router.push('/admin/viajes')
   } catch (err: any) {
-    console.error('Error al guardar viaje:', err)
-    let errorMessage = err?.message || 'Ocurrió un error al registrar el viaje'
-    
-    // Tratamiento amigable para errores de validación de Zod
+    console.error('Error al actualizar viaje:', err)
+    let errorMessage = err?.message || 'Ocurrió un error al guardar los cambios'
+
     if (err?.errors && Array.isArray(err.errors) && err.errors.length > 0) {
       errorMessage = err.errors[0].message
     }
@@ -188,15 +265,13 @@ async function handleSubmit() {
       color: 'error',
       icon: 'i-heroicons-exclamation-triangle'
     })
+  } finally {
+    submitting.value = false
   }
 }
 
 onMounted(() => {
-  // Pre-cargar datos maestros en memoria (ADR-05 resolverá en 0 ms si ya están en caché)
-  Promise.all([
-    fetchVenues(),
-    fetchTransports()
-  ])
+  loadData()
 })
 </script>
 
@@ -211,20 +286,65 @@ onMounted(() => {
         <UIcon name="i-heroicons-arrow-left" class="w-4 h-4" />
         <span>Volver a salidas programadas</span>
       </NuxtLink>
-      <div class="flex items-center gap-2">
-        <h1 class="text-2xl font-black text-[#F5EEDC] tracking-tight">
-          Publicar Nuevo Viaje
-        </h1>
-        <span class="px-2 py-0.5 text-xs font-semibold rounded bg-[#E53924]/10 text-[#E53924] border border-[#E53924]/20">
-          Asistente de Salida
-        </span>
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <h1 class="text-2xl font-black text-[#F5EEDC] tracking-tight">
+            Editar Salida Programada
+          </h1>
+          <span class="px-2 py-0.5 text-xs font-semibold rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            Modificación Integral
+          </span>
+        </div>
+
+        <div v-if="loadedEvent" class="flex items-center gap-2">
+          <span class="text-xs text-zinc-400 font-mono">ID: {{ loadedEvent.id.slice(0, 8) }}...</span>
+          <NuxtLink
+            :to="`/viajes/${loadedEvent.slug}`"
+            target="_blank"
+            class="text-xs text-zinc-400 hover:text-[#F5EEDC] inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#14141A] border border-[#2A2A38]"
+          >
+            <UIcon name="i-heroicons-arrow-top-right-on-square" class="w-3.5 h-3.5" />
+            <span>Ver Ficha Pública</span>
+          </NuxtLink>
+        </div>
       </div>
       <p class="text-xs text-zinc-400 mt-1">
-        Completá los datos del espectáculo, vinculá el recinto y la unidad de transporte, y configurá las opciones de tarifas.
+        Modificá fechas, reprogramaciones, colectivos asignados, tarifas o afiches promocionales.
       </p>
     </div>
 
-    <form class="space-y-6" @submit.prevent="handleSubmit">
+    <!-- Estado de Carga -->
+    <div v-if="pageLoading" class="py-20 text-center">
+      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 mx-auto text-[#E53924] animate-spin mb-3" />
+      <p class="text-sm text-zinc-400">Cargando datos del viaje...</p>
+    </div>
+
+    <!-- Estado No Encontrado -->
+    <UCard v-else-if="notFound" class="bg-[#1A1A22] border-[#2A2A38] text-center py-16">
+      <div class="max-w-md mx-auto space-y-3">
+        <div class="w-12 h-12 rounded-xl bg-red-950/40 border border-red-900/50 flex items-center justify-center mx-auto text-[#E53924]">
+          <UIcon name="i-heroicons-exclamation-triangle" class="w-6 h-6" />
+        </div>
+        <h3 class="text-base font-bold text-[#F5EEDC]">El viaje solicitado no existe o fue eliminado</h3>
+        <p class="text-xs text-zinc-400">
+          No pudimos localizar la salida con el ID especificado en la base de datos.
+        </p>
+        <div class="pt-2">
+          <UButton
+            to="/admin/viajes"
+            size="sm"
+            color="neutral"
+            variant="subtle"
+            icon="i-heroicons-arrow-left"
+          >
+            Volver al Catálogo
+          </UButton>
+        </div>
+      </div>
+    </UCard>
+
+    <!-- Formulario de Edición -->
+    <form v-else class="space-y-6" @submit.prevent="handleSubmit">
       <!-- BLOQUE 1: Datos del Show y Espectáculo -->
       <UCard class="bg-[#1A1A22] border-[#2A2A38]">
         <template #header>
@@ -426,7 +546,7 @@ onMounted(() => {
         <div class="space-y-4">
           <div
             v-for="(tier, idx) in formState.tiers"
-            :key="idx"
+            :key="tier.id || idx"
             class="p-4 rounded-xl bg-[#14141A] border border-[#2A2A38] space-y-3 relative group"
           >
             <div class="flex items-center justify-between pb-2 border-b border-[#2A2A38]">
@@ -435,6 +555,12 @@ onMounted(() => {
                   {{ idx + 1 }}
                 </span>
                 <span class="text-xs font-semibold text-[#F5EEDC]">Opción de Viaje</span>
+                <span v-if="tier.id" class="text-[10px] text-zinc-500 font-mono">
+                  (Existente)
+                </span>
+                <span v-else class="text-[10px] text-emerald-400 font-semibold">
+                  (Nuevo)
+                </span>
               </div>
               <div class="flex items-center gap-1">
                 <UButton
@@ -483,7 +609,7 @@ onMounted(() => {
                 <input
                   v-model="tier.includes_ticket"
                   type="checkbox"
-                  class="rounded bg-[#0F0F12] border-[#2A2A38] text-[#E53924] focus:ring-0 w-4 h-4"
+                  class="rounded bg-[#0F0F12] border-[#2A2A38] text-[#E53924] focus:ring-0 w-4 h-4 cursor-pointer"
                 />
                 <span>¿Incluye Entrada al Show?</span>
               </label>
@@ -492,7 +618,7 @@ onMounted(() => {
                 <input
                   v-model="tier.early_bird"
                   type="checkbox"
-                  class="rounded bg-[#0F0F12] border-[#2A2A38] text-amber-500 focus:ring-0 w-4 h-4"
+                  class="rounded bg-[#0F0F12] border-[#2A2A38] text-amber-500 focus:ring-0 w-4 h-4 cursor-pointer"
                 />
                 <span>Tarifa Preventa (Early Bird)</span>
               </label>
@@ -501,7 +627,7 @@ onMounted(() => {
                 <input
                   v-model="tier.is_available"
                   type="checkbox"
-                  class="rounded bg-[#0F0F12] border-[#2A2A38] text-emerald-500 focus:ring-0 w-4 h-4"
+                  class="rounded bg-[#0F0F12] border-[#2A2A38] text-emerald-500 focus:ring-0 w-4 h-4 cursor-pointer"
                 />
                 <span>Habilitado para reserva</span>
               </label>
@@ -510,7 +636,7 @@ onMounted(() => {
         </div>
       </UCard>
 
-      <!-- BLOQUE 4: Multimedia y Publicación -->
+      <!-- BLOQUE 4: Multimedia y Estado de Publicación -->
       <UCard class="bg-[#1A1A22] border-[#2A2A38]">
         <template #header>
           <div class="flex items-center gap-2">
@@ -535,7 +661,7 @@ onMounted(() => {
               />
             </UFormField>
 
-            <UFormField label="Estado Inicial de la Salida" name="status" help="Visibilidad para los pasajeros">
+            <UFormField label="Estado de la Salida" name="status" help="Visibilidad para los pasajeros">
               <select
                 v-model="formState.status"
                 class="w-full rounded-md bg-[#14141A] border border-[#2A2A38] text-zinc-200 text-sm px-3 py-2 focus:outline-none focus:border-[#E53924]"
@@ -568,7 +694,7 @@ onMounted(() => {
               <input
                 v-model="formState.is_featured"
                 type="checkbox"
-                class="rounded bg-[#0F0F12] border-[#2A2A38] text-amber-500 focus:ring-0 w-4 h-4"
+                class="rounded bg-[#0F0F12] border-[#2A2A38] text-amber-500 focus:ring-0 w-4 h-4 cursor-pointer"
               />
               <span class="font-semibold text-[#F5EEDC]">Destacar este viaje en la portada principal</span>
               <span class="text-zinc-500">(Aparecerá en el banner principal superior)</span>
@@ -590,9 +716,9 @@ onMounted(() => {
         <UButton
           type="submit"
           class="bg-[#E53924] hover:bg-[#c9321f] text-white font-bold px-6 py-2.5 cursor-pointer shadow-xl shadow-[#E53924]/20"
-          :loading="submitting"
+          :loading="submitting || composableLoading"
         >
-          Publicar Viaje Definitivo
+          Guardar Cambios del Viaje
         </UButton>
       </div>
     </form>

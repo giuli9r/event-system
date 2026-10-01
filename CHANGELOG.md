@@ -3,6 +3,119 @@ Historial técnico y cronológico del proyecto.
 
 ---
 
+## 📊 Resumen Consolidado de Historias de Usuario (Velocity & Tracking)
+
+> Métricas acumuladas del proyecto basadas en estimaciones por especialidad (UX, Design, Frontend, Backend, QA) en escala Planning Poker / Fibonacci (`0, 1, 2, 3, 5, 8, 10, 13, 20, 40, 70`) con equivalencia **1 Story Point = 1 Hora Ideal de Desarrollo**.
+
+| US ID | Historia de Usuario | Sprint | Estado | UX | Design | Front | Back | QA | Puntos (SP) | Horas Est. |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **US-01** | Setup Inicial, Infraestructura, Supabase DDL & RLS | Sprint 1 | ✅ Done | 1 | 3 | 5 | 20 | 3 | **32 pts** | 32 h |
+| **US-02** | Autenticación, Route Guard, Login Zod y Shell Admin | Sprint 1 | ✅ Done | 3 | 3 | 8 | 8 | 3 | **25 pts** | 25 h |
+| **US-03** | Maestro de Flota y Choferes (useDrivers, useTransports, ADR-05 5m) | Sprint 2 | ✅ Done | 5 | 5 | 13 | 10 | 3 | **36 pts** | 36 h |
+| **US-04** | Maestro de Recintos y Sedes (useVenues, ADR-05 TTL 30m, Maps) | Sprint 2 | ✅ Done | 3 | 3 | 8 | 8 | 3 | **25 pts** | 25 h |
+| **US-05** | Creación, Publicación de Viajes y Tarifas (Events & Package Tiers) | Sprint 2 | ✅ Done | 8 | 5 | 13 | 13 | 5 | **44 pts** | 44 h |
+| **US-06** | Gestión Integral de Edición: QuickPriceModal (<10s) & Edición Completa | Sprint 2 | ✅ Done | 5 | 3 | 13 | 10 | 5 | **36 pts** | 36 h |
+| **TOTAL** | **Total Acumulado Final Sprint 2 (US-01 a US-06)** | — | **Completado** | **25** | **22** | **60** | **69** | **22** | **198 pts** | **198 h** |
+
+---
+
+## [2026-10-01 16:30] - v0.8.0
+
+### Summary
+Implementación completa de la Gestión Integral de Edición de Salidas y Precios (Sprint 2 - US-06): arquitectura de modificación en dos niveles que combina micro-edición de precios ultrarrápida (`QuickPriceModal.vue`) en menos de 10 segundos directamente desde la grilla operativa, y macro-edición en la ruta `/admin/viajes/[id]/editar.vue` para modificación integral de los 4 pasos del viaje (espectáculo, recinto, flota, chofer, políticas y tarifas); extensión de `useEvents` con métodos atómicos `updatePackageTiers`, `fetchEventById` y orquestador transaccional `updateEventWithTiers` con reconciliación en cascada de `package_tiers` (insert, update, delete) y sincronización reactiva in-place de la memoria global ADR-05.
+
+### Changes
+- **Backend / Composables:**
+  - Se extendió [`app/composables/useEvents.ts`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/composables/useEvents.ts) con:
+    - `fetchEventById(id)`: resolución instantánea a 0 ms desde la caché reactiva en memoria con fallback a Supabase.
+    - `updatePackageTiers(eventId, tiers)`: actualización atómica de precios, disponibilidad y preventa por lote en `package_tiers` con mutación reactiva in-place.
+    - `updateEventWithTiers(eventId, eventPayload, tiersPayload)`: orquestador transaccional que actualiza el evento y reconcilia de forma inteligente las opciones de paquetes (detecta nuevos tiers, actualiza existentes y elimina los descartados por el operador), re-consultando y actualizando la entidad en caché.
+- **Frontend / Componentes:**
+  - Se creó el componente [`app/components/QuickPriceModal.vue`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/components/QuickPriceModal.vue): modal reactivo con presets de ajuste rápido (`-$1k`, `+$1k`, `+$5k`), inputs numéricos formateados en ARS, toggles de disponibilidad y preventa, atajo `Enter` para guardar y confirmación en menos de 10 segundos.
+  - Se implementó la vista dinámica [`app/pages/admin/viajes/[id]/editar.vue`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/pages/admin/viajes/[id]/editar.vue): precarga hidratada del viaje y sus 4 pasos, consumo reactivo de recintos y transportes en memoria, repeater dinámico de tarifas, banners de estado y validación Zod con `eventFormSchema`.
+  - Se integraron los disparadores en [`app/pages/admin/viajes/index.vue`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/pages/admin/viajes/index.vue): botón directo en la columna de tarifas (`i-heroicons-banknotes`) para abrir el `QuickPriceModal` y botón de edición completa (`i-heroicons-pencil-square`) en la columna de acciones.
+- **Calidad & Compilación:**
+  - Compilación verificada en Nuxt 4 (`npm run build`) con código de salida 0.
+
+---
+
+## [2026-10-01 11:30] - v0.7.0
+
+### Summary
+Implementación completa del módulo de Gestión y Publicación de Salidas y Viajes (Sprint 2 - US-05): creación del composable `useEvents` bajo arquitectura ADR-05 con consultas relacionales hacia recintos, flota con choferes y tarifas; diseño de tipos compuestos `EventWithRelations`; asistente de publicación multi-bloque en `/admin/viajes/nuevo` con selector instantáneo de recintos y transportes en caché; repetidor reactivo de opciones de paquetes (`package_tiers`); generador algorítmico de slugs canónicos; tablero administrativo en `/admin/viajes` con cálculo dinámico de KPIs de salidas y selector ágil de estado operativo.
+
+### Changes
+- **Backend / Composables:**
+  - Se creó `app/composables/useEvents.ts` implementando el estándar ADR-05 (`tripu-events-data`, `tripu-events-timestamp`, `tripu-events-loading`) con TTL de 5 minutos, consultas relacionales consolidadas (`select('*, venue:venues(*), transport:transports(*, driver:drivers(*)), package_tiers(*)')`), métodos `createEventWithTiers` (inserción atómica evento + tarifas), `updateEvent`, `updateEventStatus`, `deleteEvent` y purga `clearEventsState()`.
+  - Se registró `useEvents().clearEventsState()` en el hook `handleLogout()` de `app/layouts/admin.vue`.
+- **Tipado, Validación & Utilidades:**
+  - Se definió el tipo `EventWithRelations` y los esquemas Zod `eventFormSchema` y `packageTierSchema`.
+  - Se implementó la función algorítmica `generateSlug(artist, venueName, date)` que normaliza diacríticos y genera URLs amigables canónicas en tiempo real.
+- **Frontend / Vistas Operativas:**
+  - Se implementó el tablero de salidas [`app/pages/admin/viajes/index.vue`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/pages/admin/viajes/index.vue) con tarjetas de KPIs (salidas activas, cupos en calle, borradores, sold out), filtros por estado (`published`, `draft`, `sold_out`, `completed`), buscador predictivo, tabla en Dark Mode con rango de precios y selector rápido de estado en 1 clic.
+  - Se implementó el asistente de publicación [`app/pages/admin/viajes/nuevo.vue`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/pages/admin/viajes/nuevo.vue) estructurado en 4 bloques: Show y Recinto (consumo de `useVenues` en memoria), Logística y Flota (consumo de `useTransports` en memoria con plazas y chofer), Gestor dinámico de tarifas (`package_tiers` Repeater con precios en ARS, switch de entradas y preventas), y Flyer promocional con previsualización.
+- **Calidad & Compilación:**
+  - Compilación exitosa en Nuxt 4 (`npm run build`) con código de salida 0.
+
+---
+
+## [2026-09-30 11:00] - v0.6.0
+
+### Summary
+Implementación completa del Maestro de Recintos y Sedes (Sprint 2 - US-04): creación del composable `useVenues` bajo arquitectura de caché en memoria ADR-05 con TTL adaptado a 30 minutos, extensión de tipología y base de datos con los tipos 'predio' y 'complejo' (`venue_type_enum`), interfaz administrativa completa con cálculo dinámico de KPIs de aforo y sedes, buscador predictivo, filtros rápidos por tipología, modal unificado de alta/edición con Zod y presets de aforo, geolocalización directa con Google Maps y confirmación de baja con salvaguarda de integridad referencial.
+
+### Changes
+- **Tipado & Base de Datos:**
+  - Se extendió el enumerado `venue_type_enum` en `types/database.types.ts`, `app/types/database.types.ts` y `DB/schema.sql` incorporando los nuevos tipos `'predio'` y `'complejo'`.
+  - Se agregaron sentencias idempotentes `ALTER TYPE venue_type_enum ADD VALUE IF NOT EXISTS...` en el script DDL de PostgreSQL.
+- **Backend / Composables:**
+  - Se implementó `app/composables/useVenues.ts` adoptando el estándar ADR-05 (`tripu-venues-data`, `tripu-venues-timestamp`, `tripu-venues-loading`), con un TTL adaptado de **30 minutos** (`CACHE_TTL_MS = 1800000`) para datos maestros físicos de baja volatilidad, mutaciones reactivas locales `O(1)`/`O(N)` ordenadas alfabéticamente y purga `clearVenuesState()`.
+  - Se conectó `useVenues().clearVenuesState()` en el manejador `handleLogout()` de `app/layouts/admin.vue`.
+- **Frontend / Vistas & Modales:**
+  - Se implementó la vista operativa [`app/pages/admin/recintos/index.vue`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/pages/admin/recintos/index.vue) con:
+    - Tarjetas superiores de KPIs: Total de Recintos, Aforo Global acumulado (formateado en es-AR), Ciudades Sedes activas y Recintos de Gran Escala.
+    - Motor de búsqueda reactiva predictiva por nombre, localidad y dirección.
+    - Filtros ágiles de categorías por tipología (`Estadio`, `Arena`, `Predio`, `Complejo`, `Campo`, `Club`, etc.).
+    - Tabla catálogo en Dark Mode con renderizado condicional de imágenes y fallback iconográfico temático.
+    - Integración directa con Google Maps (`google_maps_url` o búsqueda automática por coordenadas/nombre).
+    - Modal de Alta / Edición de Recintos con validación Zod (`venueSchema`), presets ágiles de aforo (1.5k a 85k pax) y previsualización de imágenes.
+    - Modal de Baja con advertencia explícita de integridad referencial sobre eventos asociados.
+- **Seguridad & Validación de URLs:**
+  - Se blindó `google_maps_url` mediante un validador de dominios estrictos que admite únicamente URLs oficiales de Google Maps (`maps.app.goo.gl`, `maps.google.com`, `google.com/maps` y variantes regionales), rechazando dominios externos o esquemas maliciosos.
+  - Se forzó el protocolo web seguro (`HTTP`/`HTTPS`) en la URL de imágenes de recintos, descartando esquemas inseguros (`javascript:`, `data:`, `file:`).
+- **Calidad & Compilación:**
+  - Compilación verificada exitosamente en Nuxt 4 (`npm run build`) con código de salida 0.
+
+---
+
+## [2026-09-29 17:00] - v0.5.2
+
+### Summary
+Formalización del estándar arquitectónico de Gestión de Estado (State Management) y aprobación de ADR-05 en `ARCHITECTURE.md`, estableciendo como precedente obligatorio el patrón de Caché Global en Memoria con `useState`, TTL de 5 minutos, deduplicación y bypass forzado para todos los composables de dominio presentes y futuros.
+
+### Architecture
+- Se formalizó en la Sección 19 de [`ARCHITECTURE.md`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/ARCHITECTURE.md) el estándar obligatorio de 5 pilares para composables de datos (`useDrivers`, `useTransports`, `useVenues`, `useEvents`, etc.).
+- Se aprobó **ADR-05: Caché Global en Memoria con useState y TTL como Estándar de Gestión de Estado** en la Sección 26, fundamentado en la premisa operativa de concurrencia acotada ($\le 3$ operadores simultáneos), priorizando la navegación instantánea a 0 ms, la reutilización cruzada de entidades y la reducción radical de consultas a Supabase BaaS.
+
+---
+
+## [2026-09-29 16:35] - v0.5.1
+
+### Summary
+Implementación de arquitectura de Caché Global en memoria con `useState`, Time-To-Live (TTL de 5 minutos), deduplicación de peticiones concurrentes y purga segura al cerrar sesión en los composables `useDrivers` y `useTransports`.
+
+### Changes
+- Se actualizó [`app/composables/useDrivers.ts`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/composables/useDrivers.ts) adoptando `useState` para el almacenamiento reactivo global (`tripu-drivers-data`, `tripu-drivers-timestamp`, `tripu-drivers-loading`). Se implementó verificación de validez de caché con TTL de 5 minutos (`CACHE_TTL_MS`), soporte para recarga forzada `fetchDrivers({ force: true })`, método `invalidateCache()` y método de purga `clearDriversState()`.
+- Se actualizó [`app/composables/useTransports.ts`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/composables/useTransports.ts) aplicando simétricamente el patrón de caché global con `useState` (`tripu-transports-data`, `tripu-transports-timestamp`, `tripu-transports-loading`), TTL de 5 minutos, recarga forzada `{ force: true }`, `invalidateCache()` y `clearTransportsState()`.
+- Se añadieron botones de sincronización manual forzada (icono `i-heroicons-arrow-path`) y actualización de reintentos en [`app/pages/admin/choferes/index.vue`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/pages/admin/choferes/index.vue) y [`app/pages/admin/transportes/index.vue`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/pages/admin/transportes/index.vue).
+- Se actualizó [`app/layouts/admin.vue`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/layouts/admin.vue) invocando `clearDriversState()` y `clearTransportsState()` en la purga incondicional de logout, garantizando la privacidad de datos de negocio en memoria en dispositivos compartidos.
+
+### Performance & UX
+- Tiempo de respuesta inmediato de 0 ms y 0 peticiones de red redundantes al navegar entre las vistas de Choferes y Transportes dentro de la ventana de validez del TTL.
+- Sincronización automática del dropdown de choferes en la vista de flota ante altas o modificaciones de choferes sin requerir consultas de red adicionales.
+
+---
+
 ## [2026-09-29 12:25] - v0.5.0
 
 ### Summary

@@ -29,8 +29,12 @@ async function handleLogout() {
     remoteLogoutFailed = true
     console.warn('Excepción de red al cerrar sesión:', err?.message)
   } finally {
-    // Forzamos la limpieza reactiva en Nuxt
+    // Forzamos la limpieza reactiva en Nuxt y purga de cachés en memoria
     user.value = null
+    useDrivers().clearDriversState()
+    useTransports().clearTransportsState()
+    useVenues().clearVenuesState()
+    useEvents().clearEventsState()
     loggingOut.value = false
 
     if (remoteLogoutFailed) {

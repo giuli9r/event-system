@@ -25,12 +25,16 @@ export type VenueTypeEnum =
   | 'bar'
   | 'sitio_publico'
   | 'edificio'
+  | 'predio'
+  | 'complejo'
 
 export type EventStatusEnum =
   | 'draft'
   | 'published'
   | 'sold_out'
   | 'completed'
+  | 'canceled'
+  | 'rescheduled'
 
 export interface Database {
   public: {
