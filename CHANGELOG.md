@@ -15,7 +15,31 @@ Historial técnico y cronológico del proyecto.
 | **US-04** | Maestro de Recintos y Sedes (useVenues, ADR-05 TTL 30m, Maps) | Sprint 2 | ✅ Done | 3 | 3 | 8 | 8 | 3 | **25 pts** | 25 h |
 | **US-05** | Creación, Publicación de Viajes y Tarifas (Events & Package Tiers) | Sprint 2 | ✅ Done | 8 | 5 | 13 | 13 | 5 | **44 pts** | 44 h |
 | **US-06** | Gestión Integral de Edición: QuickPriceModal (<10s) & Edición Completa | Sprint 2 | ✅ Done | 5 | 3 | 13 | 10 | 5 | **36 pts** | 36 h |
-| **TOTAL** | **Total Acumulado Final Sprint 2 (US-01 a US-06)** | — | **Completado** | **25** | **22** | **60** | **69** | **22** | **198 pts** | **198 h** |
+| **US-07** | Maestro de Clientes (useCustomers, ADR-05 5m, Tags, WhatsApp) | Sprint 3 | ✅ Done | 3 | 3 | 10 | 10 | 3 | **29 pts** | 29 h |
+| **TOTAL** | **Total Acumulado (US-01 a US-07)** | — | **En Progreso (Sprint 3)** | **28** | **25** | **70** | **79** | **25** | **227 pts** | **227 h** |
+
+---
+
+## [2026-10-02 12:30] - v0.9.0
+
+### Summary
+Implementación completa del Maestro de Clientes y Gestión de Pasajeros (Sprint 3 - US-07): creación de la entidad `customers` en PostgreSQL con RLS y restricciones de unicidad de DNI; desarrollo del composable reactivo `useCustomers` bajo la arquitectura de caché en memoria ADR-05 (TTL 5 min) con mutaciones locales $O(1)$/ $O(N)$ y purga segura al cerrar sesión; diseño de la arquitectura de serialización y deserialización de tags de afinidad musical (`"array:tag1,tag2,..."`); componente interactivo `CustomerTagInput.vue` con soporte de teclado y chips visuales; catálogo operativo en `/admin/clientes` con KPIs de telemetría, buscador predictivo en tiempo real, enlace de 1 clic a WhatsApp (`wa.me`), modal unificado de alta/edición con Zod (`customerSchema`) y modal de baja lógica.
+
+### Changes
+- **Base de Datos & Tipado:**
+  - Se formalizó la tabla `public.customers` en `DB/schema.sql` y `DOCS/DER.md` con índices en `dni`, `city` y `is_active`.
+  - Se establecieron políticas estrictas de Row Level Security (RLS) limitadas al rol `authenticated`.
+  - Se definieron y exportaron los tipos `CustomerRow`, `CustomerInsert` y `CustomerUpdate` en `types/database.types.ts` y `app/types/database.types.ts`.
+- **Backend / Composables:**
+  - Se creó `app/composables/useCustomers.ts` implementando el estándar ADR-05 (`tripu-customers-data`, `tripu-customers-timestamp`, `tripu-customers-loading`), con TTL de 5 minutos, mutaciones locales optimistas y purga en `handleLogout()`.
+  - Se implementaron las funciones canónicas `parseInterests(raw)` y `formatInterests(tags)` para la serialización de tags.
+  - Se exportó el esquema de validación Zod `customerSchema` y el tipo inferido `CustomerFormState`.
+- **Frontend / Componentes & Vistas:**
+  - Se creó el componente `app/components/CustomerTagInput.vue` con atajos de teclado (`Enter`, coma, `Backspace`), chips visuales con botón de remoción y selector de presets rápidos.
+  - Se implementó la vista operativa `app/pages/admin/clientes/index.vue` con tarjetas de KPIs (Total, Activos, WhatsApp, Localidades), buscador predictivo, filtros de estado y ciudad, tabla en Dark Mode, enlace directo a WhatsApp y modales de alta/edición y baja lógica.
+  - Se incorporó el acceso directo a "Clientes" (`i-heroicons-users`) en la barra de navegación de `app/layouts/admin.vue`.
+- **Calidad & Compilación:**
+  - Compilación exitosa en Nuxt 4 (`npm run build`) con código de salida 0.
 
 ---
 

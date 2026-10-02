@@ -326,6 +326,63 @@ export interface Database {
           status?: string
         }
       }
+      customers: {
+        Row: {
+          id: string
+          created_at: string
+          updated_at: string
+          name: string
+          lastname: string
+          dni: string
+          email: string | null
+          phone: string | null
+          city: string | null
+          daybirth: string | null
+          emergency_contact: string | null
+          instagram: string | null
+          notes: string | null
+          interests: string | null
+          is_active: boolean
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          name: string
+          lastname: string
+          dni: string
+          email?: string | null
+          phone?: string | null
+          city?: string | null
+          daybirth?: string | null
+          emergency_contact?: string | null
+          instagram?: string | null
+          notes?: string | null
+          interests?: string | null
+          is_active?: boolean
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          name?: string
+          lastname?: string
+          dni?: string
+          email?: string | null
+          phone?: string | null
+          city?: string | null
+          daybirth?: string | null
+          emergency_contact?: string | null
+          instagram?: string | null
+          notes?: string | null
+          interests?: string | null
+          is_active?: boolean
+        }
+      }
     }
   }
 }
+
+export type CustomerRow = Database['public']['Tables']['customers']['Row']
+export type CustomerInsert = Database['public']['Tables']['customers']['Insert']
+export type CustomerUpdate = Database['public']['Tables']['customers']['Update']
