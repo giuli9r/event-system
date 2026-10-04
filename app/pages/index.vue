@@ -50,6 +50,7 @@ onMounted(async () => {
 })
 
 function handleSelectEvent(event: PublicFeaturedEvent) {
+  if (event.status === 'sold_out') return
   selectedEvent.value = event
   reservationModalOpen.value = true
 }

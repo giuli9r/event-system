@@ -7,7 +7,7 @@ export interface PublicFeaturedEvent extends DbEvent {
   package_tiers: PackageTier[]
 }
 
-const PUBLIC_CACHE_TTL_MS = 3 * 60 * 1000 // 3 minutos de caché en cliente
+const PUBLIC_CACHE_TTL_MS = 1 * 60 * 1000 // 1 minuto de caché en cliente
 
 export function usePublicEvents() {
   const supabase = useSupabaseClient<Database>()
@@ -17,7 +17,7 @@ export function usePublicEvents() {
   const allEvents = useState<PublicFeaturedEvent[]>('tripu-public-all-events', () => [])
   const lastFetchedFeatured = useState<number | null>('tripu-public-featured-timestamp', () => null)
   const lastFetchedAll = useState<number | null>('tripu-public-all-timestamp', () => null)
-  
+
   const loading = useState<boolean>('tripu-public-featured-loading', () => false)
   const allLoading = useState<boolean>('tripu-public-all-loading', () => false)
   const error = ref<string | null>(null)
