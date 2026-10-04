@@ -25,10 +25,16 @@ useHead({
 
 const {
   featuredEvents,
+  allEvents,
+  filteredEvents,
+  availableCities,
+  availableMonths,
   loading,
+  allLoading,
   fetchFeaturedEvents,
+  fetchAllPublicEvents,
+  resetFilters,
   formatEventDate,
-  getMinPrice,
   formatCurrency
 } = usePublicEvents()
 
@@ -37,7 +43,10 @@ const selectedEvent = ref<PublicFeaturedEvent | null>(null)
 const reservationModalOpen = ref(false)
 
 onMounted(async () => {
-  await fetchFeaturedEvents()
+  await Promise.all([
+    fetchFeaturedEvents(),
+    fetchAllPublicEvents()
+  ])
 })
 
 function handleSelectEvent(event: PublicFeaturedEvent) {
@@ -50,7 +59,7 @@ function getWhatsAppReservationUrl(event: PublicFeaturedEvent) {
   const dateFormatted = formatEventDate(event.event_date)
   const venue = event.venue?.name || 'recital'
   const text = encodeURIComponent(
-    `¡Hola Tripu! 👋 Quiero reservar mi lugar para el viaje al show de *${event.artist_headliner}* en ${venue} (${dateFormatted}). ¿Me pueden pasar los medios de pago y disponibilidad?`
+    `¡Hola Tripu! 👋 Quiero consultar disponibilidad y reservar para el viaje al show de *${event.artist_headliner}* en ${venue} (${dateFormatted}). ¿Me pueden pasar los medios de pago y detalles?`
   )
   return `https://wa.me/${phone}?text=${text}`
 }
@@ -66,8 +75,114 @@ function getWhatsAppReservationUrl(event: PublicFeaturedEvent) {
       @select="handleSelectEvent"
     />
 
+    <!-- US-09: CARTELERA Y CATÁLOGO DE PRÓXIMOS RECITALES (Basado en PROXIMOS_EVENTOS.png) -->
+    <section id="proximos-shows" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 scroll-mt-20">
+      <!-- ENCABEZADO DE SECCIÓN IDÉNTICO A LA MAQUETA -->
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1A1A22] border border-[#2A2A38] text-xs font-bold uppercase tracking-wider text-[#E53924] mb-3">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#E53924]" />
+            <span>Cartelera Oficial</span>
+          </div>
+          <h2 class="text-3xl sm:text-5xl font-black uppercase text-[#F5EEDC] tracking-tight">
+            PRÓXIMOS RECITALES
+          </h2>
+        </div>
+
+        <a
+          href="https://wa.me/5493564000000"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 text-xs sm:text-sm font-bold uppercase text-[#25D366] hover:text-[#32e776] transition-colors"
+        >
+          <span>¿No encontrás tu show? Consultanos</span>
+          <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
+        </a>
+      </div>
+
+      <!-- BARRA DE FILTROS Y BÚSQUEDA REACTIVA (US-09.3) -->
+      <div class="mb-10">
+        <EventFilters
+          :cities="availableCities"
+          :months="availableMonths"
+          :total-count="allEvents.length"
+          :filtered-count="filteredEvents.length"
+        />
+      </div>
+
+      <!-- SKELETON LOADER DE LA GRILLA -->
+      <div
+        v-if="allLoading && allEvents.length === 0"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+      >
+        <div
+          v-for="i in 4"
+          :key="i"
+          class="rounded-2xl bg-[#14141B] border border-[#2A2A38] overflow-hidden animate-pulse flex flex-col"
+        >
+          <div class="aspect-[4/5] bg-[#1A1A22]" />
+          <div class="p-4 space-y-3">
+            <div class="h-6 bg-[#2A2A38] rounded-md w-3/4" />
+            <div class="h-4 bg-[#2A2A38] rounded-md w-1/2" />
+            <div class="h-4 bg-[#2A2A38] rounded-md w-2/3" />
+            <div class="pt-3 border-t border-[#2A2A38] flex justify-between">
+              <div class="h-6 bg-[#2A2A38] rounded-md w-1/3" />
+              <div class="h-8 bg-[#2A2A38] rounded-xl w-1/3" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ESTADO SIN RESULTADOS -->
+      <div
+        v-else-if="filteredEvents.length === 0"
+        class="p-12 text-center rounded-2xl bg-[#14141B] border border-[#2A2A38] space-y-4 max-w-xl mx-auto my-6"
+      >
+        <div class="w-16 h-16 rounded-full bg-[#E53924]/10 border border-[#E53924]/30 flex items-center justify-center text-[#E53924] mx-auto">
+          <UIcon name="i-heroicons-musical-note" class="w-8 h-8" />
+        </div>
+        <h3 class="text-xl font-bold uppercase text-[#F5EEDC]">
+          No encontramos viajes con esos filtros
+        </h3>
+        <p class="text-xs sm:text-sm text-zinc-400">
+          Probá modificando la ciudad o el mes seleccionado, o hacé clic en limpiar para ver todos los viajes confirmados.
+        </p>
+        <div class="pt-2 flex flex-wrap justify-center gap-3">
+          <button
+            type="button"
+            class="px-5 py-2.5 rounded-xl text-xs font-bold uppercase bg-[#E53924] hover:bg-[#d0301d] text-[#F5EEDC] transition-colors"
+            @click="resetFilters"
+          >
+            Ver todos los recitales
+          </button>
+          <a
+            href="https://wa.me/5493564000000"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="px-5 py-2.5 rounded-xl text-xs font-bold uppercase border border-[#25D366]/40 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-colors flex items-center gap-1.5"
+          >
+            <UIcon name="i-heroicons-chat-bubble-oval-left-ellipsis" class="w-4 h-4" />
+            <span>Consultar por WhatsApp</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- GRILLA OFICIAL DE TARJETAS (US-09.2 / PROXIMOS_EVENTOS.png) -->
+      <div
+        v-else
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+      >
+        <EventCard
+          v-for="event in filteredEvents"
+          :key="event.id"
+          :event="event"
+          @select="handleSelectEvent"
+        />
+      </div>
+    </section>
+
     <!-- SECCIÓN INTERMEDIA: PROPUESTA DE VALOR TRIPU -->
-    <section id="experiencia" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 border-b border-[#2A2A38]/50">
+    <section id="experiencia" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 border-t border-[#2A2A38]/50">
       <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1A1A22] border border-[#2A2A38] text-xs font-bold uppercase tracking-wider text-[#E53924]">
           <span class="w-1.5 h-1.5 rounded-full bg-[#E53924]" />
@@ -120,85 +235,6 @@ function getWhatsAppReservationUrl(event: PublicFeaturedEvent) {
           <p class="text-xs sm:text-sm text-zinc-400 leading-relaxed">
             Elegí entre solo traslado o paquetes con entrada oficial asegurada, opciones de preventa y múltiples medios de pago.
           </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- TEASER DE PRÓXIMOS EVENTOS (Base para US-09) -->
-    <section id="proximos-shows" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
-        <div>
-          <span class="text-xs font-bold uppercase tracking-widest text-[#E53924]">Cartelera Oficial</span>
-          <h2 class="text-3xl sm:text-4xl font-black uppercase text-[#F5EEDC] tracking-tight">
-            Próximas Salidas Confirmadas
-          </h2>
-        </div>
-        <a
-          href="https://wa.me/5493564000000"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-2 text-xs font-bold uppercase text-[#25D366] hover:underline"
-        >
-          <span>¿Buscás otro show? Consultanos</span>
-          <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
-        </a>
-      </div>
-
-      <!-- Grid Simplificado de Eventos -->
-      <div v-if="featuredEvents && featuredEvents.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div
-          v-for="ev in featuredEvents"
-          :key="ev.id"
-          class="rounded-2xl bg-[#14141B] border border-[#2A2A38] overflow-hidden hover:border-[#E53924]/60 transition-all duration-300 flex flex-col group cursor-pointer"
-          @click="handleSelectEvent(ev)"
-        >
-          <!-- Portada -->
-          <div class="relative h-48 overflow-hidden bg-[#1A1A22]">
-            <img
-              :src="ev.image_url || '/branding/logo-tripu-horizontal-black.png'"
-              :alt="ev.artist_headliner || ev.title"
-              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-            <div class="absolute inset-0 bg-gradient-to-t from-[#14141B] via-transparent to-transparent" />
-            
-            <div class="absolute top-3 left-3">
-              <span class="px-2.5 py-1 rounded-full text-[11px] font-bold uppercase bg-[#E53924] text-[#F5EEDC] shadow">
-                Confirmado
-              </span>
-            </div>
-          </div>
-
-          <!-- Contenido -->
-          <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
-            <div>
-              <span class="text-xs font-bold uppercase text-[#FF6B55]">
-                {{ formatEventDate(ev.event_date) }}
-              </span>
-              <h3 class="text-2xl font-black uppercase text-[#F5EEDC] group-hover:text-[#E53924] transition-colors">
-                {{ ev.artist_headliner || ev.title }}
-              </h3>
-              <p v-if="ev.venue" class="text-xs text-zinc-400 mt-1 flex items-center gap-1">
-                <UIcon name="i-heroicons-map-pin" class="w-3.5 h-3.5 text-zinc-500" />
-                <span>{{ ev.venue.name }}, {{ ev.venue.city }}</span>
-              </p>
-            </div>
-
-            <div class="pt-4 border-t border-[#2A2A38] flex items-center justify-between">
-              <div>
-                <span class="text-[10px] font-bold uppercase text-zinc-500 block">Tarifa</span>
-                <span class="text-lg font-black text-[#F5EEDC]">
-                  {{ getMinPrice(ev.package_tiers) ? formatCurrency(getMinPrice(ev.package_tiers)!) : 'A consultar' }}
-                </span>
-              </div>
-              <button
-                type="button"
-                class="px-4 py-2 rounded-xl text-xs font-black uppercase bg-[#E53924] hover:bg-[#d0301d] text-[#F5EEDC] transition-colors"
-                @click.stop="handleSelectEvent(ev)"
-              >
-                Reservar
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </section>
