@@ -64,6 +64,7 @@ const hasActiveFilters = computed(() => {
           />
           <select
             v-model="selectedCity"
+            aria-label="Filtrar por ciudad"
             class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-[#0F0F12] border border-[#2A2A38] text-sm text-[#F5EEDC] focus:outline-none focus:border-[#E53924] appearance-none cursor-pointer transition-colors"
           >
             <option value="all">Todas las ciudades</option>
@@ -87,6 +88,7 @@ const hasActiveFilters = computed(() => {
           />
           <select
             v-model="selectedMonth"
+            aria-label="Filtrar por mes"
             class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-[#0F0F12] border border-[#2A2A38] text-sm text-[#F5EEDC] focus:outline-none focus:border-[#E53924] appearance-none cursor-pointer transition-colors"
           >
             <option value="all">Todos los meses</option>
@@ -110,6 +112,7 @@ const hasActiveFilters = computed(() => {
           />
           <select
             v-model="statusFilter"
+            aria-label="Filtrar por disponibilidad"
             class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-[#0F0F12] border border-[#2A2A38] text-sm text-[#F5EEDC] focus:outline-none focus:border-[#E53924] appearance-none cursor-pointer transition-colors"
           >
             <option value="all">Todos los cupos</option>

@@ -234,7 +234,10 @@ onUnmounted(() => {
         <div class="absolute inset-0 w-full h-full overflow-hidden">
           <img :src="event.image_url || DEFAULT_FALLBACK_IMAGE" :alt="event.artist_headliner || event.title"
             class="w-full h-full object-cover object-center transform scale-105 transition-transform duration-[10000ms] ease-out"
-            :class="idx === currentIndex ? 'scale-100' : 'scale-105'" loading="lazy" />
+            :class="idx === currentIndex ? 'scale-100' : 'scale-105'"
+            :loading="idx === 0 ? 'eager' : 'lazy'"
+            :fetchpriority="idx === 0 ? 'high' : 'auto'"
+            decoding="async" />
         </div>
 
         <!-- CAPA 1: GRADIENTES SCRIM (Oscurecimiento lateral y degradé a negro en base) -->
@@ -329,7 +332,7 @@ onUnmounted(() => {
 
               <!-- Botón Primario: Reservar -->
               <button type="button"
-                class="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-black uppercase tracking-wider text-sm bg-[#E53924] hover:bg-[#d0301d] text-[#F5EEDC] shadow-lg shadow-[#E53924]/30 active:scale-95 transition-all duration-200"
+                class="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-black uppercase tracking-wider text-sm bg-[#E53924] hover:bg-[#d0301d] text-white shadow-lg shadow-[#E53924]/30 active:scale-95 transition-all duration-200"
                 @click="emit('select', event)">
                 <span>Reservar Lugar</span>
                 <UIcon name="i-heroicons-arrow-right" class="w-4 h-4 stroke-[2.5]" />
@@ -364,13 +367,17 @@ onUnmounted(() => {
 
         <!-- CAPA 5: INDICADORES INFERIORES (Paginación + Contador de Diapositivas) -->
         <div
-          class="absolute bottom-4 sm:bottom-6 right-4 sm:right-8 z-30 flex items-center gap-3 bg-[#14141B]/80 border border-[#2A2A38] px-3.5 py-1.5 rounded-full backdrop-blur-md">
-          <!-- Dots Interactivos -->
-          <div class="flex items-center gap-1.5">
+          class="absolute bottom-4 sm:bottom-6 right-4 sm:right-8 z-30 flex items-center gap-3 bg-[#14141B]/80 border border-[#2A2A38] px-3.5 py-1 rounded-full backdrop-blur-md">
+          <!-- Dots Interactivos (Área táctil accesible de mínimo 28px) -->
+          <div class="flex items-center gap-1">
             <button v-for="(_, idx) in events" :key="idx" type="button" :aria-label="`Ir a diapositiva ${idx + 1}`"
-              class="h-1.5 rounded-full transition-all duration-300"
-              :class="idx === currentIndex ? 'w-6 bg-[#E53924]' : 'w-2 bg-zinc-600 hover:bg-zinc-400'"
-              @click="goToSlide(idx)" />
+              class="h-7 px-1 flex items-center justify-center cursor-pointer"
+              @click="goToSlide(idx)">
+              <span
+                class="h-1.5 rounded-full transition-all duration-300 block"
+                :class="idx === currentIndex ? 'w-6 bg-[#E53924]' : 'w-2 bg-zinc-500 hover:bg-zinc-300'"
+              />
+            </button>
           </div>
 
           <!-- Divisor -->

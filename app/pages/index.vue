@@ -5,24 +5,6 @@ definePageMeta({
   layout: 'default'
 })
 
-useHead({
-  title: 'Tripu Producciones | Viajes a Recitales y Festivales de Música',
-  meta: [
-    {
-      name: 'description',
-      content: 'Traslados oficiales y experiencias a los mejores recitales y festivales de música de Argentina. Salidas desde San Francisco, Córdoba.'
-    },
-    {
-      property: 'og:title',
-      content: 'Tripu Producciones | El viaje es parte de la experiencia'
-    },
-    {
-      property: 'og:image',
-      content: '/branding/logo-tripu-horizontal.webp'
-    }
-  ]
-})
-
 const {
   featuredEvents,
   allEvents,
@@ -38,16 +20,50 @@ const {
   formatCurrency
 } = usePublicEvents()
 
-// Evento seleccionado para modal de reserva rápida
-const selectedEvent = ref<PublicFeaturedEvent | null>(null)
-const reservationModalOpen = ref(false)
-
-onMounted(async () => {
+// Carga SSR para renderizar eventos e imagen LCP en el documento inicial
+await useAsyncData('tripu-public-home-events', async () => {
   await Promise.all([
     fetchFeaturedEvents(),
     fetchAllPublicEvents()
   ])
+  return true
 })
+
+// Metadatos y precarga prioritaria del hero LCP
+useHead(() => {
+  const heroImage = featuredEvents.value?.[0]?.image_url
+  return {
+    title: 'Tripu Producciones | Viajes a Recitales y Festivales de Música',
+    meta: [
+      {
+        name: 'description',
+        content: 'Traslados oficiales y experiencias a los mejores recitales y festivales de música de Argentina. Salidas desde San Francisco, Córdoba.'
+      },
+      {
+        property: 'og:title',
+        content: 'Tripu Producciones | El viaje es parte de la experiencia'
+      },
+      {
+        property: 'og:image',
+        content: '/branding/logo-tripu-horizontal.webp'
+      }
+    ],
+    link: heroImage
+      ? [
+          {
+            rel: 'preload',
+            as: 'image',
+            href: heroImage,
+            fetchpriority: 'high'
+          }
+        ]
+      : []
+  }
+})
+
+// Evento seleccionado para modal de reserva rápida
+const selectedEvent = ref<PublicFeaturedEvent | null>(null)
+const reservationModalOpen = ref(false)
 
 function handleSelectEvent(event: PublicFeaturedEvent) {
   if (event.status === 'sold_out') return
@@ -81,7 +97,7 @@ function getWhatsAppReservationUrl(event: PublicFeaturedEvent) {
       <!-- ENCABEZADO DE SECCIÓN IDÉNTICO A LA MAQUETA -->
       <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
         <div>
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1A1A22] border border-[#2A2A38] text-xs font-bold uppercase tracking-wider text-[#E53924] mb-3">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1A1A22] border border-[#2A2A38] text-xs font-bold uppercase tracking-wider text-[#FF6B55] mb-3">
             <span class="w-1.5 h-1.5 rounded-full bg-[#E53924]" />
             <span>Cartelera Oficial</span>
           </div>
@@ -185,7 +201,7 @@ function getWhatsAppReservationUrl(event: PublicFeaturedEvent) {
     <!-- SECCIÓN INTERMEDIA: PROPUESTA DE VALOR TRIPU -->
     <section id="experiencia" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 border-t border-[#2A2A38]/50">
       <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1A1A22] border border-[#2A2A38] text-xs font-bold uppercase tracking-wider text-[#E53924]">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1A1A22] border border-[#2A2A38] text-xs font-bold uppercase tracking-wider text-[#FF6B55]">
           <span class="w-1.5 h-1.5 rounded-full bg-[#E53924]" />
           <span>Experiencia Tripu</span>
         </div>

@@ -20,6 +20,8 @@ const navLinks = [
             <img
               src="/branding/logo-tripu-horizontal-sm.webp"
               alt="Tripu Producciones"
+              width="176"
+              height="44"
               class="h-9 sm:h-11 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
             />
           </NuxtLink>
@@ -121,6 +123,8 @@ const navLinks = [
             <img
               src="/branding/logo-tripu-horizontal-sm.webp"
               alt="Tripu Producciones"
+              width="160"
+              height="40"
               class="h-10 w-auto object-contain"
             />
             <p class="text-xs sm:text-sm text-zinc-400 max-w-sm">
@@ -168,9 +172,9 @@ const navLinks = [
         </div>
 
         <!-- Barra Inferior de Copyright -->
-        <div class="pt-8 border-t border-[#1A1A22] flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-zinc-500">
+        <div class="pt-8 border-t border-[#1A1A22] flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-zinc-400">
           <p>© {{ new Date().getFullYear() }} Tripu Producciones. Todos los derechos reservados.</p>
-          <p class="text-zinc-500">
+          <p class="text-zinc-400">
             "El viaje es parte de la experiencia"
           </p>
         </div>

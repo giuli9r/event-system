@@ -6,6 +6,10 @@ definePageMeta({
   middleware: 'auth'
 })
 
+useHead({
+  title: 'Panel de Operaciones | Tripu Admin'
+})
+
 const user = useSupabaseUser()
 const supabase = useSupabaseClient<Database>()
 

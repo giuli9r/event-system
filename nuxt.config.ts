@@ -9,6 +9,35 @@ export default defineNuxtConfig({
     '@nuxtjs/sitemap'
   ],
 
+  features: {
+    inlineStyles: true
+  },
+
+  // Configuración global de Head, SEO y Accesibilidad (Lighthouse)
+  app: {
+    head: {
+      htmlAttrs: {
+        lang: 'es'
+      },
+      title: 'Tripu Producciones | Viajes a Recitales y Festivales de Música',
+      titleTemplate: (chunk?: string) => (chunk && !chunk.includes('Tripu Producciones')) ? `${chunk} | Tripu Producciones` : (chunk || 'Tripu Producciones'),
+      meta: [
+        { charset: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        {
+          name: 'description',
+          content: 'Plataforma oficial de traslados, viajes organizados y experiencias a los mejores recitales y festivales de música de Argentina.'
+        },
+        { name: 'theme-color', content: '#0F0F12' }
+      ],
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'preconnect', href: 'https://images.unsplash.com' },
+        { rel: 'preconnect', href: 'https://encrypted-tbn0.gstatic.com' }
+      ]
+    }
+  },
+
   css: ['~/assets/css/main.css'],
 
   // Configuración de Supabase

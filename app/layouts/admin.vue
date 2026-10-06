@@ -142,6 +142,7 @@ async function handleLogout() {
               icon="i-heroicons-arrow-right-on-rectangle"
               :loading="loggingOut"
               title="Cerrar Sesión"
+              aria-label="Cerrar Sesión"
               @click="handleLogout"
             />
             <!-- Botón de Menú Móvil -->
@@ -150,6 +151,7 @@ async function handleLogout() {
               variant="ghost"
               color="neutral"
               icon="i-heroicons-bars-3"
+              aria-label="Abrir menú de navegación"
               @click="mobileMenuOpen = !mobileMenuOpen"
             />
           </div>

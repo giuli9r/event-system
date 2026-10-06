@@ -38,12 +38,12 @@ function handleSelect() {
       <img :src="event.image_url || DEFAULT_CARD_IMAGE" :alt="event.artist_headliner || event.title"
         class="w-full h-full object-cover object-center transition-transform duration-500 ease-out" :class="isSoldOut
           ? 'group-hover:scale-105 filter grayscale-[60%] brightness-65'
-          : 'group-hover:scale-105 '" loading="lazy" />
+          : 'group-hover:scale-105 '" loading="lazy" decoding="async" />
 
       <!-- Badge Flotante Superior para Destacados -->
       <div v-if="event.is_featured && !isSoldOut" class="absolute top-3 right-3 z-10">
         <span
-          class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#E53924] text-[#F5EEDC] shadow-md shadow-[#E53924]/30">
+          class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#E53924] text-white shadow-md shadow-[#E53924]/30">
           <UIcon name="i-heroicons-star" class="w-3 h-3 text-amber-300 fill-amber-300" />
           <span>Destacado</span>
         </span>
@@ -106,7 +106,7 @@ function handleSelect() {
       <!-- Bloque 3: Tarifa y Botón de Acción -->
       <div class="pt-3 border-t border-[#2A2A38] flex items-center justify-between gap-2">
         <div>
-          <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">Tarifa</span>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">Tarifa</span>
           <span v-if="minPrice" class="text-base sm:text-lg font-black tracking-tight"
             :class="isSoldOut ? 'text-zinc-500 line-through' : 'text-[#F5EEDC]'">
             {{ formatCurrency(minPrice) }}
@@ -117,10 +117,11 @@ function handleSelect() {
         </div>
 
         <button type="button" :disabled="isSoldOut" :aria-disabled="isSoldOut"
+          :aria-label="isSoldOut ? 'Viaje agotado' : 'Reservar lugar para este recital'"
           class="px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200"
           :class="isSoldOut
             ? 'bg-[#1A1A22] text-zinc-500 border border-[#2A2A38] cursor-not-allowed opacity-60'
-            : 'bg-[#E53924] hover:bg-[#d0301d] text-[#F5EEDC] shadow-md shadow-[#E53924]/20 active:scale-95 cursor-pointer'" @click.stop="handleSelect">
+            : 'bg-[#E53924] hover:bg-[#d0301d] text-white shadow-md shadow-[#E53924]/20 active:scale-95 cursor-pointer'" @click.stop="handleSelect">
           {{ isSoldOut ? 'Agotado' : 'Reservar' }}
         </button>
       </div>
