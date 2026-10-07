@@ -50,7 +50,7 @@ export const contactMessageSchema = z.object({
     .pipe(
       z.string()
         .min(10, 'Tu consulta debe tener al menos 10 caracteres')
-        .max(2000, 'El mensaje no puede superar los 2000 caracteres')
+        .max(1000, 'El mensaje no puede superar los 1000 caracteres')
     ),
   // Campo Honeypot antispam: debe viajar siempre vacío
   honeypot: z.string().optional().default('')
