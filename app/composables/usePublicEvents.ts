@@ -137,6 +137,59 @@ export function usePublicEvents() {
   }
 
   /**
+   * Obtiene un evento público individual por su slug (publicado o agotado)
+   * Implementa caché en memoria con useState y TTL (ADR-05)
+   */
+  async function fetchPublicEventBySlug(slug: string, options: { force?: boolean } = {}) {
+    if (!slug) return null
+
+    // Claves dinámicas de caché por slug
+    const cachedEvent = useState<PublicFeaturedEvent | null>(`tripu-public-event-${slug}`, () => null)
+    const cachedTimestamp = useState<number | null>(`tripu-public-event-ts-${slug}`, () => null)
+
+    const isCacheValid = !options.force &&
+      cachedEvent.value !== null &&
+      cachedTimestamp.value !== null &&
+      (Date.now() - cachedTimestamp.value) < PUBLIC_CACHE_TTL_MS
+
+    if (isCacheValid) {
+      return cachedEvent.value
+    }
+
+    // Si ya tenemos el evento cargado en la lista general de memoria, usarlo como primer fallback
+    if (!options.force && allEvents.value.length > 0) {
+      const foundInList = allEvents.value.find(e => e.slug === slug)
+      if (foundInList) {
+        cachedEvent.value = foundInList
+        cachedTimestamp.value = Date.now()
+        return foundInList
+      }
+    }
+
+    try {
+      const { data, error: err } = await supabase
+        .from('events')
+        .select(PUBLIC_QUERY)
+        .eq('slug', slug)
+        .in('status', ['published', 'sold_out'])
+        .maybeSingle()
+
+      if (err) throw err
+
+      if (data) {
+        cachedEvent.value = data as unknown as PublicFeaturedEvent
+        cachedTimestamp.value = Date.now()
+        return cachedEvent.value
+      }
+
+      return null
+    } catch (err: any) {
+      console.error(`Error fetching public event with slug ${slug}:`, err)
+      return null
+    }
+  }
+
+  /**
    * Ciudades únicas disponibles en los eventos actuales
    */
   const availableCities = computed(() => {
@@ -300,7 +353,7 @@ export function usePublicEvents() {
       }
       const match = timeStr.match(/^(\d{1,2}):(\d{2})/)
       if (match) {
-        return `${match[1].padStart(2, '0')}:${match[2]} HS`
+        return `${match[1]?.padStart(2, '0')}:${match[2]} HS`
       }
       return `${timeStr} HS`
     } catch {
@@ -325,6 +378,7 @@ export function usePublicEvents() {
     isAllCacheValid,
     fetchFeaturedEvents,
     fetchAllPublicEvents,
+    fetchPublicEventBySlug,
     resetFilters,
     getMinPrice,
     formatCurrency,

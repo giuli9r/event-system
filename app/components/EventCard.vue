@@ -20,9 +20,13 @@ const isSoldOut = computed(() => props.event.status === 'sold_out')
 const minPrice = computed(() => getMinPrice(props.event.package_tiers))
 
 function handleSelect() {
-  // Evitar apertura de modal o acción si el viaje está agotado
+  // Evitar acción si el viaje está agotado
   if (isSoldOut.value) return
-  emit('select', props.event)
+  if (props.event.slug) {
+    window.open(`/viajes/${props.event.slug}`, '_blank', 'noopener,noreferrer')
+  } else {
+    emit('select', props.event)
+  }
 }
 </script>
 

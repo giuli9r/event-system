@@ -229,22 +229,29 @@ event-system/
 
 ## 7. Public Platform
 
-### Estado Actual de Implementación (Sprint 3)
-La ruta raíz `/` se encuentra completamente implementada en `app/pages/index.vue` utilizando el layout público [`app/layouts/default.vue`](file:///c:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/layouts/default.vue):
+### Estado Actual de Implementación (Sprint 3 & Sprint 4)
+La plataforma pública cuenta con dos vistas principales utilizando el layout público [`app/layouts/default.vue`](file:///c:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/layouts/default.vue):
 
 1. **Carrusel Hero de Destacados (`FeaturedCarousel.vue`):**
    * Altura de 640px en notebooks y desktops con soporte para transiciones automáticas y táctiles.
    * Doble gradiente scrim para garantizar legibilidad WCAG AA sobre cualquier fotografía de concierto.
    * **Botón Suspendido con Efecto Nuxt-DevTools Glow:** Botón flotante centrado al pie del carrusel con movimiento de levitación continua (`animate-suspension`, 0 a 7px en 2.2s). Al hacer hover, activa un aura difusa exterior y un borde cónico giratorio a 360° (`@keyframes devtools-spin`), invitando al usuario a desplazarse hacia la cartelera.
+   * Botón de acción directa con navegación a la ficha de viaje (`/viajes/[slug]`) en nueva pestaña.
 2. **Cartelera General de Recitales (`EventCard.vue`):**
    * Grilla responsiva de 4 columnas en desktop (`xl:grid-cols-4`).
    * Tarjetas estilo póster vertical (4:5) con tira inferior `"ENTRADAS DISPONIBLES"` y cartel central `"AGOTADO"` para salidas completas.
-   * **Inhabilitación defensiva de eventos agotados:** Bloqueo de clics y botón CTA deshabilitado (`cursor-not-allowed`, `:disabled="isSoldOut"`) impidiendo abrir la modal de reserva para shows sin cupo.
+   * **Navegación en nueva pestaña (`target="_blank"`):** Al hacer clic en un viaje disponible, abre la ficha detallada en una nueva pestaña conservando intacta la búsqueda y el scroll del catálogo principal.
+   * **Inhabilitación defensiva de eventos agotados:** Bloqueo de clics y botón CTA deshabilitado (`cursor-not-allowed`, `:disabled="isSoldOut"`).
 3. **Barra de Búsqueda y Filtros Reactivos (`EventFilters.vue`):**
    * Búsqueda por texto en tiempo real, selector desplegable de ciudades y filtro por mes.
    * Ejecución en memoria del cliente a 0 ms sin peticiones de red redundantes.
-4. **Modal de Reserva Rápida Contextual:**
-   * Al hacer clic en un viaje disponible, despliega un modal con desglose de paquetes y botón de confirmación directa hacia WhatsApp con mensaje formateado.
+4. **Ficha Detallada de Viaje (`app/pages/viajes/[slug].vue` - US-09):**
+   * Renderizado en servidor (SSR) mediante `fetchPublicEventBySlug(slug)` con caché `useState` en memoria (ADR-05).
+   * Manejo de error 404 defensivo si la salida no existe o no está publicada.
+   * Ficha editorial con póster, metadatos de show, punto y horario de salida, política de regreso e itinerario detallado.
+   * Comparador visual de opciones de paquetes y preventas (`package_tiers`).
+   * Metadatos dinámicos OpenGraph y Twitter Cards (`useSeoMeta`).
+   * Conversión contextual inteligente a WhatsApp (US-10) en desktop y barra flotante sticky en mobile.
 
 ---
 

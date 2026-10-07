@@ -58,6 +58,9 @@ function resetProgress() {
 }
 
 function startAutoplay() {
+  // Asegurar ejecución estricta solo en entorno navegador/cliente
+  if (!import.meta.client) return
+
   stopAutoplay()
   if (totalSlides.value <= 1) return
 
@@ -95,12 +98,12 @@ const touchEndX = ref(0)
 const minSwipeDistance = 45
 
 function onTouchStart(e: TouchEvent) {
-  touchStartX.value = e.changedTouches[0].screenX
+  touchStartX.value = e.changedTouches[0]?.screenX ?? 0
   pauseAutoplay()
 }
 
 function onTouchEnd(e: TouchEvent) {
-  touchEndX.value = e.changedTouches[0].screenX
+  touchEndX.value = e.changedTouches[0]?.screenX ?? 0
   handleSwipe()
   resumeAutoplay()
 }
@@ -151,13 +154,14 @@ watch(
       currentIndex.value = 0
     }
     resetProgress()
-    if (newLen > 1) {
-      startAutoplay()
-    } else {
-      stopAutoplay()
+    if (import.meta.client) {
+      if (newLen > 1) {
+        startAutoplay()
+      } else {
+        stopAutoplay()
+      }
     }
-  },
-  { immediate: true }
+  }
 )
 
 onMounted(() => {
@@ -234,10 +238,8 @@ onUnmounted(() => {
         <div class="absolute inset-0 w-full h-full overflow-hidden">
           <img :src="event.image_url || DEFAULT_FALLBACK_IMAGE" :alt="event.artist_headliner || event.title"
             class="w-full h-full object-cover object-center transform scale-105 transition-transform duration-[10000ms] ease-out"
-            :class="idx === currentIndex ? 'scale-100' : 'scale-105'"
-            :loading="idx === 0 ? 'eager' : 'lazy'"
-            :fetchpriority="idx === 0 ? 'high' : 'auto'"
-            decoding="async" />
+            :class="idx === currentIndex ? 'scale-100' : 'scale-105'" :loading="idx === 0 ? 'eager' : 'lazy'"
+            :fetchpriority="idx === 0 ? 'high' : 'auto'" decoding="async" />
         </div>
 
         <!-- CAPA 1: GRADIENTES SCRIM (Oscurecimiento lateral y degradé a negro en base) -->
@@ -330,8 +332,13 @@ onUnmounted(() => {
                 </span>
               </div>
 
-              <!-- Botón Primario: Reservar -->
-              <button type="button"
+              <!-- Botón Primario: Ver Viaje / Reservar -->
+              <a v-if="event.slug" :href="`/viajes/${event.slug}`" target="_blank" rel="noopener noreferrer"
+                class="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-black uppercase tracking-wider text-sm bg-[#E53924] hover:bg-[#d0301d] text-white shadow-lg shadow-[#E53924]/30 active:scale-95 transition-all duration-200">
+                <span>Ver Viaje y Reservar</span>
+                <UIcon name="i-heroicons-arrow-right" class="w-4 h-4 stroke-[2.5]" />
+              </a>
+              <button v-else type="button"
                 class="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-black uppercase tracking-wider text-sm bg-[#E53924] hover:bg-[#d0301d] text-white shadow-lg shadow-[#E53924]/30 active:scale-95 transition-all duration-200"
                 @click="emit('select', event)">
                 <span>Reservar Lugar</span>
@@ -371,12 +378,9 @@ onUnmounted(() => {
           <!-- Dots Interactivos (Área táctil accesible de mínimo 28px) -->
           <div class="flex items-center gap-1">
             <button v-for="(_, idx) in events" :key="idx" type="button" :aria-label="`Ir a diapositiva ${idx + 1}`"
-              class="h-7 px-1 flex items-center justify-center cursor-pointer"
-              @click="goToSlide(idx)">
-              <span
-                class="h-1.5 rounded-full transition-all duration-300 block"
-                :class="idx === currentIndex ? 'w-6 bg-[#E53924]' : 'w-2 bg-zinc-500 hover:bg-zinc-300'"
-              />
+              class="h-7 px-1 flex items-center justify-center cursor-pointer" @click="goToSlide(idx)">
+              <span class="h-1.5 rounded-full transition-all duration-300 block"
+                :class="idx === currentIndex ? 'w-6 bg-[#E53924]' : 'w-2 bg-zinc-500 hover:bg-zinc-300'" />
             </button>
           </div>
 

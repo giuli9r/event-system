@@ -7,6 +7,22 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.10.0] - 2026-10-07
+### Añadido
+* **US-09 & US-10: Ficha Detallada de Viaje y Conversión Contextual (`/viajes/[slug]`):**
+  * Página dinámica pública `app/pages/viajes/[slug].vue` con Server-Side Rendering (SSR) vía `useAsyncData`.
+  * Método `fetchPublicEventBySlug` en `usePublicEvents.ts` con caché global en memoria `useState` y TTL de 1 minuto (ADR-05).
+  * Control de errores 404 amigable si la salida no existe o no tiene estado público (`published` o `sold_out`).
+  * Cabecera visual con flyer de recital, artista principal, fecha, recinto y punto/horario de encuentro.
+  * Desglose completo de itinerario (`full_itinerary`), resumen de servicios incluidos y política de regreso pactada (`return_policy`).
+  * Grilla comparativa de tarifas de paquetes y preventas (`package_tiers`).
+  * Integración de metadatos dinámicos OpenGraph y Twitter Cards (`useSeoMeta`) para compartir en redes sociales y mensajería.
+  * **Navegación forzada en nueva pestaña (`target="_blank"`):** Tanto las tarjetas `EventCard.vue` como el banner `FeaturedCarousel.vue` abren la ficha detallada en una pestaña independiente para conservar el estado de filtros y la posición de scroll en la cartelera principal.
+  * Conversión contextual a WhatsApp con mensaje dinámico que incluye nombre de banda, fecha, recinto y paquete seleccionado.
+  * Barra de conversión inferior flotante *sticky* para dispositivos móviles.
+
+---
+
 ## [0.9.5] - 2026-10-04
 ### Añadido
 * **US-09: Catálogo y Cartelera de Próximos Eventos:** Implementación de la sección `"PRÓXIMOS RECITALES"` basada fielmente en la maqueta visual `PROXIMOS_EVENTOS.png`.
