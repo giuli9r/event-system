@@ -9,6 +9,7 @@ const navLinks = [
   { label: 'Flota', to: '/admin/transportes', icon: 'i-heroicons-truck' },
   { label: 'Choferes', to: '/admin/choferes', icon: 'i-heroicons-user-group' },
   { label: 'Recintos', to: '/admin/recintos', icon: 'i-heroicons-building-office-2' },
+  { label: 'Clientes', to: '/admin/clientes', icon: 'i-heroicons-users' },
   { label: 'Mensajes', to: '/admin/mensajes', icon: 'i-heroicons-chat-bubble-left-right' }
 ]
 
@@ -35,6 +36,7 @@ async function handleLogout() {
     useTransports().clearTransportsState()
     useVenues().clearVenuesState()
     useEvents().clearEventsState()
+    useCustomers().clearCustomersState()
     loggingOut.value = false
 
     if (remoteLogoutFailed) {
@@ -140,6 +142,7 @@ async function handleLogout() {
               icon="i-heroicons-arrow-right-on-rectangle"
               :loading="loggingOut"
               title="Cerrar Sesión"
+              aria-label="Cerrar Sesión"
               @click="handleLogout"
             />
             <!-- Botón de Menú Móvil -->
@@ -148,6 +151,7 @@ async function handleLogout() {
               variant="ghost"
               color="neutral"
               icon="i-heroicons-bars-3"
+              aria-label="Abrir menú de navegación"
               @click="mobileMenuOpen = !mobileMenuOpen"
             />
           </div>
