@@ -54,6 +54,7 @@ const navLinks = [
               to="/admin/login"
               class="text-xs text-zinc-400 hover:text-[#F5EEDC] p-2.5 rounded-xl hover:bg-[#1A1A22] border border-transparent hover:border-[#2A2A38] transition-colors"
               title="Acceso al Panel de Control"
+              aria-label="Acceso al Panel de Control de Operadores"
             >
               <UIcon name="i-heroicons-lock-closed" class="w-4 h-4" />
             </NuxtLink>
@@ -63,7 +64,8 @@ const navLinks = [
           <div class="flex sm:hidden items-center">
             <button
               type="button"
-              aria-label="Abrir menú"
+              :aria-label="mobileMenuOpen ? 'Cerrar menú principal' : 'Abrir menú principal'"
+              :aria-expanded="mobileMenuOpen"
               class="p-2 rounded-lg text-zinc-400 hover:text-[#F5EEDC] hover:bg-[#1A1A22]"
               @click="mobileMenuOpen = !mobileMenuOpen"
             >
@@ -143,6 +145,7 @@ const navLinks = [
             </h4>
             <ul class="space-y-2 text-xs text-zinc-400">
               <li><a href="#proximos-shows" class="hover:text-[#E53924] transition-colors">Próximos Viajes</a></li>
+              <li><NuxtLink to="/contacto" class="hover:text-[#E53924] transition-colors">Atención al Pasajero</NuxtLink></li>
               <li><a href="#experiencia" class="hover:text-[#E53924] transition-colors">La Experiencia Tripu</a></li>
               <li><a href="#faq" class="hover:text-[#E53924] transition-colors">Preguntas Frecuentes</a></li>
               <li><NuxtLink to="/admin/login" class="hover:text-[#E53924] transition-colors">Portal Operador</NuxtLink></li>
@@ -171,10 +174,15 @@ const navLinks = [
           </div>
         </div>
 
-        <!-- Barra Inferior de Copyright -->
+        <!-- Barra Inferior de Copyright y Enlaces Legales -->
         <div class="pt-8 border-t border-[#1A1A22] flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-zinc-400">
           <p>© {{ new Date().getFullYear() }} Tripu Producciones. Todos los derechos reservados.</p>
-          <p class="text-zinc-400">
+          <div class="flex items-center flex-wrap justify-center gap-3 text-zinc-400">
+            <NuxtLink to="/terminos-y-condiciones" class="hover:text-[#E53924] transition-colors">Términos y Condiciones</NuxtLink>
+            <span class="text-zinc-600">•</span>
+            <NuxtLink to="/politica-de-privacidad" class="hover:text-[#E53924] transition-colors">Política de Privacidad</NuxtLink>
+          </div>
+          <p class="text-zinc-500 italic">
             "El viaje es parte de la experiencia"
           </p>
         </div>

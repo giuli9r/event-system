@@ -7,6 +7,24 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 
 ---
 
+## [1.0.0] - 2026-10-07
+### Añadido
+* **US-12: Hardening de Seguridad (RLS) y Accesibilidad Universal WCAG 2.1 AA:**
+  * Reglas CSS universales para `:focus-visible` con anillo perimetral Rojo Tripu (`#E53924`, 2px con offset de 2px).
+  * Soporte integral para preferencias de movimiento reducido `@media (prefers-reduced-motion: reduce)` anulando rotaciones continuas (`.animate-devtools-spin`) y levitaciones (`.animate-suspension`).
+  * Enriquecimiento de accesibilidad y navegación por teclado en `EventCard.vue` (roles semánticos, `tabindex`, soporte de eventos Enter/Space y etiquetas `aria-label`).
+  * Accesibilidad semántica en formulario de contacto (`app/pages/contacto.vue`) y menús de navegación (`app/layouts/default.vue`).
+  * Auditoría integral de políticas Row Level Security (RLS) en PostgreSQL: actualización de la política de `public.events` para permitir consulta pública de estados `['published', 'sold_out']` preservando el aislamiento estricto de tablas sensibles (`customers`, `users`, `drivers`).
+* **US-13: SEO Técnico, Sitemap Dinámico, Páginas Legales y Error Handling:**
+  * Proveedor dinámico de sitemap en `server/api/__sitemap__/urls.ts` que indexa automáticamente todas las fichas de viaje `/viajes/[slug]` publicadas y agotadas con `lastmod`, `changefreq` y prioridad SEO.
+  * Configuración oficial de `@nuxtjs/sitemap` en `nuxt.config.ts`.
+  * Páginas legales responsive y accesibles en Dark Mode: `app/pages/terminos-y-condiciones.vue` y `app/pages/politica-de-privacidad.vue` (bajo marco de la Ley N° 25.326).
+  * Página de error personalizada `app/error.vue` con diseño Dark Mode adaptativo para errores 404 (viaje/ruta no encontrada) y 500 (falla interna), con botones de rescate y navegación.
+  * Inclusión de enlaces legales y acceso a atención al cliente en el pie de página (`app/layouts/default.vue`).
+  * Compilación y build de producción validado al 100% libre de errores (`npm run build`).
+
+---
+
 ## [0.11.0] - 2026-10-07
 ### Añadido
 * **US-11: Motor y Formulario de Contacto + Bandeja Administrativa:**

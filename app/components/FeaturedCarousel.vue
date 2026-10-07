@@ -474,4 +474,11 @@ onUnmounted(() => {
 .animate-suspension {
   animation: suspension 2.2s ease-in-out infinite;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-suspension,
+  .animate-devtools-spin {
+    animation: none !important;
+  }
+}
 </style>

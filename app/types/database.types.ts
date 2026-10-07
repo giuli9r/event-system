@@ -36,7 +36,7 @@ export type EventStatusEnum =
   | 'canceled'
   | 'rescheduled'
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       users: {
@@ -82,6 +82,7 @@ export interface Database {
           user_type?: UserTypeEnum
           level?: number
         }
+        Relationships: []
       }
       drivers: {
         Row: {
@@ -117,6 +118,7 @@ export interface Database {
           company?: string | null
           notes?: string | null
         }
+        Relationships: []
       }
       venues: {
         Row: {
@@ -152,6 +154,7 @@ export interface Database {
           tipo?: VenueTypeEnum
           image?: string | null
         }
+        Relationships: []
       }
       transports: {
         Row: {
@@ -193,6 +196,7 @@ export interface Database {
           license_plate?: string | null
           notes?: string | null
         }
+        Relationships: []
       }
       events: {
         Row: {
@@ -255,6 +259,7 @@ export interface Database {
           status?: EventStatusEnum
           is_featured?: boolean
         }
+        Relationships: []
       }
       package_tiers: {
         Row: {
@@ -293,6 +298,7 @@ export interface Database {
           payment_methods?: string
           is_available?: boolean
         }
+        Relationships: []
       }
       contact_messages: {
         Row: {
@@ -325,6 +331,7 @@ export interface Database {
           message?: string
           status?: string
         }
+        Relationships: []
       }
       customers: {
         Row: {
@@ -378,7 +385,22 @@ export interface Database {
           interests?: string | null
           is_active?: boolean
         }
+        Relationships: []
       }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      user_type_enum: UserTypeEnum
+      venue_type_enum: VenueTypeEnum
+      event_status_enum: EventStatusEnum
+    }
+    CompositeTypes: {
+      [_ in never]: never
     }
   }
 }

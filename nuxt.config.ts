@@ -71,6 +71,12 @@ export default defineNuxtConfig({
     url: process.env.NUXT_PUBLIC_SITE_URL || 'https://www.tripu.com.ar'
   },
 
+  sitemap: {
+    sources: [
+      '/api/__sitemap__/urls'
+    ]
+  },
+
   runtimeConfig: {
     resendApiKey: process.env.RESEND_API_KEY,
     contactReceiverEmail: process.env.CONTACT_RECEIVER_EMAIL || 'contacto@tripu.com.ar',

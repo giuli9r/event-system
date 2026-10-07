@@ -3,8 +3,8 @@
 > **Documento Oficial de Arquitectura Técnica**  
 > **Proyecto:** Tripu System  
 > **Cliente / Marca:** Tripu Producciones  
-> **Estado del Proyecto:** En Desarrollo Activo (Sprint 3 - Portal Web Público, Catálogo & Clientes)  
-> **Versión del Sistema:** v0.9.5 (266 Story Points completados de US-01 a US-09)  
+> **Estado del Proyecto:** Sprint 1 a 5 Finalizados (Lanzamiento v1.0.0)  
+> **Versión del Sistema:** v1.0.0 (292 Story Points completados de US-01 a US-13)  
 > **Fuente de Verdad:** Código fuente verificado en repositorio Git (`event-system`), configuración Nuxt 4, dependencias y script DDL de PostgreSQL (`DB/schema.sql`).
 
 ---

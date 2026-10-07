@@ -35,7 +35,13 @@ function handleSelect() {
     class="group relative rounded-2xl bg-[#14141B] border border-[#2A2A38] transition-all duration-300 flex flex-col overflow-hidden shadow-lg select-none"
     :class="isSoldOut
       ? 'opacity-85 cursor-not-allowed hover:border-[#E53924]/60 hover:shadow-2xl hover:shadow-[#E53924]/10'
-      : 'cursor-pointer hover:border-[#E53924]/60 hover:shadow-2xl hover:shadow-[#E53924]/10'" @click="handleSelect">
+      : 'cursor-pointer hover:border-[#E53924]/60 hover:shadow-2xl hover:shadow-[#E53924]/10'"
+    :tabindex="isSoldOut ? -1 : 0"
+    :role="isSoldOut ? 'article' : 'link'"
+    :aria-label="`${isSoldOut ? 'Viaje agotado: ' : 'Ver detalles de '} ${event.artist_headliner || event.title}`"
+    @click="handleSelect"
+    @keydown.enter.prevent="handleSelect"
+    @keydown.space.prevent="handleSelect">
     <!-- CONTENEDOR DEL FLYER / IMAGEN (Proporción vertical 4:5 estilo póster) -->
     <div class="relative w-full aspect-[4/5] overflow-hidden bg-[#1A1A22]">
       <!-- Imagen del recital -->
