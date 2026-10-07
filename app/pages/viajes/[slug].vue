@@ -70,10 +70,8 @@ function getWhatsAppUrl(tierName?: string) {
   <div class="min-h-screen bg-[#0F0F12] text-[#F5EEDC] pb-24 lg:pb-16 selection:bg-[#E53924] selection:text-white">
     <!-- Migas de pan / Volver a la cartelera -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-4">
-      <NuxtLink
-        to="/"
-        class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-400 hover:text-[#E53924] transition-colors"
-      >
+      <NuxtLink to="/#proximos-shows"
+        class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-400 hover:text-[#E53924] transition-colors">
         <UIcon name="i-heroicons-arrow-left" class="w-4 h-4" />
         <span>Volver a la cartelera</span>
       </NuxtLink>
@@ -83,12 +81,8 @@ function getWhatsAppUrl(tierName?: string) {
     <section class="relative w-full bg-[#14141B] border-y border-[#2A2A38] overflow-hidden">
       <!-- Fondo difuminado con la imagen del recital -->
       <div class="absolute inset-0 z-0">
-        <img
-          v-if="currentEvent.image_url"
-          :src="currentEvent.image_url"
-          :alt="currentEvent.artist_headliner"
-          class="w-full h-full object-cover object-center filter blur-2xl opacity-20 scale-110"
-        />
+        <img v-if="currentEvent.image_url" :src="currentEvent.image_url" :alt="currentEvent.artist_headliner"
+          class="w-full h-full object-cover object-center filter blur-2xl opacity-20 scale-110" />
         <div class="absolute inset-0 bg-gradient-to-t from-[#0F0F12] via-[#0F0F12]/80 to-transparent" />
       </div>
 
@@ -96,26 +90,25 @@ function getWhatsAppUrl(tierName?: string) {
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           <!-- Columna Izquierda: Flyer Oficial Estilo Póster -->
           <div class="lg:col-span-4 max-w-sm mx-auto lg:max-w-none w-full">
-            <div class="relative rounded-2xl overflow-hidden aspect-[4/5] bg-[#1A1A22] border border-[#2A2A38] shadow-2xl">
+            <div
+              class="relative rounded-2xl overflow-hidden aspect-[4/5] bg-[#1A1A22] border border-[#2A2A38] shadow-2xl">
               <img
                 :src="currentEvent.image_url || 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=800&q=80'"
-                :alt="currentEvent.artist_headliner"
-                class="w-full h-full object-cover object-center"
-              />
+                :alt="currentEvent.artist_headliner" class="w-full h-full object-cover object-center" />
 
               <!-- Overlay y Badge de Agotado -->
-              <div
-                v-if="isSoldOut"
-                class="absolute inset-0 z-20 flex items-center justify-center bg-black/60 backdrop-blur-[2px]"
-              >
-                <span class="px-6 py-2.5 rounded-xl bg-[#0F0F12]/95 border border-zinc-700 text-zinc-200 font-mono font-black text-sm uppercase tracking-[0.25em] shadow-2xl">
+              <div v-if="isSoldOut"
+                class="absolute inset-0 z-20 flex items-center justify-center bg-black/60 backdrop-blur-[2px]">
+                <span
+                  class="px-6 py-2.5 rounded-xl bg-[#0F0F12]/95 border border-zinc-700 text-zinc-200 font-mono font-black text-sm uppercase tracking-[0.25em] shadow-2xl">
                   AGOTADO
                 </span>
               </div>
 
               <!-- Badge Destacado -->
               <div v-else-if="currentEvent.is_featured" class="absolute top-3 right-3 z-10">
-                <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-[#E53924] text-white shadow-lg shadow-[#E53924]/40">
+                <span
+                  class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-[#E53924] text-white shadow-lg shadow-[#E53924]/40">
                   <UIcon name="i-heroicons-star" class="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
                   <span>Destacado</span>
                 </span>
@@ -126,16 +119,19 @@ function getWhatsAppUrl(tierName?: string) {
           <!-- Columna Derecha: Título, Metadatos y CTA Principal -->
           <div class="lg:col-span-8 space-y-6">
             <div class="space-y-3">
-              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1A1A22] border border-[#2A2A38] text-xs font-bold uppercase tracking-wider text-[#FF6B55]">
+              <div
+                class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1A1A22] border border-[#2A2A38] text-xs font-bold uppercase tracking-wider text-[#FF6B55]">
                 <span class="w-1.5 h-1.5 rounded-full" :class="isSoldOut ? 'bg-zinc-500' : 'bg-[#E53924]'" />
                 <span>{{ isSoldOut ? 'Salida Completa' : 'Salida Confirmada' }}</span>
               </div>
 
-              <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black uppercase text-[#F5EEDC] tracking-tight leading-none">
+              <h1
+                class="text-3xl sm:text-5xl lg:text-6xl font-black uppercase text-[#F5EEDC] tracking-tight leading-none">
                 {{ currentEvent.artist_headliner }}
               </h1>
 
-              <p v-if="currentEvent.title && currentEvent.title !== currentEvent.artist_headliner" class="text-lg sm:text-xl font-bold text-zinc-400">
+              <p v-if="currentEvent.title && currentEvent.title !== currentEvent.artist_headliner"
+                class="text-lg sm:text-xl font-bold text-zinc-400">
                 {{ currentEvent.title }}
               </p>
             </div>
@@ -144,7 +140,8 @@ function getWhatsAppUrl(tierName?: string) {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4 border-y border-[#2A2A38]/70">
               <!-- Fecha -->
               <div class="flex items-start gap-3">
-                <div class="w-10 h-10 rounded-xl bg-[#1A1A22] border border-[#2A2A38] flex items-center justify-center text-[#E53924] shrink-0">
+                <div
+                  class="w-10 h-10 rounded-xl bg-[#1A1A22] border border-[#2A2A38] flex items-center justify-center text-[#E53924] shrink-0">
                   <UIcon name="i-heroicons-calendar-days" class="w-5 h-5" />
                 </div>
                 <div>
@@ -157,25 +154,29 @@ function getWhatsAppUrl(tierName?: string) {
 
               <!-- Recinto / Ciudad -->
               <div class="flex items-start gap-3">
-                <div class="w-10 h-10 rounded-xl bg-[#1A1A22] border border-[#2A2A38] flex items-center justify-center text-[#E53924] shrink-0">
+                <div
+                  class="w-10 h-10 rounded-xl bg-[#1A1A22] border border-[#2A2A38] flex items-center justify-center text-[#E53924] shrink-0">
                   <UIcon name="i-heroicons-map-pin" class="w-5 h-5" />
                 </div>
                 <div>
                   <span class="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block">Lugar / Sede</span>
                   <p class="text-sm sm:text-base font-black text-[#F5EEDC]">
                     {{ currentEvent.venue?.name || 'Recinto a confirmar' }}
-                    <span v-if="currentEvent.venue?.city" class="text-zinc-400 font-medium">({{ currentEvent.venue.city }})</span>
+                    <span v-if="currentEvent.venue?.city" class="text-zinc-400 font-medium">({{ currentEvent.venue.city
+                      }})</span>
                   </p>
                 </div>
               </div>
 
               <!-- Punto de Salida -->
               <div class="flex items-start gap-3">
-                <div class="w-10 h-10 rounded-xl bg-[#1A1A22] border border-[#2A2A38] flex items-center justify-center text-[#E53924] shrink-0">
+                <div
+                  class="w-10 h-10 rounded-xl bg-[#1A1A22] border border-[#2A2A38] flex items-center justify-center text-[#E53924] shrink-0">
                   <UIcon name="i-heroicons-truck" class="w-5 h-5" />
                 </div>
                 <div>
-                  <span class="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block">Punto de Salida</span>
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block">Punto de
+                    Salida</span>
                   <p class="text-sm sm:text-base font-bold text-[#F5EEDC]">
                     {{ currentEvent.departure_location }}
                   </p>
@@ -184,11 +185,13 @@ function getWhatsAppUrl(tierName?: string) {
 
               <!-- Horario de Partida -->
               <div class="flex items-start gap-3">
-                <div class="w-10 h-10 rounded-xl bg-[#1A1A22] border border-[#2A2A38] flex items-center justify-center text-[#E53924] shrink-0">
+                <div
+                  class="w-10 h-10 rounded-xl bg-[#1A1A22] border border-[#2A2A38] flex items-center justify-center text-[#E53924] shrink-0">
                   <UIcon name="i-heroicons-clock" class="w-5 h-5" />
                 </div>
                 <div>
-                  <span class="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block">Horario de Salida</span>
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block">Horario de
+                    Salida</span>
                   <p class="text-sm sm:text-base font-bold text-[#F5EEDC]">
                     {{ formatEventTime(currentEvent.departure_time) }}
                   </p>
@@ -202,7 +205,8 @@ function getWhatsAppUrl(tierName?: string) {
                 <span class="text-xs font-bold uppercase tracking-wider text-zinc-400 block">Tarifa por persona</span>
                 <div v-if="minPrice" class="flex items-baseline gap-2">
                   <span class="text-xs text-zinc-400 font-medium">desde</span>
-                  <span class="text-3xl font-black text-[#F5EEDC]" :class="isSoldOut ? 'line-through text-zinc-500' : ''">
+                  <span class="text-3xl font-black text-[#F5EEDC]"
+                    :class="isSoldOut ? 'line-through text-zinc-500' : ''">
                     {{ formatCurrency(minPrice) }}
                   </span>
                 </div>
@@ -212,20 +216,13 @@ function getWhatsAppUrl(tierName?: string) {
               </div>
 
               <div class="hidden lg:block">
-                <a
-                  v-if="!isSoldOut"
-                  :href="getWhatsAppUrl()"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-xs font-black uppercase tracking-wider bg-[#25D366] hover:bg-[#20ba5a] text-[#0F0F12] shadow-xl shadow-[#25D366]/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                >
+                <a v-if="!isSoldOut" :href="getWhatsAppUrl()" target="_blank" rel="noopener noreferrer"
+                  class="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-xs font-black uppercase tracking-wider bg-[#25D366] hover:bg-[#20ba5a] text-[#0F0F12] shadow-xl shadow-[#25D366]/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
                   <UIcon name="i-heroicons-chat-bubble-oval-left-ellipsis" class="w-5 h-5 stroke-[2.5]" />
                   <span>Consultar y Reservar por WhatsApp</span>
                 </a>
-                <div
-                  v-else
-                  class="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-xs font-black uppercase tracking-wider bg-[#1A1A22] text-zinc-500 border border-[#2A2A38] cursor-not-allowed"
-                >
+                <div v-else
+                  class="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-xs font-black uppercase tracking-wider bg-[#1A1A22] text-zinc-500 border border-[#2A2A38] cursor-not-allowed">
                   <span>Cupos Agotados</span>
                 </div>
               </div>
@@ -250,7 +247,8 @@ function getWhatsAppUrl(tierName?: string) {
               ¿Qué incluye esta salida?
             </h2>
 
-            <p v-if="currentEvent.includes_summary" class="text-sm sm:text-base text-zinc-300 leading-relaxed whitespace-pre-line">
+            <p v-if="currentEvent.includes_summary"
+              class="text-sm sm:text-base text-zinc-300 leading-relaxed whitespace-pre-line">
               {{ currentEvent.includes_summary }}
             </p>
             <div v-else class="space-y-2 text-sm text-zinc-300">
@@ -270,7 +268,8 @@ function getWhatsAppUrl(tierName?: string) {
           </section>
 
           <!-- Itinerario Completo -->
-          <section v-if="currentEvent.full_itinerary" class="p-6 sm:p-8 rounded-2xl bg-[#14141B] border border-[#2A2A38] space-y-4">
+          <section v-if="currentEvent.full_itinerary"
+            class="p-6 sm:p-8 rounded-2xl bg-[#14141B] border border-[#2A2A38] space-y-4">
             <div class="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#FF6B55]">
               <UIcon name="i-heroicons-clock" class="w-4 h-4 text-[#E53924]" />
               <span>Cronograma</span>
@@ -278,7 +277,8 @@ function getWhatsAppUrl(tierName?: string) {
             <h2 class="text-2xl font-black uppercase text-[#F5EEDC] tracking-tight">
               Itinerario Previsto
             </h2>
-            <div class="text-sm sm:text-base text-zinc-300 leading-relaxed whitespace-pre-line p-4 rounded-xl bg-[#0F0F12] border border-[#2A2A38]">
+            <div
+              class="text-sm sm:text-base text-zinc-300 leading-relaxed whitespace-pre-line p-4 rounded-xl bg-[#0F0F12] border border-[#2A2A38]">
               {{ currentEvent.full_itinerary }}
             </div>
           </section>
@@ -306,17 +306,15 @@ function getWhatsAppUrl(tierName?: string) {
             </h2>
 
             <div v-if="currentEvent.package_tiers && currentEvent.package_tiers.length > 0" class="space-y-3">
-              <div
-                v-for="tier in currentEvent.package_tiers"
-                :key="tier.id"
+              <div v-for="tier in currentEvent.package_tiers" :key="tier.id"
                 class="p-4 rounded-xl bg-[#1A1A22] border transition-all duration-200"
-                :class="tier.is_available && !isSoldOut ? 'border-[#2A2A38] hover:border-[#E53924]/60' : 'border-[#2A2A38]/50 opacity-60'"
-              >
+                :class="tier.is_available && !isSoldOut ? 'border-[#2A2A38] hover:border-[#E53924]/60' : 'border-[#2A2A38]/50 opacity-60'">
                 <div class="flex items-start justify-between gap-2 mb-2">
                   <h3 class="font-bold text-sm text-[#F5EEDC] leading-snug">
                     {{ tier.name }}
                   </h3>
-                  <span v-if="tier.early_bird && tier.is_available" class="shrink-0 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-amber-400/10 text-amber-400 border border-amber-400/30">
+                  <span v-if="tier.early_bird && tier.is_available"
+                    class="shrink-0 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-amber-400/10 text-amber-400 border border-amber-400/30">
                     Preventa
                   </span>
                 </div>
@@ -330,13 +328,9 @@ function getWhatsAppUrl(tierName?: string) {
                   </span>
                 </div>
 
-                <a
-                  v-if="tier.is_available && !isSoldOut"
-                  :href="getWhatsAppUrl(tier.name)"
-                  target="_blank"
+                <a v-if="tier.is_available && !isSoldOut" :href="getWhatsAppUrl(tier.name)" target="_blank"
                   rel="noopener noreferrer"
-                  class="mt-3 w-full py-2 rounded-lg text-xs font-black uppercase tracking-wider bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-[#0F0F12] border border-[#25D366]/30 flex items-center justify-center gap-1.5 transition-colors"
-                >
+                  class="mt-3 w-full py-2 rounded-lg text-xs font-black uppercase tracking-wider bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-[#0F0F12] border border-[#25D366]/30 flex items-center justify-center gap-1.5 transition-colors">
                   <span>Reservar este paquete</span>
                   <UIcon name="i-heroicons-arrow-right" class="w-3.5 h-3.5" />
                 </a>
@@ -364,10 +358,12 @@ function getWhatsAppUrl(tierName?: string) {
     </main>
 
     <!-- BARRA FLOTANTE STICKY PARA DISPOSITIVOS MÓVILES (Conversión Directa) -->
-    <div class="lg:hidden fixed bottom-0 inset-x-0 z-40 p-4 bg-[#14141B]/95 backdrop-blur-md border-t border-[#2A2A38] shadow-2xl flex items-center justify-between gap-4">
+    <div
+      class="lg:hidden fixed bottom-0 inset-x-0 z-40 p-4 bg-[#14141B]/95 backdrop-blur-md border-t border-[#2A2A38] shadow-2xl flex items-center justify-between gap-4">
       <div>
         <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">Tarifa desde</span>
-        <span v-if="minPrice" class="text-xl font-black text-[#F5EEDC]" :class="isSoldOut ? 'line-through text-zinc-500' : ''">
+        <span v-if="minPrice" class="text-xl font-black text-[#F5EEDC]"
+          :class="isSoldOut ? 'line-through text-zinc-500' : ''">
           {{ formatCurrency(minPrice) }}
         </span>
         <span v-else class="text-xs font-bold text-zinc-400">
@@ -375,20 +371,13 @@ function getWhatsAppUrl(tierName?: string) {
         </span>
       </div>
 
-      <a
-        v-if="!isSoldOut"
-        :href="getWhatsAppUrl()"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="flex-1 py-3.5 px-4 rounded-xl text-xs font-black uppercase tracking-wider bg-[#25D366] text-[#0F0F12] text-center flex items-center justify-center gap-2 shadow-lg shadow-[#25D366]/20 active:scale-95 transition-transform"
-      >
+      <a v-if="!isSoldOut" :href="getWhatsAppUrl()" target="_blank" rel="noopener noreferrer"
+        class="flex-1 py-3.5 px-4 rounded-xl text-xs font-black uppercase tracking-wider bg-[#25D366] text-[#0F0F12] text-center flex items-center justify-center gap-2 shadow-lg shadow-[#25D366]/20 active:scale-95 transition-transform">
         <UIcon name="i-heroicons-chat-bubble-oval-left-ellipsis" class="w-4 h-4 stroke-[2.5]" />
         <span>Consultar por WhatsApp</span>
       </a>
-      <div
-        v-else
-        class="flex-1 py-3.5 px-4 rounded-xl text-xs font-black uppercase tracking-wider bg-[#1A1A22] text-zinc-500 border border-[#2A2A38] text-center"
-      >
+      <div v-else
+        class="flex-1 py-3.5 px-4 rounded-xl text-xs font-black uppercase tracking-wider bg-[#1A1A22] text-zinc-500 border border-[#2A2A38] text-center">
         Agotado
       </div>
     </div>

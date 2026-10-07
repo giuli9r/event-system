@@ -333,11 +333,11 @@ onUnmounted(() => {
               </div>
 
               <!-- Botón Primario: Ver Viaje / Reservar -->
-              <a v-if="event.slug" :href="`/viajes/${event.slug}`" target="_blank" rel="noopener noreferrer"
+              <NuxtLink v-if="event.slug" :to="`/viajes/${event.slug}`"
                 class="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-black uppercase tracking-wider text-sm bg-[#E53924] hover:bg-[#d0301d] text-white shadow-lg shadow-[#E53924]/30 active:scale-95 transition-all duration-200">
                 <span>Ver Viaje y Reservar</span>
                 <UIcon name="i-heroicons-arrow-right" class="w-4 h-4 stroke-[2.5]" />
-              </a>
+              </NuxtLink>
               <button v-else type="button"
                 class="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-black uppercase tracking-wider text-sm bg-[#E53924] hover:bg-[#d0301d] text-white shadow-lg shadow-[#E53924]/30 active:scale-95 transition-all duration-200"
                 @click="emit('select', event)">

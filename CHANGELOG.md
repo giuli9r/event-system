@@ -7,6 +7,22 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.11.0] - 2026-10-07
+### Añadido
+* **US-11: Motor y Formulario de Contacto + Bandeja Administrativa:**
+  * Esquema Zod en `shared/schemas/contact.ts` con sanitización estricta de cadenas (limpieza de HTML y caracteres de control) y honeypot antispam.
+  * Endpoint Nitro seguro en `server/api/contact.post.ts` con persistencia en `contact_messages` de PostgreSQL y despacho resiliente de correos vía Resend (`RESEND_API_KEY`).
+  * Página pública accesible `app/pages/contacto.vue` con estética Dark Mode, estados de envío/confirmación y alternativa directa hacia WhatsApp (`#25D366`).
+  * Composable `useContactMessages.ts` con caché reactiva (TTL 2 minutos) y métodos de actualización de estados.
+  * Módulo administrativo completo en `app/pages/admin/mensajes/index.vue` con buscador en tiempo real, filtros por estado (*nuevo*, *leído*, *respondido*, *archivado*), visor modal de consulta y respuesta ágil vía WhatsApp/Email.
+  * Actualización de la barra de navegación pública (`app/layouts/default.vue`) con enlace directo a `/contacto`.
+
+### Modificado
+* **Navegación de Ficha de Viaje en la Misma Pestaña:**
+  * Modificación de `EventCard.vue` (`navigateTo`) y `FeaturedCarousel.vue` (`NuxtLink`) para abrir `/viajes/[slug]` en la misma pestaña del navegador en lugar de forzar nueva ventana (`target="_blank"`), mejorando la fluidez SPA de navegación.
+
+---
+
 ## [0.10.0] - 2026-10-07
 ### Añadido
 * **US-09 & US-10: Ficha Detallada de Viaje y Conversión Contextual (`/viajes/[slug]`):**

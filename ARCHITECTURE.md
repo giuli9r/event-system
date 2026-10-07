@@ -240,7 +240,7 @@ La plataforma pública cuenta con dos vistas principales utilizando el layout p�
 2. **Cartelera General de Recitales (`EventCard.vue`):**
    * Grilla responsiva de 4 columnas en desktop (`xl:grid-cols-4`).
    * Tarjetas estilo póster vertical (4:5) con tira inferior `"ENTRADAS DISPONIBLES"` y cartel central `"AGOTADO"` para salidas completas.
-   * **Navegación en nueva pestaña (`target="_blank"`):** Al hacer clic en un viaje disponible, abre la ficha detallada en una nueva pestaña conservando intacta la búsqueda y el scroll del catálogo principal.
+   * **Navegación directa:** Al hacer clic en un viaje disponible, navega a la ficha detallada (`/viajes/[slug]`) en la misma pestaña mediante `navigateTo()`, asegurando una transición SPA fluida y limpia.
    * **Inhabilitación defensiva de eventos agotados:** Bloqueo de clics y botón CTA deshabilitado (`cursor-not-allowed`, `:disabled="isSoldOut"`).
 3. **Barra de Búsqueda y Filtros Reactivos (`EventFilters.vue`):**
    * Búsqueda por texto en tiempo real, selector desplegable de ciudades y filtro por mes.
@@ -268,7 +268,8 @@ El panel administrativo (`/admin/*`) cuenta con los siguientes módulos operativ
 * **`/admin/transportes` (✅ Implementado):** Maestro de flota con CRUD completo, presets de capacidad (19 a 60 pax) y asignación de chofer.
 * **`/admin/choferes` (✅ Implementado):** Directorio de choferes con números de guardia, licencias CNRT y enlaces directos a WhatsApp.
 * **`/admin/recintos` (✅ Implementado):** Maestro de estadios y recintos con aforo oficial, geolocalización directa con Google Maps y validación Zod.
-* **`/admin/mensajes` (✅ Implementado):** Bandeja de consultas recibidas desde la web.
+* **`/admin/mensajes` (✅ Implementado - US-11):** Bandeja operativa de consultas recibidas desde la web pública con filtros por estado (*nuevo*, *leído*, *respondido*, *archivado*), buscador en tiempo real, visor modal de mensaje completo y respuestas ágiles por correo o WhatsApp.
+* **`/contacto` (✅ Implementado - US-11):** Página pública con formulario Dark Mode accesible, validación Zod (`shared/schemas/contact.ts`), honeypot antispam y endpoint de servidor Nitro (`server/api/contact.post.ts`) con despacho resiliente vía Resend.
 
 ---
 

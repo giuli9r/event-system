@@ -2,10 +2,10 @@
 const mobileMenuOpen = ref(false)
 
 const navLinks = [
-  { label: 'Próximos Shows', to: '#proximos-shows', icon: 'i-heroicons-musical-note' },
-  { label: 'La Experiencia', to: '#experiencia', icon: 'i-heroicons-sparkles' },
-  { label: 'Preguntas Frecuentes', to: '#faq', icon: 'i-heroicons-question-mark-circle' },
-  { label: 'Contacto', to: '#contacto', icon: 'i-heroicons-chat-bubble-bottom-center-text' }
+  { label: 'Próximos Shows', to: '/#proximos-shows', icon: 'i-heroicons-musical-note' },
+  { label: 'La Experiencia', to: '/#experiencia', icon: 'i-heroicons-sparkles' },
+  { label: 'Preguntas Frecuentes', to: '/#faq', icon: 'i-heroicons-question-mark-circle' },
+  { label: 'Contacto', to: '/contacto', icon: 'i-heroicons-chat-bubble-bottom-center-text' }
 ]
 </script>
 

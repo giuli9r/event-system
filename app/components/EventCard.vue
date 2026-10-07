@@ -23,7 +23,7 @@ function handleSelect() {
   // Evitar acción si el viaje está agotado
   if (isSoldOut.value) return
   if (props.event.slug) {
-    window.open(`/viajes/${props.event.slug}`, '_blank', 'noopener,noreferrer')
+    navigateTo(`/viajes/${props.event.slug}`)
   } else {
     emit('select', props.event)
   }
