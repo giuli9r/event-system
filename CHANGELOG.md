@@ -39,6 +39,13 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
     * Tests con `node:test` y `node:assert/strict` cubriendo el 100% de las fórmulas, reglas de negocio contables y simulaciones reactivas.
     * Script `"test": "node --test tests/*.test.mjs"` en `package.json`.
     * Ejecución verificada con 9/9 tests aprobados exitosamente.
+* **Frontend Público - Redireccionamiento a Instagram Oficial y Marquees Dinámicas:**
+  * Integración oficial del módulo `nuxt-marquee` en `nuxt.config.ts` para animaciones CSS aceleradas por GPU, fluidas y respetuosas de `prefers-reduced-motion`.
+  * Redireccionamiento interactivo directo a la cuenta oficial de Instagram (`https://www.instagram.com/tripuproducciones/`):
+    * Botón de Instagram destacado con icono y gradiente de marca en la barra de navegación pública (`app/layouts/default.vue`), ubicado junto al botón de WhatsApp.
+    * Botón en menú móvil (`drawer`) y enlaces directos interactivos en la columna de contacto del footer.
+  * **Marquee Superior de Identidad (`NuxtMarquee`):** Barra continua sobre el header que exhibe en loop interactivo con pausa al hover: WhatsApp oficial, Instagram de la productora y la frase lema: `"El Viaje como parte de la Experiencia"`.
+  * **Marquee Horizontal de Destinos (`NuxtMarquee`):** Cinta dinámica ubicada inmediatamente encima de la sección `id="experiencia"` en la home (`app/pages/index.vue`), destacando las ciudades de origen, ascenso y destino de la producción: *San Francisco*, *Córdoba*, *Rosario*, *Buenos Aires*, *Villa María* y *Morteros*.
 
 ---
 
