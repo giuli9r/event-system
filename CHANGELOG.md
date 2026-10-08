@@ -39,6 +39,19 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
     * Tests con `node:test` y `node:assert/strict` cubriendo el 100% de las fórmulas, reglas de negocio contables y simulaciones reactivas.
     * Script `"test": "node --test tests/*.test.mjs"` en `package.json`.
     * Ejecución verificada con 9/9 tests aprobados exitosamente.
+* **Frontend Público - Redireccionamiento a Instagram Oficial y Marquees Dinámicas:**
+  * Integración oficial del módulo `nuxt-marquee` en `nuxt.config.ts` para animaciones CSS aceleradas por GPU, fluidas y respetuosas de `prefers-reduced-motion`.
+  * Redireccionamiento interactivo directo a la cuenta oficial de Instagram (`https://www.instagram.com/tripuproducciones/`):
+    * Botón de Instagram destacado con icono y gradiente de marca en la barra de navegación pública (`app/layouts/default.vue`), ubicado junto al botón de WhatsApp.
+    * Botón en menú móvil (`drawer`) y enlaces directos interactivos en la columna de contacto del footer.
+  * **Marquee Superior de Identidad (`NuxtMarquee`):** Barra continua sobre el header que exhibe en loop interactivo con pausa al hover: WhatsApp oficial, Instagram de la productora y la frase lema: `"El Viaje como parte de la Experiencia"`.
+  * **Marquee Horizontal de Destinos (`NuxtMarquee`):** Cinta dinámica ubicada inmediatamente encima de la sección `id="experiencia"` en la home (`app/pages/index.vue`), destacando las ciudades de origen, ascenso y destino de la producción: *San Francisco*, *Córdoba*, *Rosario*, *Buenos Aires*, *Villa María* y *Morteros*.
+* **Frontend Público - Evidencia de Viajes y Carrusel de Fotos de Experiencia (`ExperienceCarousel.vue`):**
+  * Procesamiento y optimización de 19 fotografías reales de viajes a formato de alta eficiencia WebP (`public/experiencias/experiencia-01.webp` a `19.webp`) con compresión al 82% y reducción del 59.2% de peso (ahorro de transferencia de ~5.4 MB a ~3.6 MB).
+  * Carga asíncrona no bloqueante con atributos `loading="lazy"` y `decoding="async"` para proteger el LCP y no competir con los recursos críticos del documento.
+  * Implementación de carrusel minimalista con bucle infinito (`infinite loop`), dos flechas de navegación circular flotantes, autoplay suave con pausa en hover y soporte gestual táctil (`touch swipe`) para móviles.
+  * Modal Lightbox integrado para ampliación y navegación de postales en alta resolución a pantalla completa con navegación por teclado (flechas y Escape).
+  * Inserción en la sección `id="experiencia"` de la home ([`app/pages/index.vue`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/pages/index.vue)), ubicada estratégicamente arriba de la Grilla de Beneficios.
 
 ---
 

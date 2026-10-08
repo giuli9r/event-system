@@ -6,7 +6,8 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/ui',
     '@nuxtjs/supabase',
-    '@nuxtjs/sitemap'
+    '@nuxtjs/sitemap',
+    'nuxt-marquee'
   ],
 
   features: {
