@@ -7,6 +7,17 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 
 ---
 
+## [1.1.0] - 2026-10-08
+### Añadido
+* **Panel de Operaciones (`/admin/index.vue`) - Paneo de Próximos 10 Viajes:**
+  * Incorporación de la tabla operativa con el primer paneo de los próximos 10 viajes agendados cronológicamente por fecha de salida.
+  * Columnas implementadas: Evento/Artista (con miniatura y destacado), Fecha de salida (día, hora y fecha de recital), Recinto y ciudad destino, Estado (`Publicado` | `Sold Out` con badge visual y selector rápido) y Botón de edición directa (`/admin/viajes/[id]/editar`) junto a enlace de previsualización pública.
+  * Consumo integrado con composable `useEvents()` bajo arquitectura de caché reactiva en memoria ADR-05 (TTL 5 min) y botón de sincronización general forzada.
+  * Filtro ágil en encabezado para alternar entre *Todos*, *Publicados* y *Sold Out*.
+  * Estructura semántica HTML accesible (`<table>`) dentro de `<UCard>` conforme a ADR-06 y soporte para estados de carga, error y vacío.
+
+---
+
 ## [1.0.0] - 2026-10-07
 ### Añadido
 * **US-12: Hardening de Seguridad (RLS) y Accesibilidad Universal WCAG 2.1 AA:**
