@@ -36,6 +36,21 @@ export type EventStatusEnum =
   | 'canceled'
   | 'rescheduled'
 
+export type PaymentMethodEnum =
+  | 'transferencia'
+  | 'efectivo'
+  | 'tarjeta_credito'
+  | 'tarjeta_debito'
+  | 'mercado_pago'
+  | 'mixto'
+
+export type PaymentStatusEnum =
+  | 'paid'
+  | 'partial'
+  | 'pending'
+  | 'refunded'
+  | 'canceled'
+
 export type Database = {
   public: {
     Tables: {
@@ -387,6 +402,78 @@ export type Database = {
         }
         Relationships: []
       }
+      sales: {
+        Row: {
+          id: string
+          created_at: string
+          updated_at: string
+          sale_date: string
+          event_id: string
+          customer_id: string
+          package_tier_id: string | null
+          created_by: string | null
+          quantity: number
+          unit_price: number
+          total_amount: number
+          amount_paid: number
+          balance_due: number
+          installments: number
+          currency: string
+          payment_method: PaymentMethodEnum
+          payment_status: PaymentStatusEnum
+          seat_number: string | null
+          boarding_location: string | null
+          receipt_number: string | null
+          notes: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          sale_date?: string
+          event_id: string
+          customer_id: string
+          package_tier_id?: string | null
+          created_by?: string | null
+          quantity?: number
+          unit_price: number
+          total_amount: number
+          amount_paid?: number
+          balance_due?: number
+          installments?: number
+          currency?: string
+          payment_method?: PaymentMethodEnum
+          payment_status?: PaymentStatusEnum
+          seat_number?: string | null
+          boarding_location?: string | null
+          receipt_number?: string | null
+          notes?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          sale_date?: string
+          event_id?: string
+          customer_id?: string
+          package_tier_id?: string | null
+          created_by?: string | null
+          quantity?: number
+          unit_price?: number
+          total_amount?: number
+          amount_paid?: number
+          balance_due?: number
+          installments?: number
+          currency?: string
+          payment_method?: PaymentMethodEnum
+          payment_status?: PaymentStatusEnum
+          seat_number?: string | null
+          boarding_location?: string | null
+          receipt_number?: string | null
+          notes?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -398,6 +485,8 @@ export type Database = {
       user_type_enum: UserTypeEnum
       venue_type_enum: VenueTypeEnum
       event_status_enum: EventStatusEnum
+      payment_method_enum: PaymentMethodEnum
+      payment_status_enum: PaymentStatusEnum
     }
     CompositeTypes: {
       [_ in never]: never
@@ -408,3 +497,7 @@ export type Database = {
 export type CustomerRow = Database['public']['Tables']['customers']['Row']
 export type CustomerInsert = Database['public']['Tables']['customers']['Insert']
 export type CustomerUpdate = Database['public']['Tables']['customers']['Update']
+
+export type SaleRow = Database['public']['Tables']['sales']['Row']
+export type SaleInsert = Database['public']['Tables']['sales']['Insert']
+export type SaleUpdate = Database['public']['Tables']['sales']['Update']
