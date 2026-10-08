@@ -7,6 +7,41 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 
 ---
 
+## [1.1.0] - 2026-10-08
+### Añadido
+* **Panel de Operaciones (`/admin/index.vue`) - Paneo de Próximos 10 Viajes:**
+  * Incorporación de la tabla operativa con el primer paneo de los próximos 10 viajes agendados cronológicamente por fecha de salida.
+  * Columnas implementadas: Evento/Artista (con miniatura y destacado), Fecha de salida (día, hora y fecha de recital), Recinto y ciudad destino, Estado (`Publicado` | `Sold Out` con badge visual y selector rápido) y Botón de edición directa (`/admin/viajes/[id]/editar`) junto a enlace de previsualización pública.
+  * Consumo integrado con composable `useEvents()` bajo arquitectura de caché reactiva en memoria ADR-05 (TTL 5 min) y botón de sincronización general forzada.
+  * Filtro ágil en encabezado para alternar entre *Todos*, *Publicados* y *Sold Out*.
+* **Módulo Contable - Definición de la Entidad Ventas (`public.sales`):**
+  * Formalización en DDL de PostgreSQL (`DB/schema.sql`) de la tabla `sales` con clave primaria UUID, relaciones a `events` (`ON DELETE RESTRICT`), `customers` (`ON DELETE RESTRICT`), `package_tiers` (`ON DELETE SET NULL`) y `users` (`created_by`).
+  * Congelamiento histórico de importes: almacenamiento de `unit_price`, `quantity`, `total_amount`, `amount_paid` y cálculo de saldo pendiente `balance_due`.
+  * Regla de negocio para cuotas y señas ("Cobro en caliente"): campo `installments` para pagos fraccionados (2, 3 o 4 cuotas), soporte para señas y seguimiento de saldos pendientes para cobro en el colectivo al momento del embarque.
+  * Asignación alfanumérica de butacas (`seat_number`), punto de subida pactado (`boarding_location`), número de comprobante (`receipt_number`) y notas internas para acompañantes (`notes`).
+  * Enums PostgreSQL tipados `payment_method_enum` (`transferencia`, `efectivo`, `tarjeta_credito`, `tarjeta_debito`, `mercado_pago`, `mixto`) y `payment_status_enum` (`paid`, `partial`, `pending`, `refunded`, `canceled`).
+  * Índices de base de datos optimizados para consultas por evento, cliente, fecha, estado de pago y saldo pendiente (`idx_sales_balance_due`).
+  * Seguridad estricta con Row Level Security (RLS) al 100%: política exclusiva para operadores autenticados, denegando todo acceso anónimo.
+  * Generación y sincronización de tipos TypeScript en `types/database.types.ts` y `app/types/database.types.ts` con interfaz compuesta `SaleWithRelations`.
+  * Esquema de validación y sanitización tipado en `shared/schemas/sales.ts` con Zod.
+  * Composable `useSales.ts` bajo estándar ADR-05 con caché en memoria (`tripu-sales-data`, TTL 5m), métricas contables computadas (`totalRevenue`, `totalCollected`, `totalPendingBalance`, `totalTicketsSold`), método especializado `recordPayment` para asentar cuotas en caliente y purga en `handleLogout()`.
+  * Incorporación del enlace de navegación `/admin/ventas` en la barra superior del layout administrativo ([`admin.vue`](file:///C:/Users/USUARIO/Desktop/myself/PROJECTS/tripusystem/GIT_REPO/event-system/app/layouts/admin.vue)).
+  * **Calculadora Contable Reactiva y Validaciones en Tiempo Real (`shared/utils/salesCalculator.ts`):**
+    * Motor de cálculo reactivo puro para el modal de Asentar Venta:
+      * $\text{Cantidad de Pasajes} \times \text{Precio Unitario} = \text{Total Pactado}$.
+      * $\text{Total Pactado} - \text{Abonado Hoy} = \text{Saldo Pendiente}$.
+    * Reactividad instantánea en cada pulsación de teclado (`@input`, watchers reactivos y sincronización de estado).
+    * Regla de Cantidad: si es 0, null, vacía o undefined, el Total Pactado es $0 y se aplica borde rojo con mensaje de error visible.
+    * Regla de Cortesía/Regalo: Total Pactado permite $0 si el precio unitario es $0.
+    * Regla de Pago: Abonado Hoy no puede ser negativo y no puede superar el Total Pactado (alerta y borde rojo).
+    * Regla de Saldo: Saldo Pendiente no puede ser negativo ($\ge 0$).
+  * **Suite de Pruebas Unitarias Automatizadas (`tests/salesCalculator.test.mjs`):**
+    * Tests con `node:test` y `node:assert/strict` cubriendo el 100% de las fórmulas, reglas de negocio contables y simulaciones reactivas.
+    * Script `"test": "node --test tests/*.test.mjs"` en `package.json`.
+    * Ejecución verificada con 9/9 tests aprobados exitosamente.
+
+---
+
 ## [1.0.0] - 2026-10-07
 ### Añadido
 * **US-12: Hardening de Seguridad (RLS) y Accesibilidad Universal WCAG 2.1 AA:**

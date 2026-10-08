@@ -17,7 +17,7 @@ La arquitectura técnica se sustenta en un modelo híbrido **Jamstack / Backend-
 * **Frontend Web Reactivo con Server-Side Rendering (SSR):** Desarrollado sobre **Nuxt 4** y **Vue 3**, garantizando renderizado veloz, hidratación eficiente y posicionamiento orgánico en motores de búsqueda (SEO).
 * **Plataforma Pública de Exploración:** Diseñada con estética Dark Mode moderna y accesible (WCAG AA), permitiendo a los usuarios navegar el carrusel de destacados (`FeaturedCarousel.vue`), explorar la cartelera general de eventos (`EventCard.vue`), filtrar reactivamente en memoria por banda, ciudad o mes (`EventFilters.vue`) e iniciar consultas contextuales inmediatas hacia WhatsApp sin requerir registro de cuenta.
 * **Panel Administrativo Protegido (`/admin`):** Interfaz operativa construida con componentes estandarizados de **Nuxt UI** para la gestión de flota, choferes, recintos destino, clientes/pasajeros (`/admin/clientes`), publicación de viajes con afiches promocionales y edición rápida de tarifas (`QuickPriceModal.vue`).
-* **Backend y Capa de Persistencia:** Alojado sobre **Supabase Cloud**, utilizando **PostgreSQL 15+** como motor relacional (8 tablas protegidas), **Supabase Auth** para control de identidades administrativas mediante cookies seguras, **Supabase Storage** para almacenamiento de activos gráficos y **Row Level Security (RLS)** como mecanismo inviolable de autorización en base de datos.
+* **Backend y Capa de Persistencia:** Alojado sobre **Supabase Cloud**, utilizando **PostgreSQL 15+** como motor relacional (9 tablas protegidas), **Supabase Auth** para control de identidades administrativas mediante cookies seguras, **Supabase Storage** para almacenamiento de activos gráficos y **Row Level Security (RLS)** como mecanismo inviolable de autorización en base de datos.
 * **Modelo Operativo de Costo Cero ($0/mes):** Diseñado para operar íntegramente sobre las capas gratuitas de Supabase, Vercel/Netlify y servicios auxiliares sin sacrificar seguridad ni rendimiento.
 
 ---
@@ -46,10 +46,11 @@ flowchart TD
         A6[Edición Rápida de Precios y Modos de Pago]
         A7[Maestro de Clientes y Pasajeros con Tags de Intereses]
         A8[Bandeja de Consultas de Contacto]
+        A9[Módulo de Ventas y Cobranzas en Caliente]
     end
 
     subgraph Supabase_BaaS [Supabase Cloud BaaS]
-        B1[(PostgreSQL 15+ Database - 8 Tablas)]
+        B1[(PostgreSQL 15+ Database - 9 Tablas)]
         B2[Supabase Auth - JWT / Cookies]
         B3[Supabase Storage - Bucket tripu-assets]
         B4{Row Level Security - RLS}
@@ -286,6 +287,10 @@ erDiagram
     EVENTS ||--|{ PACKAGE_TIERS : ofrece
     EVENTS ||--o{ CONTACT_MESSAGES : consulta
     CUSTOMERS ||--o{ EVENTS : viaja_en
+    EVENTS ||--o{ SALES : genera
+    CUSTOMERS ||--o{ SALES : adquiere
+    PACKAGE_TIERS ||--o{ SALES : clasifica
+    USERS ||--o{ SALES : registra
 
     USERS {
         uuid id PK
@@ -380,6 +385,28 @@ erDiagram
         string message
         string status
     }
+
+    SALES {
+        uuid id PK
+        uuid event_id FK
+        uuid customer_id FK
+        uuid package_tier_id FK
+        uuid created_by FK
+        timestamptz sale_date
+        int quantity
+        numeric unit_price
+        numeric total_amount
+        numeric amount_paid
+        numeric balance_due
+        int installments
+        string currency
+        enum payment_method
+        enum payment_status
+        string seat_number
+        string boarding_location
+        string receipt_number
+        string notes
+    }
 ```
 
 ---
@@ -413,12 +440,14 @@ Operador Tripu -> Ingresa datos en formulario Nuxt UI
 
 ## 11. Database Architecture
 
-La base de datos relacional PostgreSQL cuenta con 8 tablas principales formalizadas en `DB/schema.sql`:
+La base de datos relacional PostgreSQL cuenta con 9 tablas principales formalizadas en `DB/schema.sql`:
 
 ### Tipos Enumerados (ENUMs)
 1. `user_type_enum`: `'MASTER'`, `'CHIEF_TRIPU'`, `'JEFE'`, `'COORDINADOR'`, `'MARINERO'`, `'PASAJERO'`.
 2. `venue_type_enum`: `'estadio'`, `'campo'`, `'arena'`, `'club'`, `'sala'`, `'estudio'`, `'boliche'`, `'bar'`, `'sitio_publico'`, `'edificio'`, `'predio'`, `'complejo'`.
 3. `event_status_enum`: `'draft'`, `'published'`, `'sold_out'`, `'completed'`, `'canceled'`, `'rescheduled'`.
+4. `payment_method_enum`: `'transferencia'`, `'efectivo'`, `'tarjeta_credito'`, `'tarjeta_debito'`, `'mercado_pago'`, `'mixto'`.
+5. `payment_status_enum`: `'paid'`, `'partial'`, `'pending'`, `'refunded'`, `'canceled'`.
 
 ### Resumen de Tablas y Reglas de Integridad
 * **`public.users`:** Usuarios administrativos del sistema con rol tipado y restricción `check_user_level`.
@@ -429,6 +458,7 @@ La base de datos relacional PostgreSQL cuenta con 8 tablas principales formaliza
 * **`public.package_tiers`:** Opciones de paquete y tarifas asociadas a un viaje (`ON DELETE CASCADE`).
 * **`public.customers`:** Directorio de clientes y pasajeros con DNI único, fecha de nacimiento, contacto de emergencia, notas internas y gustos musicales serializados (`"array:rock,los-piojos"`).
 * **`public.contact_messages`:** Mensajes recibidos desde el formulario web con estado por defecto `'pending'`.
+* **`public.sales`:** Asientos contables de ventas de pasajes asociadas a un viaje y cliente, con congelamiento histórico de precios (`unit_price`, `total_amount`), cuotas (`installments`), control de señas y saldos para cobro en caliente (`amount_paid`, `balance_due`), butaca alfanumérica (`seat_number`) y comprobantes.
 
 ---
 
@@ -452,7 +482,7 @@ El sistema distingue de forma estricta entre **Autenticación** y **Autorizació
 
 ## 14. Row Level Security
 
-El sistema aplica **Row Level Security (RLS) obligatorio** sobre el 100% de las 8 tablas relacionales:
+El sistema aplica **Row Level Security (RLS) obligatorio** sobre el 100% de las 9 tablas relacionales:
 
 ```sql
 alter table public.users enable row level security;
@@ -463,6 +493,7 @@ alter table public.events enable row level security;
 alter table public.package_tiers enable row level security;
 alter table public.contact_messages enable row level security;
 alter table public.customers enable row level security;
+alter table public.sales enable row level security;
 ```
 
 ### Matriz de Políticas RLS Activas
@@ -481,6 +512,7 @@ alter table public.customers enable row level security;
 | **`drivers`** | `ALL` | `authenticated` | `true` (Solo operadores autenticados gestionan choferes). |
 | **`transports`** | `ALL` | `authenticated` | `true` (Solo operadores autenticados gestionan flota). |
 | **`customers`** | `ALL` | `authenticated` | `true` (Privacidad estricta: solo operadores gestionan clientes). |
+| **`sales`** | `ALL` | `authenticated` | `true` (Privacidad financiera estricta: solo operadores gestionan ventas). |
 
 ---
 
@@ -535,8 +567,9 @@ Tripu System adopta una estrategia pragmática de ultra alto rendimiento para la
 | **`useDrivers`** | `tripu-drivers-data`, `timestamp`, `loading` | **5 min** | Directorio de choferes profesionales. |
 | **`useTransports`** | `tripu-transports-data`, `timestamp`, `loading` | **5 min** | Flota vehicular con chofer asignado. |
 | **`useVenues`** | `tripu-venues-data`, `timestamp`, `loading` | **30 min** | Recintos y estadios (baja volatilidad). |
+| **`useSales`** | `tripu-sales-data`, `timestamp`, `loading` | **5 min** | Asientos contables de ventas y cobranzas en caliente. |
 
-* **Higiene de Memoria:** Al invocar `handleLogout()` en `app/layouts/admin.vue`, se purgan todos los estados en memoria (`clearCustomersState()`, `clearEventsState()`, etc.) para proteger terminales compartidas.
+* **Higiene de Memoria:** Al invocar `handleLogout()` en `app/layouts/admin.vue`, se purgan todos los estados en memoria (`clearCustomersState()`, `clearEventsState()`, `clearSalesState()`, etc.) para proteger terminales compartidas.
 
 ---
 
