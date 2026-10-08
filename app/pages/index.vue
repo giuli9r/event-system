@@ -183,7 +183,7 @@ const tripCities = [
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-2 flex items-center justify-between">
         <span class="text-[11px] font-black uppercase tracking-widest text-[#FF6B55] flex items-center gap-1.5">
           <UIcon name="i-heroicons-map-pin" class="w-3.5 h-3.5 text-[#E53924]" />
-          <span>Rutas, Salidas y Destinos Confirmados</span>
+          <span>Rutas, Salidas y Destinos</span>
         </span>
         <span class="text-[10px] text-zinc-500 hidden sm:inline font-mono">
           Viajamos juntos a los escenarios más grandes de Argentina
@@ -226,6 +226,9 @@ const tripCities = [
           misma energía del pogo.
         </p>
       </div>
+
+      <!-- EVIDENCIA DE VIAJES: CARRUSEL DE FOTOS DE EXPERIENCIA -->
+      <ExperienceCarousel />
 
       <!-- Grid de Beneficios -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
