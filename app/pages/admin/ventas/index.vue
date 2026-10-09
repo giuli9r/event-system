@@ -44,18 +44,23 @@ const {
   fetchCustomers
 } = useCustomers()
 
+const route = useRoute()
+
 // Estados de Toolbar y Filtros
-const searchQuery = ref('')
-const selectedEventFilter = ref<string>('all')
+const searchQuery = ref(typeof route.query.q === 'string' ? route.query.q : '')
+const selectedEventFilter = ref<string>(typeof route.query.eventId === 'string' && route.query.eventId ? route.query.eventId : 'all')
 const selectedStatusFilter = ref<string>('all')
 const selectedPaymentMethodFilter = ref<string>('all')
 
 const statusFilterOptions = [
   { value: 'all', label: 'Todas las Ventas' },
-  { value: 'pending_balance', label: '🔥 Con Saldo Pendiente (Cobro en Caliente)', count: salesWithPendingBalance.value.length },
+  { value: 'pending_balance', label: '🔥 Con Saldo Pendiente (Cobro en Caliente)' },
   { value: 'paid', label: 'Saldadas' },
+  { value: 'gifted', label: '🎁 Bonificadas' },
   { value: 'partial', label: 'Con Seña' },
-  { value: 'pending', label: 'Sin Pagos' }
+  { value: 'pending', label: 'Sin Pagos' },
+  { value: 'refunded', label: 'Reembolsadas' },
+  { value: 'canceled', label: 'Anuladas / Canceladas' }
 ]
 
 const paymentMethodOptions = [
@@ -146,21 +151,19 @@ function formatWhatsAppUrl(phone: string | null | undefined, sale: SaleWithRelat
   return `https://wa.me/${cleaned}?text=${msg}`
 }
 
-function getPaymentStatusBadge(status: PaymentStatusEnum, balanceDue: number) {
-  if (balanceDue > 0 && status !== 'canceled' && status !== 'refunded') {
-    return {
-      label: 'Saldo Pendiente',
-      class: 'bg-red-500/15 text-red-400 border-red-500/40 font-bold',
-      icon: 'i-heroicons-exclamation-circle'
-    }
-  }
-
+function getPaymentStatusBadge(status: PaymentStatusEnum) {
   switch (status) {
     case 'paid':
       return {
         label: 'Saldado',
         class: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
         icon: 'i-heroicons-check-circle'
+      }
+    case 'gifted':
+      return {
+        label: 'Bonificado',
+        class: 'bg-teal-500/15 text-teal-300 border-teal-500/30 font-semibold',
+        icon: 'i-heroicons-gift'
       }
     case 'partial':
       return {
@@ -217,6 +220,7 @@ const isSaleModalOpen = ref(false)
 const isEditing = ref(false)
 const saleToEditId = ref<string | null>(null)
 const submittingSale = ref(false)
+const isGiftedSale = ref(false)
 
 const saleForm = reactive({
   sale_date: new Date().toISOString().slice(0, 10),
@@ -260,13 +264,57 @@ const selectedFormEvent = computed(() => {
   return events.value.find(e => e.id === saleForm.event_id) || null
 })
 
+function handleGiftedToggle() {
+  if (isGiftedSale.value) {
+    saleForm.unit_price = 0
+    saleForm.amount_paid = 0
+    saleForm.total_amount = 0
+    saleForm.balance_due = 0
+    saleForm.payment_status = 'gifted'
+  } else {
+    saleForm.payment_status = 'paid'
+    if (selectedFormEvent.value && saleForm.package_tier_id) {
+      handlePackageTierChange()
+    } else {
+      saleForm.unit_price = 0
+      recalculateAmounts(true)
+    }
+  }
+}
+
+function handlePaymentStatusChange() {
+  if (saleForm.payment_status === 'gifted') {
+    isGiftedSale.value = true
+    saleForm.unit_price = 0
+    saleForm.total_amount = 0
+    saleForm.amount_paid = 0
+    saleForm.balance_due = 0
+  } else if (isGiftedSale.value) {
+    isGiftedSale.value = false
+    if (selectedFormEvent.value && saleForm.package_tier_id) {
+      handlePackageTierChange()
+    } else {
+      recalculateAmounts(true)
+    }
+  }
+}
+
 /**
  * Recalcula en tiempo real Total Pactado y Saldo Pendiente:
  * - Cantidad de Pasajes * Precio Unitario = Total Pactado
  * - Total Pactado - Abonado Hoy = Saldo Pendiente
  * - Si cantidad es 0, null o undefined -> Total Pactado es 0 y se marca con error visual
  */
-function recalculateAmounts() {
+function recalculateAmounts(forceSync = false) {
+  if (isGiftedSale.value) {
+    saleForm.unit_price = 0
+    saleForm.total_amount = 0
+    saleForm.amount_paid = 0
+    saleForm.balance_due = 0
+    saleForm.payment_status = 'gifted'
+    return
+  }
+
   const calc = calculateSaleAmounts({
     quantity: saleForm.quantity,
     unit_price: saleForm.unit_price,
@@ -277,15 +325,19 @@ function recalculateAmounts() {
   saleForm.total_amount = calc.total_amount
   saleForm.balance_due = calc.balance_due
 
-  // Sincronizar estado de cobro
-  if (calc.total_amount === 0) {
-    saleForm.payment_status = 'paid' // Entrada cortesía/regalo
-  } else if (calc.balance_due === 0 && Number(saleForm.amount_paid) > 0) {
-    saleForm.payment_status = 'paid'
-  } else if (Number(saleForm.amount_paid) > 0 && calc.balance_due > 0) {
-    saleForm.payment_status = 'partial'
-  } else if (Number(saleForm.amount_paid) === 0) {
-    saleForm.payment_status = 'pending'
+  // Sincronizar estado de cobro automáticamente si es nueva venta o si el estado es automático
+  // Si en edición el operador seleccionó 'refunded', 'canceled', etc., respetamos la selección manual
+  const isAutoStatus = saleForm.payment_status === 'paid' || saleForm.payment_status === 'partial' || saleForm.payment_status === 'pending'
+  if (!isEditing.value || forceSync || isAutoStatus) {
+    if (calc.total_amount === 0) {
+      saleForm.payment_status = 'paid' // Entrada cortesía/regalo estándar
+    } else if (calc.balance_due === 0 && Number(saleForm.amount_paid) > 0) {
+      saleForm.payment_status = 'paid'
+    } else if (Number(saleForm.amount_paid) > 0 && calc.balance_due > 0) {
+      saleForm.payment_status = 'partial'
+    } else if (Number(saleForm.amount_paid) === 0) {
+      saleForm.payment_status = 'pending'
+    }
   }
 }
 
@@ -350,6 +402,7 @@ function applyPaymentPreset(preset: 'total' | 'half' | 'zero') {
 function openCreateSaleModal() {
   isEditing.value = false
   saleToEditId.value = null
+  isGiftedSale.value = false
 
   // Reset del formulario
   saleForm.sale_date = new Date().toISOString().slice(0, 10)
@@ -388,6 +441,7 @@ function openCreateSaleModal() {
 function openEditSaleModal(sale: SaleWithRelations) {
   isEditing.value = true
   saleToEditId.value = sale.id
+  isGiftedSale.value = sale.payment_status === 'gifted'
 
   saleForm.sale_date = sale.sale_date ? new Date(sale.sale_date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)
   saleForm.event_id = sale.event_id
@@ -585,7 +639,22 @@ async function handleConfirmDelete() {
   }
 }
 
+watch(() => route.query, (newQuery) => {
+  if (newQuery.q !== undefined) {
+    searchQuery.value = String(newQuery.q || '')
+  }
+  if (newQuery.eventId !== undefined) {
+    selectedEventFilter.value = String(newQuery.eventId || 'all')
+  }
+})
+
 onMounted(() => {
+  if (route.query.q && typeof route.query.q === 'string') {
+    searchQuery.value = route.query.q
+  }
+  if (route.query.eventId && typeof route.query.eventId === 'string' && route.query.eventId !== 'all') {
+    selectedEventFilter.value = route.query.eventId
+  }
   fetchSales()
   fetchEvents()
   fetchCustomers()
@@ -961,14 +1030,16 @@ onMounted(() => {
               <!-- 6. Estado / Saldo en Puerta (Cobro en Caliente) -->
               <td class="px-4 py-3.5 whitespace-nowrap">
                 <div class="space-y-1">
+                  <!-- Badge del Estado de Pago (Payment Status) -->
+                  <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold border" :class="getPaymentStatusBadge(sale.payment_status).class">
+                    <UIcon :name="getPaymentStatusBadge(sale.payment_status).icon" class="w-3 h-3 shrink-0" />
+                    <span>{{ getPaymentStatusBadge(sale.payment_status).label }}</span>
+                  </div>
+
                   <!-- Alerta de Saldo Pendiente para cobro en el colectivo -->
-                  <div v-if="sale.balance_due > 0" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse">
+                  <div v-if="sale.balance_due > 0 && sale.payment_status !== 'canceled' && sale.payment_status !== 'refunded'" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/50">
                     <UIcon name="i-heroicons-exclamation-triangle" class="w-3 h-3 shrink-0" />
                     <span>Resta: {{ formatCurrency(sale.balance_due) }}</span>
-                  </div>
-                  <div v-else class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold border" :class="getPaymentStatusBadge(sale.payment_status, sale.balance_due).class">
-                    <UIcon :name="getPaymentStatusBadge(sale.payment_status, sale.balance_due).icon" class="w-3 h-3 shrink-0" />
-                    <span>{{ getPaymentStatusBadge(sale.payment_status, sale.balance_due).label }}</span>
                   </div>
 
                   <p class="text-[10px] text-zinc-500 capitalize">
@@ -1204,8 +1275,26 @@ onMounted(() => {
               </div>
             </div>
 
-            <!-- Cuotas y Medio de Pago -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- Checkbox Pasaje Bonificado -->
+            <div class="flex items-center justify-between p-2.5 rounded-lg bg-[#0F0F12] border border-[#2A2A38]">
+              <div class="flex items-center gap-2">
+                <input
+                  id="is-gifted-checkbox"
+                  v-model="isGiftedSale"
+                  type="checkbox"
+                  class="w-4 h-4 rounded text-teal-500 bg-zinc-900 border-zinc-700 focus:ring-teal-500 focus:ring-offset-0 cursor-pointer"
+                  @change="handleGiftedToggle"
+                />
+                <label for="is-gifted-checkbox" class="text-xs font-semibold text-teal-300 cursor-pointer flex items-center gap-1.5">
+                  <UIcon name="i-heroicons-gift" class="w-4 h-4 text-teal-400" />
+                  <span>Pasaje Bonificado (Cortesía / $0)</span>
+                </label>
+              </div>
+              <span class="text-[11px] text-zinc-400 font-mono">Valor final $0 · Estado Saldado</span>
+            </div>
+
+            <!-- Cuotas, Medio de Pago y Estado del Pago (PaymentStatusEnum) -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <UFormField label="Plan de Cuotas (Cantidad)" help="Indica en cuántas cuotas se pactó">
                 <select
                   v-model.number="saleForm.installments"
@@ -1229,6 +1318,21 @@ onMounted(() => {
                   <option value="tarjeta_debito">Tarjeta de Débito</option>
                   <option value="mercado_pago">Mercado Pago</option>
                   <option value="mixto">Pago Mixto</option>
+                </select>
+              </UFormField>
+
+              <UFormField label="Estado del Pago" help="Modificación manual (PaymentStatusEnum)">
+                <select
+                  v-model="saleForm.payment_status"
+                  class="w-full rounded-lg bg-[#0F0F12] border border-[#2A2A38] text-[#F5EEDC] text-xs px-3 py-2.5 focus:outline-none focus:border-[#E53924] cursor-pointer font-semibold"
+                  @change="handlePaymentStatusChange"
+                >
+                  <option value="paid">Saldado (100% Pagado)</option>
+                  <option value="partial">Con Seña (Parcial)</option>
+                  <option value="pending">Sin Pagos (Pendiente)</option>
+                  <option value="gifted">Bonificado (Regalo / $0)</option>
+                  <option value="refunded">Reembolsado (Devolución)</option>
+                  <option value="canceled">Anulada / Cancelada</option>
                 </select>
               </UFormField>
             </div>

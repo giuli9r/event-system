@@ -50,6 +50,7 @@ export type PaymentStatusEnum =
   | 'pending'
   | 'refunded'
   | 'canceled'
+  | 'gifted'
 
 export type Database = {
   public: {

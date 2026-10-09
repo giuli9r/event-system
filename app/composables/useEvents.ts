@@ -516,12 +516,47 @@ export function useEvents() {
 
   /**
    * Eliminación física de un viaje (en cascada elimina package_tiers).
+   * Regla de negocio contable:
+   * - Si NO tiene ventas asociadas -> Se elimina físicamente.
+   * - Si tiene ventas asociadas y TODAS están en 'refunded' o 'canceled' -> Se liberan dichas ventas y se elimina el viaje.
+   * - Si tiene ventas con estados activos ('paid', 'partial', 'pending', 'gifted') -> Se bloquea la eliminación y retorna error 23503.
    */
   async function deleteEvent(id: string) {
     loading.value = true
     error.value = null
 
     try {
+      // 1. Consultar si existen ventas registradas para este viaje
+      const { data: sales, error: salesErr } = await supabase
+        .from('sales')
+        .select('id, payment_status')
+        .eq('event_id', id)
+
+      if (salesErr) throw salesErr
+
+      if (sales && sales.length > 0) {
+        // Verificar si existen ventas activas (no reembolsadas ni anuladas)
+        const activeSales = sales.filter(s => s.payment_status !== 'refunded' && s.payment_status !== 'canceled')
+        if (activeSales.length > 0) {
+          const constraintErr = {
+            code: '23503',
+            message: 'No se puede eliminar el viaje porque cuenta con ventas activas. Modifique los pagos a "refunded" o "canceled" primero, o cambie el estado del viaje a "Cancelado".',
+            details: `Existen ${activeSales.length} ventas con estado activo.`
+          }
+          throw constraintErr
+        }
+
+        // Si TODAS las ventas están en 'refunded' o 'canceled', se autoriza la eliminación física
+        // Se purgan las ventas ya resueltas/reembolsadas para liberar la FK restrictiva
+        const { error: delSalesErr } = await supabase
+          .from('sales')
+          .delete()
+          .eq('event_id', id)
+
+        if (delSalesErr) throw delSalesErr
+      }
+
+      // 2. Eliminar el evento físicamente (en cascada elimina package_tiers)
       const { error: err } = await supabase
         .from('events')
         .delete()
