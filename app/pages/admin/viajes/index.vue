@@ -27,6 +27,8 @@ const statusOptions = [
 const isDeleteModalOpen = ref(false)
 const eventToDelete = ref<EventWithRelations | null>(null)
 const deleting = ref(false)
+const warning = ref<string | null>(null)
+const updatingStatusToCancel = ref(false)
 
 // Modal de ajuste rápido de tarifas (< 10s)
 const isQuickPriceModalOpen = ref(false)
@@ -153,6 +155,7 @@ async function handleQuickStatusChange(ev: EventWithRelations, newStatus: EventS
 
 function openDeleteModal(ev: EventWithRelations) {
   eventToDelete.value = ev
+  warning.value = null
   isDeleteModalOpen.value = true
 }
 
@@ -161,7 +164,14 @@ async function handleConfirmDelete() {
   deleting.value = true
   try {
     const { error: err } = await deleteEvent(eventToDelete.value.id)
-    if (err) throw err
+    if (err) {
+      // Captura de restricción de ventas activas (Integridad Contable PostgreSQL)
+      if (err.code === '23503' || err.message?.includes('sales_event_id_fkey') || err.details?.includes('sales')) {
+        warning.value = 'Este viaje posee ventas activas en el sistema contable. Para poder eliminar el viaje, primero debe modificar el estado de los pagos a "Reembolsado" (refunded) o "Anulada" (canceled) en el Módulo de Ventas, o cambiar el estado del viaje a "Cancelado".'
+        return
+      }
+      throw err
+    }
     toast.add({
       title: 'Viaje eliminado',
       description: `La salida "${eventToDelete.value.title}" fue eliminada del sistema.`,
@@ -170,6 +180,7 @@ async function handleConfirmDelete() {
     })
     isDeleteModalOpen.value = false
     eventToDelete.value = null
+    warning.value = null
   } catch (err: any) {
     toast.add({
       title: 'Error al eliminar',
@@ -179,6 +190,51 @@ async function handleConfirmDelete() {
     })
   } finally {
     deleting.value = false
+  }
+}
+
+function redirectToSales(options: { force?: boolean } = {}) {
+  const target = eventToDelete.value
+  isDeleteModalOpen.value = false
+  warning.value = null
+  if (target) {
+    navigateTo({
+      path: '/admin/ventas',
+      query: {
+        q: target.title,
+        eventId: target.id
+      }
+    })
+  } else {
+    navigateTo('/admin/ventas')
+  }
+}
+
+async function handleCancelEventInstead(ev?: EventWithRelations | null) {
+  const target = ev || eventToDelete.value
+  if (!target) return
+  updatingStatusToCancel.value = true
+  try {
+    const { error: err } = await updateEventStatus(target.id, 'canceled')
+    if (err) throw err
+    toast.add({
+      title: 'Viaje cancelado',
+      description: `El viaje "${target.title}" fue marcado como Cancelado. Las ventas y balances contables se mantienen intactos.`,
+      color: 'success',
+      icon: 'i-heroicons-check-circle'
+    })
+    isDeleteModalOpen.value = false
+    eventToDelete.value = null
+    warning.value = null
+  } catch (err: any) {
+    toast.add({
+      title: 'Error al cambiar estado',
+      description: err?.message || 'No se pudo actualizar el estado del viaje',
+      color: 'error',
+      icon: 'i-heroicons-exclamation-triangle'
+    })
+  } finally {
+    updatingStatusToCancel.value = false
   }
 }
 
@@ -573,7 +629,8 @@ onMounted(() => {
     >
       <template #body>
         <div class="space-y-4 pt-1">
-          <div class="p-3.5 rounded-lg bg-red-950/30 border border-red-900/50 text-xs text-red-300 space-y-2">
+          <!-- Advertencia estándar si aún no saltó conflicto contable -->
+          <div v-if="!warning" class="p-3.5 rounded-lg bg-red-950/30 border border-red-900/50 text-xs text-red-300 space-y-2">
             <div class="flex items-center gap-2 font-bold text-red-200">
               <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5 text-[#E53924] shrink-0" />
               <span>Confirmación de Eliminación</span>
@@ -586,6 +643,34 @@ onMounted(() => {
             </p>
           </div>
 
+          <!-- Estado de Ventas asociadas al viaje (Integridad Contable) -->
+          <UAlert
+            v-if="warning"
+            title="Cuidado! El viaje cuenta con ventas confirmadas. Verifique para conservar los valores contables"
+            :description="warning"
+            color="warning"
+            variant="subtle"
+            icon="i-heroicons-exclamation-triangle"
+          >
+            <template #actions>
+              <div class="flex items-center gap-2 flex-wrap mt-2">
+                <UButton size="xs" variant="solid" color="warning" @click="redirectToSales({ force: true })">
+                  Ver Ventas asociadas
+                </UButton>
+                <UButton
+                  size="xs"
+                  variant="outline"
+                  color="neutral"
+                  icon="i-heroicons-no-symbol"
+                  :loading="updatingStatusToCancel"
+                  @click="handleCancelEventInstead(eventToDelete)"
+                >
+                  Cambiar a Cancelado
+                </UButton>
+              </div>
+            </template>
+          </UAlert>
+
           <div class="flex items-center justify-end gap-3 pt-2">
             <UButton
               variant="ghost"
@@ -593,9 +678,10 @@ onMounted(() => {
               class="cursor-pointer"
               @click="isDeleteModalOpen = false"
             >
-              Cancelar
+              {{ warning ? 'Cerrar' : 'Cancelar' }}
             </UButton>
             <UButton
+              v-if="!warning"
               variant="solid"
               color="error"
               class="bg-red-600 hover:bg-red-700 text-white font-semibold cursor-pointer"

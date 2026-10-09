@@ -459,6 +459,7 @@ La base de datos relacional PostgreSQL cuenta con 9 tablas principales formaliza
 * **`public.customers`:** Directorio de clientes y pasajeros con DNI único, fecha de nacimiento, contacto de emergencia, notas internas y gustos musicales serializados (`"array:rock,los-piojos"`).
 * **`public.contact_messages`:** Mensajes recibidos desde el formulario web con estado por defecto `'pending'`.
 * **`public.sales`:** Asientos contables de ventas de pasajes asociadas a un viaje y cliente, con congelamiento histórico de precios (`unit_price`, `total_amount`), cuotas (`installments`), control de señas y saldos para cobro en caliente (`amount_paid`, `balance_due`), butaca alfanumérica (`seat_number`) y comprobantes.
+  * **Regla de Integridad Contable Estricta (`ON DELETE RESTRICT`):** La relación `sales_event_id_fkey` prohíbe terminantemente la eliminación física (`DELETE`) de un viaje que contenga ventas registradas (PostgreSQL error `23503`). Ante un intento de baja, el sistema intercepta la excepción, despliega una alerta preventiva (`UAlert`), recomienda cambiar el estado de la salida a `"Cancelado"` para preservar los libros contables históricos, y ofrece un enlace de auditoría directa a `/admin/ventas` pre-filtrando reactivamente las ventas por el título del evento (`v-model="searchQuery"`).
 
 ---
 

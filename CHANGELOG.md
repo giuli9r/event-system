@@ -7,6 +7,21 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 
 ---
 
+## [1.1.1] - 2026-10-09
+### Añadido
+* **Visualización del Estado de Pago y Enum 'gifted' en Módulo Ventas (`/admin/ventas`):**
+  * Visualización explícita del estado del pago (`payment_status`) en la columna *"Estado / Saldo en Puerta"* de la tabla de Ventas, con badge tipado para cada caso: `Saldado` (verde), `Bonificado` (teal/esmeralda), `Con Seña` (ámbar), `Sin Pagos` (rojo suave), `Reembolsado` (púrpura) y `Anulada` (zinc), conservando en paralelo la alerta de cobro en caliente (*"Resta: $X"*) para operaciones con saldo pendiente.
+  * Incorporación del valor `'gifted'` en `PaymentStatusEnum` en base de datos (`payment_status_enum`), esquemas Zod (`shared/schemas/sales.ts`) y tipos TypeScript (`types/database.types.ts`).
+  * Checkbox interactivo *"Pasaje Bonificado"* en el modal de ventas: al activarse, congela el importe unitario y total en `$0` con saldo `$0` y establece el estado en `gifted` (Bonificado / Saldado).
+  * Selector manual de `payment_status` en el modal (creación y edición), permitiendo al operador alternar libremente entre los estados disponibles de `PaymentStatusEnum` (`paid`, `partial`, `pending`, `gifted`, `refunded`, `canceled`).
+* **Reglas de Integridad y Eliminación Condicional de Viajes (`/admin/viajes`):**
+  * Habilitación de eliminación física para salidas que no poseen ventas asociadas, o cuyas ventas asociadas se encuentran en su totalidad en estado `'refunded'` o `'canceled'`.
+  * Purga automática de registros reembolsados/anulados previa al borrado del evento para satisfacer la clave foránea relacional (`sales_event_id_fkey`).
+  * Bloqueo defensivo con advertencia interactiva (`UAlert`) si el viaje cuenta con ventas activas (`paid`, `partial`, `pending`, `gifted`), instruyendo al operador a marcar previamente los pagos como *"Reembolsado"* (`refunded`) o *"Anulada"* (`canceled`) en el Módulo de Ventas, o bien cambiar el estado del viaje a *"Cancelado"*.
+  * Sincronización bidireccional reactiva entre `/admin/viajes` y `/admin/ventas` mediante `searchQuery` (`v-model`) y `selectedEventFilter`.
+
+---
+
 ## [1.1.0] - 2026-10-08
 ### Añadido
 * **Panel de Operaciones (`/admin/index.vue`) - Paneo de Próximos 10 Viajes:**

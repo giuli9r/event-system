@@ -14,7 +14,8 @@ export const paymentStatuses = [
   'partial',
   'pending',
   'refunded',
-  'canceled'
+  'canceled',
+  'gifted'
 ] as const
 
 export const saleFormSchema = z.object({
