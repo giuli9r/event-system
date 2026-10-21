@@ -277,43 +277,31 @@ function calculateAge(daybirth: string | null | undefined): number | null {
           <h1 class="text-2xl font-black tracking-tight text-[#F5EEDC]">
             Padrón de Clientes &amp; Pasajeros
           </h1>
-          <span class="text-xs px-2.5 py-0.5 rounded-full bg-[#E53924]/10 text-[#FF5733] border border-[#E53924]/30 font-bold uppercase tracking-wider">
+          <span
+            class="text-xs px-2.5 py-0.5 rounded-full bg-[#E53924]/10 text-[#FF5733] border border-[#E53924]/30 font-bold uppercase tracking-wider">
             Módulo Clientes
           </span>
         </div>
         <p class="text-sm text-zinc-400 mt-1">
-          Directorio centralizado de pasajeros habituales con DNI, contacto directo para WhatsApp e intereses musicales para salidas.
+          Directorio centralizado de pasajeros habituales con DNI, contacto directo para WhatsApp e intereses musicales
+          para salidas.
         </p>
       </div>
 
       <div class="flex items-center gap-2.5">
-        <UButton
-          icon="i-heroicons-arrow-path"
-          variant="subtle"
-          color="neutral"
-          :loading="loading"
-          title="Forzar actualización de datos desde Supabase"
-          @click="fetchCustomers({ force: true })"
-        />
-        <UButton
-          icon="i-heroicons-user-plus"
+        <UButton icon="i-heroicons-arrow-path" variant="subtle" color="neutral" :loading="loading"
+          title="Forzar actualización de datos desde Supabase" @click="fetchCustomers({ force: true })" />
+        <UButton icon="i-heroicons-user-plus"
           class="bg-[#E53924] hover:bg-[#c9321f] text-white font-semibold shadow-md shadow-[#E53924]/20 transition-all cursor-pointer"
-          @click="openCreateModal"
-        >
+          @click="openCreateModal">
           Nuevo Pasajero
         </UButton>
       </div>
     </div>
 
     <!-- Banner de Error si falló la carga -->
-    <UAlert
-      v-if="error"
-      title="Error al conectar con la base de datos de clientes"
-      :description="error"
-      color="error"
-      variant="subtle"
-      icon="i-heroicons-exclamation-triangle"
-    >
+    <UAlert v-if="error" title="Error al conectar con la base de datos de clientes" :description="error" color="error"
+      variant="subtle" icon="i-heroicons-exclamation-triangle">
       <template #actions>
         <UButton size="xs" variant="solid" color="error" @click="fetchCustomers({ force: true })">
           Reintentar
@@ -326,7 +314,8 @@ function calculateAge(daybirth: string | null | undefined): number | null {
       <!-- Total Clientes -->
       <UCard class="bg-[#1A1A22] border-[#2A2A38]">
         <div class="flex items-center gap-3.5">
-          <div class="w-11 h-11 rounded-lg bg-[#E53924]/10 border border-[#E53924]/30 flex items-center justify-center text-[#FF5733] shrink-0">
+          <div
+            class="w-11 h-11 rounded-lg bg-[#E53924]/10 border border-[#E53924]/30 flex items-center justify-center text-[#FF5733] shrink-0">
             <UIcon name="i-heroicons-users" class="w-5 h-5" />
           </div>
           <div>
@@ -339,7 +328,8 @@ function calculateAge(daybirth: string | null | undefined): number | null {
       <!-- Clientes Activos -->
       <UCard class="bg-[#1A1A22] border-[#2A2A38]">
         <div class="flex items-center gap-3.5">
-          <div class="w-11 h-11 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+          <div
+            class="w-11 h-11 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
             <UIcon name="i-heroicons-check-badge" class="w-5 h-5" />
           </div>
           <div>
@@ -357,7 +347,8 @@ function calculateAge(daybirth: string | null | undefined): number | null {
       <!-- Con WhatsApp cargado -->
       <UCard class="bg-[#1A1A22] border-[#2A2A38]">
         <div class="flex items-center gap-3.5">
-          <div class="w-11 h-11 rounded-lg bg-green-500/10 border border-green-500/30 flex items-center justify-center text-green-400 shrink-0">
+          <div
+            class="w-11 h-11 rounded-lg bg-green-500/10 border border-green-500/30 flex items-center justify-center text-green-400 shrink-0">
             <UIcon name="i-heroicons-chat-bubble-left-ellipsis" class="w-5 h-5" />
           </div>
           <div>
@@ -370,7 +361,8 @@ function calculateAge(daybirth: string | null | undefined): number | null {
       <!-- Ciudades registradas -->
       <UCard class="bg-[#1A1A22] border-[#2A2A38]">
         <div class="flex items-center gap-3.5">
-          <div class="w-11 h-11 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 shrink-0">
+          <div
+            class="w-11 h-11 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 shrink-0">
             <UIcon name="i-heroicons-map-pin" class="w-5 h-5" />
           </div>
           <div>
@@ -382,33 +374,25 @@ function calculateAge(daybirth: string | null | undefined): number | null {
     </div>
 
     <!-- Toolbar: Buscador y Filtros -->
-    <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-[#1A1A22] p-3 rounded-xl border border-[#2A2A38]">
+    <div
+      class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-[#1A1A22] p-3 rounded-xl border border-[#2A2A38]">
       <div class="flex-1 max-w-md">
-        <UInput
-          v-model="searchQuery"
-          icon="i-heroicons-magnifying-glass"
-          placeholder="Buscar por Nombre, DNI, Email, Ciudad o Tag..."
-          class="w-full"
-        />
+        <UInput v-model="searchQuery" icon="i-heroicons-magnifying-glass"
+          placeholder="Buscar por Nombre, DNI, Email, Ciudad o Tag..." class="w-full" />
       </div>
 
       <div class="flex items-center gap-2.5 flex-wrap">
         <!-- Filtro Estado -->
-        <select
-          v-model="statusFilter"
-          class="rounded-lg bg-[#14141A] border border-[#2A2A38] text-[#F5EEDC] text-xs px-3 py-2 focus:outline-none focus:border-[#E53924] cursor-pointer"
-        >
+        <select v-model="statusFilter"
+          class="rounded-lg bg-[#14141A] border border-[#2A2A38] text-[#F5EEDC] text-xs px-3 py-2 focus:outline-none focus:border-[#E53924] cursor-pointer">
           <option value="all">Todos los estados</option>
           <option value="active">Solo Activos</option>
           <option value="inactive">Solo Inactivos</option>
         </select>
 
         <!-- Filtro Ciudad -->
-        <select
-          v-if="availableCities.length > 0"
-          v-model="cityFilter"
-          class="rounded-lg bg-[#14141A] border border-[#2A2A38] text-[#F5EEDC] text-xs px-3 py-2 focus:outline-none focus:border-[#E53924] cursor-pointer"
-        >
+        <select v-if="availableCities.length > 0" v-model="cityFilter"
+          class="rounded-lg bg-[#14141A] border border-[#2A2A38] text-[#F5EEDC] text-xs px-3 py-2 focus:outline-none focus:border-[#E53924] cursor-pointer">
           <option value="all">Todas las ciudades</option>
           <option v-for="c in availableCities" :key="c" :value="c">{{ c }}</option>
         </select>
@@ -426,11 +410,7 @@ function calculateAge(daybirth: string | null | undefined): number | null {
     </div>
 
     <!-- Tabla Catálogo de Clientes -->
-    <UCard
-      v-else
-      class="bg-[#1A1A22] border-[#2A2A38] overflow-hidden"
-      :ui="{ body: 'p-0 sm:p-0' }"
-    >
+    <UCard v-else class="bg-[#1A1A22] border-[#2A2A38] overflow-hidden" :ui="{ body: 'p-0 sm:p-0' }">
       <div class="overflow-x-auto">
         <table class="w-full divide-y divide-[#2A2A38] text-left text-xs sm:text-sm">
           <thead class="bg-[#14141A] text-[11px] sm:text-xs uppercase font-semibold text-zinc-400">
@@ -445,25 +425,20 @@ function calculateAge(daybirth: string | null | undefined): number | null {
             </tr>
           </thead>
           <tbody class="divide-y divide-[#2A2A38] text-zinc-300">
-            <tr
-              v-for="customer in filteredCustomers"
-              :key="customer.id"
-              class="hover:bg-[#20202B] transition-colors"
-            >
+            <tr v-for="customer in filteredCustomers" :key="customer.id" class="hover:bg-[#20202B] transition-colors">
               <!-- Pasajero / DNI -->
               <td class="px-4 py-4 whitespace-nowrap">
                 <div class="flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-full bg-gradient-to-br from-[#E53924] to-red-950 flex items-center justify-center text-white font-bold text-xs uppercase shadow-sm">
+                  <div
+                    class="w-9 h-9 rounded-full bg-gradient-to-br from-[#E53924] to-red-950 flex items-center justify-center text-white font-bold text-xs uppercase shadow-sm">
                     {{ customer.name.charAt(0) }}{{ customer.lastname.charAt(0) }}
                   </div>
                   <div>
                     <div class="font-bold text-[#F5EEDC] flex items-center gap-2">
                       <span>{{ customer.lastname }}, {{ customer.name }}</span>
-                      <span
-                        v-if="calculateAge(customer.daybirth) !== null"
+                      <span v-if="calculateAge(customer.daybirth) !== null"
                         class="text-[11px] px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400 font-normal"
-                        :title="`Nacimiento: ${customer.daybirth}`"
-                      >
+                        :title="`Nacimiento: ${customer.daybirth}`">
                         {{ calculateAge(customer.daybirth) }} años
                       </span>
                     </div>
@@ -481,14 +456,10 @@ function calculateAge(daybirth: string | null | undefined): number | null {
                   <!-- Celular + WhatsApp -->
                   <div v-if="customer.phone" class="flex items-center gap-1.5">
                     <span class="text-xs text-[#F5EEDC] font-mono">{{ customer.phone }}</span>
-                    <a
-                      v-if="formatWhatsAppUrl(customer.phone)"
-                      :href="formatWhatsAppUrl(customer.phone)!"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <a v-if="formatWhatsAppUrl(customer.phone)" :href="formatWhatsAppUrl(customer.phone)!"
+                      target="_blank" rel="noopener noreferrer"
                       class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 text-[10.5px] font-semibold transition-colors"
-                      title="Abrir chat en WhatsApp"
-                    >
+                      title="Abrir chat en WhatsApp">
                       <UIcon name="i-heroicons-chat-bubble-left-ellipsis" class="w-3.5 h-3.5" />
                       <span>Chat</span>
                     </a>
@@ -496,7 +467,8 @@ function calculateAge(daybirth: string | null | undefined): number | null {
                   <div v-else class="text-xs text-zinc-600 italic">Sin celular</div>
 
                   <!-- Email -->
-                  <div v-if="customer.email" class="text-[11.5px] text-zinc-400 truncate max-w-[200px] flex items-center gap-1">
+                  <div v-if="customer.email"
+                    class="text-[11.5px] text-zinc-400 truncate max-w-[200px] flex items-center gap-1">
                     <UIcon name="i-heroicons-envelope" class="w-3 h-3 text-zinc-500 shrink-0" />
                     <span class="truncate">{{ customer.email }}</span>
                   </div>
@@ -521,18 +493,13 @@ function calculateAge(daybirth: string | null | undefined): number | null {
               <!-- Intereses & Tags -->
               <td class="px-4 py-4">
                 <div v-if="parseInterests(customer.interests).length > 0" class="flex flex-wrap gap-1 max-w-xs">
-                  <span
-                    v-for="tag in parseInterests(customer.interests).slice(0, 3)"
-                    :key="tag"
-                    class="px-2 py-0.5 rounded text-[10.5px] font-medium bg-[#E53924]/10 text-[#FF6B55] border border-[#E53924]/20"
-                  >
+                  <span v-for="tag in parseInterests(customer.interests).slice(0, 3)" :key="tag"
+                    class="px-2 py-0.5 rounded text-[10.5px] font-medium bg-[#E53924]/10 text-[#FF6B55] border border-[#E53924]/20">
                     #{{ tag }}
                   </span>
-                  <span
-                    v-if="parseInterests(customer.interests).length > 3"
+                  <span v-if="parseInterests(customer.interests).length > 3"
                     class="px-1.5 py-0.5 rounded text-[10px] bg-zinc-800 text-zinc-400 font-semibold"
-                    :title="parseInterests(customer.interests).slice(3).join(', ')"
-                  >
+                    :title="parseInterests(customer.interests).slice(3).join(', ')">
                     +{{ parseInterests(customer.interests).length - 3 }}
                   </span>
                 </div>
@@ -541,7 +508,8 @@ function calculateAge(daybirth: string | null | undefined): number | null {
 
               <!-- Contacto Emergencia -->
               <td class="px-4 py-4">
-                <div v-if="customer.emergency_contact" class="text-xs text-zinc-300 max-w-[180px] truncate" :title="customer.emergency_contact">
+                <div v-if="customer.emergency_contact" class="text-xs text-zinc-300 max-w-[180px] truncate"
+                  :title="customer.emergency_contact">
                   <div class="flex items-center gap-1">
                     <UIcon name="i-heroicons-shield-exclamation" class="w-3.5 h-3.5 text-amber-400 shrink-0" />
                     <span class="truncate">{{ customer.emergency_contact }}</span>
@@ -552,17 +520,13 @@ function calculateAge(daybirth: string | null | undefined): number | null {
 
               <!-- Estado -->
               <td class="px-4 py-4 whitespace-nowrap">
-                <span
-                  v-if="customer.is_active"
-                  class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
-                >
+                <span v-if="customer.is_active"
+                  class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
                   <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                   Activo
                 </span>
-                <span
-                  v-else
-                  class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-zinc-700/30 text-zinc-400 border border-zinc-700"
-                >
+                <span v-else
+                  class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-zinc-700/30 text-zinc-400 border border-zinc-700">
                   <span class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
                   Inactivo
                 </span>
@@ -570,24 +534,12 @@ function calculateAge(daybirth: string | null | undefined): number | null {
 
               <!-- Acciones -->
               <td class="px-4 py-4 whitespace-nowrap text-right space-x-1">
-                <UButton
-                  size="xs"
-                  variant="subtle"
-                  color="neutral"
-                  icon="i-heroicons-pencil-square"
-                  class="cursor-pointer"
-                  title="Editar datos del pasajero"
-                  @click="openEditModal(customer)"
-                />
-                <UButton
-                  size="xs"
-                  variant="subtle"
-                  :color="customer.is_active ? 'error' : 'success'"
+                <UButton size="xs" variant="subtle" color="neutral" icon="i-heroicons-pencil-square"
+                  class="cursor-pointer" title="Editar datos del pasajero" @click="openEditModal(customer)" />
+                <UButton size="xs" variant="subtle" :color="customer.is_active ? 'error' : 'success'"
                   :icon="customer.is_active ? 'i-heroicons-trash' : 'i-heroicons-arrow-path-rounded-square'"
-                  class="cursor-pointer"
-                  :title="customer.is_active ? 'Dar de baja (inactivar)' : 'Reactivar pasajero'"
-                  @click="openToggleStatusModal(customer)"
-                />
+                  class="cursor-pointer" :title="customer.is_active ? 'Dar de baja (inactivar)' : 'Reactivar pasajero'"
+                  @click="openToggleStatusModal(customer)" />
               </td>
             </tr>
 
@@ -613,11 +565,8 @@ function calculateAge(daybirth: string | null | undefined): number | null {
     <!-- ============================================================== -->
     <!-- MODAL DE ALTA / EDICIÓN DE CLIENTE                             -->
     <!-- ============================================================== -->
-    <UModal
-      v-model:open="isModalOpen"
-      :title="isEditing ? 'Editar Datos del Pasajero' : 'Registrar Nuevo Pasajero'"
-      :description="isEditing ? 'Modifica los datos de contacto e intereses del cliente.' : 'Completa los datos de identidad, contacto e intereses para incorporarlo al padrón.'"
-    >
+    <UModal v-model:open="isModalOpen" :title="isEditing ? 'Editar Datos del Pasajero' : 'Registrar Nuevo Pasajero'"
+      :description="isEditing ? 'Modifica los datos de contacto e intereses del cliente.' : 'Completa los datos de identidad, contacto e intereses para incorporarlo al padrón.'">
       <template #body>
         <UForm :schema="customerSchema" :state="formState" class="space-y-5 pt-2" @submit="handleSaveCustomer">
           <!-- BLOQUE 1: Identidad Personal -->
@@ -629,37 +578,22 @@ function calculateAge(daybirth: string | null | undefined): number | null {
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <UFormField label="Nombre" name="name" required>
-                <UInput
-                  v-model="formState.name"
-                  placeholder="Ej: Lucía"
-                  class="w-full"
-                />
+                <UInput v-model="formState.name" placeholder="Ej: Lucía" class="w-full" />
               </UFormField>
 
               <UFormField label="Apellido" name="lastname" required>
-                <UInput
-                  v-model="formState.lastname"
-                  placeholder="Ej: Fernández"
-                  class="w-full"
-                />
+                <UInput v-model="formState.lastname" placeholder="Ej: Fernández" class="w-full" />
               </UFormField>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <UFormField label="DNI (Documento de Identidad)" name="dni" required help="Número sin puntos ni espacios (único)">
-                <UInput
-                  v-model="formState.dni"
-                  placeholder="Ej: 38456123"
-                  class="w-full font-mono"
-                />
+              <UFormField label="DNI (Documento de Identidad)" name="dni" required
+                help="Número sin puntos ni espacios (único)">
+                <UInput v-model="formState.dni" placeholder="Ej: 38456123" class="w-full font-mono" />
               </UFormField>
 
               <UFormField label="Fecha de Nacimiento" name="daybirth">
-                <UInput
-                  v-model="formState.daybirth"
-                  type="date"
-                  class="w-full"
-                />
+                <UInput v-model="formState.daybirth" type="date" class="w-full" />
               </UFormField>
             </div>
           </div>
@@ -673,51 +607,30 @@ function calculateAge(daybirth: string | null | undefined): number | null {
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <UFormField label="Celular (WhatsApp)" name="phone" help="Número con código de área (ej: 3415551234)">
-                <UInput
-                  v-model="formState.phone"
-                  placeholder="Ej: 3415551234"
-                  icon="i-heroicons-phone"
-                  class="w-full"
-                />
+                <UInput v-model="formState.phone" placeholder="Ej: 3415551234" icon="i-heroicons-phone"
+                  class="w-full" />
               </UFormField>
 
               <UFormField label="Correo Electrónico" name="email">
-                <UInput
-                  v-model="formState.email"
-                  type="email"
-                  placeholder="lucia@ejemplo.com"
-                  icon="i-heroicons-envelope"
-                  class="w-full"
-                />
+                <UInput v-model="formState.email" type="email" placeholder="lucia@ejemplo.com"
+                  icon="i-heroicons-envelope" class="w-full" />
               </UFormField>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
               <UFormField label="Ciudad de Residencia" name="city">
-                <UInput
-                  v-model="formState.city"
-                  placeholder="Ej: Rosario"
-                  icon="i-heroicons-map-pin"
-                  class="w-full"
-                />
+                <UInput v-model="formState.city" placeholder="Ej: San Francisco" icon="i-heroicons-map-pin"
+                  class="w-full" />
               </UFormField>
 
               <UFormField label="Instagram" name="instagram">
-                <UInput
-                  v-model="formState.instagram"
-                  placeholder="lucia_viajes"
-                  icon="i-heroicons-at-symbol"
-                  class="w-full"
-                />
+                <UInput v-model="formState.instagram" placeholder="lucia_viajes" icon="i-heroicons-at-symbol"
+                  class="w-full" />
               </UFormField>
 
               <UFormField label="Contacto de Emergencia" name="emergency_contact" help="Nombre y tel familiar">
-                <UInput
-                  v-model="formState.emergency_contact"
-                  placeholder="Mamá: 341-4445555"
-                  icon="i-heroicons-shield-exclamation"
-                  class="w-full"
-                />
+                <UInput v-model="formState.emergency_contact" placeholder="Mamá: 341-4445555"
+                  icon="i-heroicons-shield-exclamation" class="w-full" />
               </UFormField>
             </div>
           </div>
@@ -729,35 +642,28 @@ function calculateAge(daybirth: string | null | undefined): number | null {
               3. Preferencias &amp; Notas Operativas
             </div>
 
-            <UFormField
-              label="Intereses Musicales & Tags de Afinidad"
-              name="interests"
-              help="Escribe el género o banda y presiona Enter o coma para añadir tags."
-            >
+            <UFormField label="Intereses Musicales & Tags de Afinidad" name="interests"
+              help="Escribe el género o banda y presiona Enter o coma para añadir tags.">
               <CustomerTagInput v-model="formState.interests" />
             </UFormField>
 
             <UFormField label="Observaciones Operativas / Notas Médicas" name="notes">
-              <UTextarea
-                v-model="formState.notes"
+              <UTextarea v-model="formState.notes"
                 placeholder="Alergias, requerimientos de movilidad reducida, vegetariano, notas del coordinador..."
-                rows="2"
-                class="w-full"
-              />
+                rows="2" class="w-full" />
             </UFormField>
 
             <!-- Switch de Estado Activo -->
-            <label class="flex items-center justify-between p-3 rounded-lg bg-[#14141A] border border-[#2A2A38] cursor-pointer">
+            <label
+              class="flex items-center justify-between p-3 rounded-lg bg-[#14141A] border border-[#2A2A38] cursor-pointer">
               <div>
                 <div class="text-xs font-bold text-[#F5EEDC]">Estado del Cliente</div>
-                <div class="text-[11px] text-zinc-400">Si está inactivo, no figurará para asignaciones operativas en manifiestos.</div>
+                <div class="text-[11px] text-zinc-400">Si está inactivo, no figurará para asignaciones operativas en
+                  manifiestos.</div>
               </div>
               <div class="flex items-center gap-2">
-                <input
-                  v-model="formState.is_active"
-                  type="checkbox"
-                  class="rounded bg-[#0F0F12] border-[#2A2A38] text-[#E53924] focus:ring-0 w-4 h-4 cursor-pointer"
-                />
+                <input v-model="formState.is_active" type="checkbox"
+                  class="rounded bg-[#0F0F12] border-[#2A2A38] text-[#E53924] focus:ring-0 w-4 h-4 cursor-pointer" />
                 <span class="text-xs font-semibold" :class="formState.is_active ? 'text-emerald-400' : 'text-zinc-500'">
                   {{ formState.is_active ? 'Activo' : 'Inactivo' }}
                 </span>
@@ -767,21 +673,13 @@ function calculateAge(daybirth: string | null | undefined): number | null {
 
           <!-- Botones de Acción Footer -->
           <div class="flex items-center justify-end gap-3 pt-4 border-t border-[#2A2A38]">
-            <UButton
-              type="button"
-              variant="ghost"
-              color="neutral"
-              :disabled="submitting"
-              class="cursor-pointer"
-              @click="isModalOpen = false"
-            >
+            <UButton type="button" variant="ghost" color="neutral" :disabled="submitting" class="cursor-pointer"
+              @click="isModalOpen = false">
               Cancelar
             </UButton>
-            <UButton
-              type="submit"
+            <UButton type="submit"
               class="bg-[#E53924] hover:bg-[#c9321f] text-white font-semibold shadow-md shadow-[#E53924]/20 cursor-pointer"
-              :loading="submitting"
-            >
+              :loading="submitting">
               {{ isEditing ? 'Guardar Cambios' : 'Registrar Pasajero' }}
             </UButton>
           </div>
@@ -792,51 +690,40 @@ function calculateAge(daybirth: string | null | undefined): number | null {
     <!-- ============================================================== -->
     <!-- MODAL DE CONFIRMACIÓN DE BAJA / REACTIVACIÓN                   -->
     <!-- ============================================================== -->
-    <UModal
-      v-model:open="isDeleteModalOpen"
+    <UModal v-model:open="isDeleteModalOpen"
       :title="customerToToggle?.is_active ? '¿Dar de baja al pasajero?' : '¿Reactivar al pasajero?'"
-      :description="`${customerToToggle?.lastname}, ${customerToToggle?.name} (DNI: ${customerToToggle?.dni})`"
-    >
+      :description="`${customerToToggle?.lastname}, ${customerToToggle?.name} (DNI: ${customerToToggle?.dni})`">
       <template #body>
         <div class="space-y-4 py-2">
           <div class="flex items-center gap-3">
-            <div
-              class="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-              :class="customerToToggle?.is_active ? 'bg-amber-500/10 text-amber-400' : 'bg-emerald-500/10 text-emerald-400'"
-            >
+            <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+              :class="customerToToggle?.is_active ? 'bg-amber-500/10 text-amber-400' : 'bg-emerald-500/10 text-emerald-400'">
               <UIcon
                 :name="customerToToggle?.is_active ? 'i-heroicons-exclamation-triangle' : 'i-heroicons-arrow-path-rounded-square'"
-                class="w-5 h-5"
-              />
+                class="w-5 h-5" />
             </div>
             <div>
               <p class="text-sm text-zinc-300">
                 <template v-if="customerToToggle?.is_active">
-                  Esta acción realizará una <strong>baja lógica</strong>. El pasajero pasará a estado inactivo pero se preservará su historial de viajes y datos de contacto en la base de datos.
+                  Esta acción realizará una <strong>baja lógica</strong>. El pasajero pasará a estado inactivo pero se
+                  preservará su historial de viajes y datos de contacto en la base de datos.
                 </template>
                 <template v-else>
-                  El pasajero volverá a figurar como <strong>activo</strong> y estará disponible para asignaciones operativas inmediatas.
+                  El pasajero volverá a figurar como <strong>activo</strong> y estará disponible para asignaciones
+                  operativas inmediatas.
                 </template>
               </p>
             </div>
           </div>
 
           <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#2A2A38]">
-            <UButton
-              variant="ghost"
-              color="neutral"
-              :disabled="toggling"
-              class="cursor-pointer"
-              @click="isDeleteModalOpen = false"
-            >
+            <UButton variant="ghost" color="neutral" :disabled="toggling" class="cursor-pointer"
+              @click="isDeleteModalOpen = false">
               Cancelar
             </UButton>
             <UButton
               :class="customerToToggle?.is_active ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'"
-              class="cursor-pointer"
-              :loading="toggling"
-              @click="handleConfirmToggleStatus"
-            >
+              class="cursor-pointer" :loading="toggling" @click="handleConfirmToggleStatus">
               {{ customerToToggle?.is_active ? 'Confirmar Baja Lógica' : 'Confirmar Reactivación' }}
             </UButton>
           </div>
