@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event).catch(() => ({}))
 
   const config = useRuntimeConfig()
-  const secretToken = config.vercelBypassToken || process.env.VERCEL_BYPASS_TOKEN || 'tripu-revalidate-secret-token'
+  const secretToken = config.vercelBypassToken || process.env.VERCEL_BYPASS_TOKEN || 'tripu_revalidate_secret_token_bypass_2026_secure_key_32chars'
 
   const isAuthorized = Boolean(user) || body?.secret === secretToken || query?.secret === secretToken
   if (!isAuthorized) {

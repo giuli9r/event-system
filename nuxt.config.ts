@@ -59,7 +59,7 @@ export default defineNuxtConfig({
   nitro: {
     vercel: {
       config: {
-        bypassToken: process.env.VERCEL_BYPASS_TOKEN || 'tripu-revalidate-secret-token'
+        bypassToken: process.env.VERCEL_BYPASS_TOKEN || 'tripu_revalidate_secret_token_bypass_2026_secure_key_32chars'
       }
     }
   },
@@ -113,7 +113,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     resendApiKey: process.env.RESEND_API_KEY,
     contactReceiverEmail: process.env.CONTACT_RECEIVER_EMAIL || 'contacto@tripu.com.ar',
-    vercelBypassToken: process.env.VERCEL_BYPASS_TOKEN || 'tripu-revalidate-secret-token',
+    vercelBypassToken: process.env.VERCEL_BYPASS_TOKEN || 'tripu_revalidate_secret_token_bypass_2026_secure_key_32chars',
     public: {
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://www.tripu.com.ar',
       whatsappNumber: process.env.NUXT_PUBLIC_WHATSAPP_NUMBER || '5493410000000'
