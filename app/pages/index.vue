@@ -5,6 +5,17 @@ definePageMeta({
   layout: 'default'
 })
 
+const user = useSupabaseUser()
+
+onMounted(() => {
+  if (user.value) {
+    Promise.all([
+      fetchFeaturedEvents({ force: true }),
+      fetchAllPublicEvents({ force: true })
+    ])
+  }
+})
+
 const {
   featuredEvents,
   allEvents,

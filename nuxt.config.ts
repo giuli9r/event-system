@@ -55,20 +55,29 @@ export default defineNuxtConfig({
     }
   },
 
+  // Configuración de Nitro para Vercel Edge e ISR Revalidation
+  nitro: {
+    vercel: {
+      config: {
+        bypassToken: process.env.VERCEL_BYPASS_TOKEN || 'tripu_revalidate_secret_token_bypass_2026_secure_key_32chars'
+      }
+    }
+  },
+
   // Cabeceras HTTP de seguridad global y reglas de rendimiento en el Edge (SWR / SPA)
   routeRules: {
-    // 1. Portada: SWR de 5 minutos (300s). Servido desde Edge CDN en < 30ms, revalidación en segundo plano
+    // 1. Portada: SWR de 2 minutos (120s) con soporte de invalidación bajo demanda
     '/': {
+      swr: 120,
+      headers: {
+        'Cache-Control': 'public, max-age=30, s-maxage=120, stale-while-revalidate=300'
+      }
+    },
+    // 2. Fichas de recitales y traslados: SWR de 5 minutos (300s)
+    '/viajes/**': {
       swr: 300,
       headers: {
         'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=600'
-      }
-    },
-    // 2. Fichas de recitales y traslados: SWR de 10 minutos (600s)
-    '/viajes/**': {
-      swr: 600,
-      headers: {
-        'Cache-Control': 'public, max-age=60, s-maxage=600, stale-while-revalidate=1200'
       }
     },
     // 3. Páginas institucionales y contacto
@@ -104,6 +113,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     resendApiKey: process.env.RESEND_API_KEY,
     contactReceiverEmail: process.env.CONTACT_RECEIVER_EMAIL || 'contacto@tripu.com.ar',
+    vercelBypassToken: process.env.VERCEL_BYPASS_TOKEN || 'tripu_revalidate_secret_token_bypass_2026_secure_key_32chars',
     public: {
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://www.tripu.com.ar',
       whatsappNumber: process.env.NUXT_PUBLIC_WHATSAPP_NUMBER || '5493410000000'
