@@ -11,6 +11,7 @@ const PUBLIC_CACHE_TTL_MS = 1 * 60 * 1000 // 1 minuto de caché en cliente
 
 export function usePublicEvents() {
   const supabase = useSupabaseClient<Database>()
+  const user = useSupabaseUser()
 
   // Estados globales de eventos
   const featuredEvents = useState<PublicFeaturedEvent[]>('tripu-public-featured-events', () => [])
@@ -28,15 +29,30 @@ export function usePublicEvents() {
   const selectedMonth = ref('all')
   const statusFilter = ref<'all' | 'available' | 'sold_out'>('all')
 
+  // Estrategia B: Operadores autenticados siempre consultan en caliente a Supabase (Bypass de caché)
+  const isOperator = computed(() => Boolean(user.value))
+
   const isFeaturedCacheValid = computed(() => {
+    if (isOperator.value) return false
     if (!lastFetchedFeatured.value || featuredEvents.value.length === 0) return false
     return (Date.now() - lastFetchedFeatured.value) < PUBLIC_CACHE_TTL_MS
   })
 
   const isAllCacheValid = computed(() => {
+    if (isOperator.value) return false
     if (!lastFetchedAll.value || allEvents.value.length === 0) return false
     return (Date.now() - lastFetchedAll.value) < PUBLIC_CACHE_TTL_MS
   })
+
+  /**
+   * Invalida la caché pública en memoria del cliente
+   */
+  function invalidatePublicEventsCache() {
+    lastFetchedFeatured.value = null
+    lastFetchedAll.value = null
+    featuredEvents.value = []
+    allEvents.value = []
+  }
 
   /**
    * Query relacional estándar para eventos públicos
@@ -376,6 +392,8 @@ export function usePublicEvents() {
     error,
     isFeaturedCacheValid,
     isAllCacheValid,
+    isOperator,
+    invalidatePublicEventsCache,
     fetchFeaturedEvents,
     fetchAllPublicEvents,
     fetchPublicEventBySlug,

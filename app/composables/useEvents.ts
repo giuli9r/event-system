@@ -227,6 +227,10 @@ export function useEvents() {
         events.value.push(fullEvent as unknown as EventWithRelations)
         events.value.sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime())
         lastFetched.value = Date.now()
+
+        if (fullEvent.status === 'published') {
+          triggerPublicRevalidation({ path: '/', slug: fullEvent.slug })
+        }
       }
 
       return { data: fullEvent as unknown as EventWithRelations, error: null }
@@ -242,6 +246,24 @@ export function useEvents() {
    * Actualización del estado operativo de un viaje ('draft' | 'published' | 'sold_out' | 'completed').
    * Muta inmediatamente el estado en memoria para feedback instantáneo (0 ms).
    */
+  function triggerPublicRevalidation(target: { path?: string; slug?: string }) {
+    try {
+      const { invalidatePublicEventsCache } = usePublicEvents()
+      invalidatePublicEventsCache()
+    } catch {
+      // ignore
+    }
+
+    if (import.meta.client) {
+      ('/api/revalidate', {
+        method: 'POST',
+        body: target
+      }).catch((err) => {
+        console.warn('[Revalidate Edge CDN Warning]:', err)
+      })
+    }
+  }
+
   async function updateEventStatus(id: string, status: EventStatus) {
     loading.value = true
     error.value = null
@@ -258,6 +280,10 @@ export function useEvents() {
       if (index !== -1) {
         events.value[index].status = status
         lastFetched.value = Date.now()
+
+        if (status === 'published' || status === 'sold_out') {
+          triggerPublicRevalidation({ path: '/', slug: events.value[index]?.slug })
+        }
       }
 
       return { error: null }
@@ -300,6 +326,10 @@ export function useEvents() {
           events.value.sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime())
         }
         lastFetched.value = Date.now()
+
+        if ((fullEvent as any).status === 'published') {
+          triggerPublicRevalidation({ path: '/', slug: (fullEvent as any).slug })
+        }
       }
 
       return { data: fullEvent as unknown as EventWithRelations, error: null }

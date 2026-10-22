@@ -5,6 +5,14 @@ definePageMeta({
   layout: 'default'
 })
 
+const user = useSupabaseUser()
+
+onMounted(() => {
+  if (user.value && slug.value) {
+    fetchPublicEventBySlug(slug.value, { force: true })
+  }
+})
+
 const route = useRoute()
 const slug = computed(() => String(route.params.slug || ''))
 
