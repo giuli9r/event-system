@@ -159,11 +159,10 @@ const tripCities = [
           confirmados.
         </p>
         <div class="pt-2 flex flex-wrap justify-center gap-3">
-          <button type="button"
-            class="px-5 py-2.5 rounded-xl text-xs font-bold uppercase bg-[#E53924] hover:bg-[#d0301d] text-[#F5EEDC] transition-colors"
-            @click="resetFilters">
+          <UButton @click="resetFilters" color="primary"
+            class="px-5 py-2.5 rounded-xl text-xs font-bold uppercase bg-[#E53924] hover:bg-[#d0301d] text-[#F5EEDC] transition-colors">
             Ver todos los recitales
-          </button>
+          </UButton>
           <a href="https://wa.me/5493564000000" target="_blank" rel="noopener noreferrer"
             class="px-5 py-2.5 rounded-xl text-xs font-bold uppercase border border-[#25D366]/40 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-colors flex items-center gap-1.5">
             <UIcon name="i-heroicons-chat-bubble-oval-left-ellipsis" class="w-4 h-4" />
