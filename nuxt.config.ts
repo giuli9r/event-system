@@ -7,7 +7,8 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@nuxtjs/supabase',
     '@nuxtjs/sitemap',
-    'nuxt-marquee'
+    'nuxt-marquee',
+    '@vercel/analytics'
   ],
 
   features: {
@@ -21,7 +22,6 @@ export default defineNuxtConfig({
         lang: 'es'
       },
       title: 'Tripu Producciones | Viajes a Recitales y Festivales de Música',
-      titleTemplate: (chunk?: string) => (chunk && !chunk.includes('Tripu Producciones')) ? `${chunk} | Tripu Producciones` : (chunk || 'Tripu Producciones'),
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
