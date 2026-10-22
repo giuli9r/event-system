@@ -55,8 +55,31 @@ export default defineNuxtConfig({
     }
   },
 
-  // Cabeceras HTTP de seguridad global
+  // Cabeceras HTTP de seguridad global y reglas de rendimiento en el Edge (SWR / SPA)
   routeRules: {
+    // 1. Portada: SWR de 5 minutos (300s). Servido desde Edge CDN en < 30ms, revalidación en segundo plano
+    '/': {
+      swr: 300,
+      headers: {
+        'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=600'
+      }
+    },
+    // 2. Fichas de recitales y traslados: SWR de 10 minutos (600s)
+    '/viajes/**': {
+      swr: 600,
+      headers: {
+        'Cache-Control': 'public, max-age=60, s-maxage=600, stale-while-revalidate=1200'
+      }
+    },
+    // 3. Páginas institucionales y contacto
+    '/contacto': { swr: 3600 },
+    '/politica-de-privacidad': { swr: 86400 },
+    '/terminos-y-condiciones': { swr: 86400 },
+    // 4. Panel Administrativo: Renderizado del lado del cliente (SPA), elimina costo de SSR para operadores
+    '/admin/**': {
+      ssr: false
+    },
+    // 5. Cabeceras de seguridad globales
     '/**': {
       headers: {
         'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',

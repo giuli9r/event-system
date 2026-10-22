@@ -48,44 +48,44 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // 4. Notificación vía Resend (opcional y resiliente)
+  // 4. Notificación vía Resend (asíncrona no bloqueante y resiliente)
   const config = useRuntimeConfig()
   const resendApiKey = config.resendApiKey
   const receiverEmail = config.contactReceiverEmail || 'contacto@tripu.com.ar'
 
   if (resendApiKey) {
-    try {
-      const emailHtml = `
-        <div style="font-family: sans-serif; background: #0F0F12; color: #F5EEDC; padding: 24px; border-radius: 12px;">
-          <h2 style="color: #E53924; margin-top: 0;">Nueva consulta recibida en la web de Tripu</h2>
-          <p><strong>Nombre:</strong> ${name}</p>
-          <p><strong>Email:</strong> <a href="mailto:${email}" style="color: #FF6B55;">${email}</a></p>
-          <p><strong>Teléfono:</strong> ${phone || 'No especificado'}</p>
-          <p><strong>Show de interés:</strong> ${selected_event || 'Consulta general'}</p>
-          <hr style="border: 1px solid #2A2A38; margin: 16px 0;" />
-          <h3 style="color: #F5EEDC; margin-bottom: 8px;">Mensaje:</h3>
-          <p style="white-space: pre-line; background: #14141B; padding: 16px; border-radius: 8px; border: 1px solid #2A2A38;">${message}</p>
-          <p style="font-size: 11px; color: #888; margin-top: 24px;">Tripu Producciones — Notificaciones del Sistema</p>
-        </div>
-      `
+    const emailHtml = `
+      <div style="font-family: sans-serif; background: #0F0F12; color: #F5EEDC; padding: 24px; border-radius: 12px;">
+        <h2 style="color: #E53924; margin-top: 0;">Nueva consulta recibida en la web de Tripu</h2>
+        <p><strong>Nombre:</strong> ${name}</p>
+        <p><strong>Email:</strong> <a href="mailto:${email}" style="color: #FF6B55;">${email}</a></p>
+        <p><strong>Teléfono:</strong> ${phone || 'No especificado'}</p>
+        <p><strong>Show de interés:</strong> ${selected_event || 'Consulta general'}</p>
+        <hr style="border: 1px solid #2A2A38; margin: 16px 0;" />
+        <h3 style="color: #F5EEDC; margin-bottom: 8px;">Mensaje:</h3>
+        <p style="white-space: pre-line; background: #14141B; padding: 16px; border-radius: 8px; border: 1px solid #2A2A38;">${message}</p>
+        <p style="font-size: 11px; color: #888; margin-top: 24px;">Tripu Producciones — Notificaciones del Sistema</p>
+      </div>
+    `
 
-      await $fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${resendApiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: {
-          from: 'Tripu Web <onboarding@resend.dev>',
-          to: [receiverEmail],
-          subject: `🎸 Nueva consulta web: ${name} (${selected_event || 'General'})`,
-          html: emailHtml
-        }
-      })
-    } catch (mailErr) {
-      // Degradación elegante: el mensaje ya fue almacenado en la base de datos
+    // Despacho no bloqueante en segundo plano (fire-and-forget)
+    // Responde inmediatamente al usuario en < 50ms sin retener la función serverless esperando la red externa
+    $fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: {
+        from: 'Tripu Web <onboarding@resend.dev>',
+        to: [receiverEmail],
+        subject: `🎸 Nueva consulta web: ${name} (${selected_event || 'General'})`,
+        html: emailHtml
+      }
+    }).catch((mailErr) => {
+      // Degradación elegante: el mensaje ya fue almacenado en PostgreSQL
       console.warn('[API /api/contact] No se pudo despachar el correo de Resend (la consulta quedó guardada en DB):', mailErr)
-    }
+    })
   }
 
   return {
