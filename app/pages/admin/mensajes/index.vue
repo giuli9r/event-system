@@ -245,95 +245,124 @@ function getWhatsAppReplyUrl(msg: ContactMessage) {
     </UCard>
 
     <!-- MODAL DETALLE DE CONSULTA -->
-    <UModal v-model:open="isDetailOpen">
+    <UModal
+      v-model:open="isDetailOpen"
+      :ui="{
+        content: 'sm:max-w-[620px] max-h-[92dvh]'
+      }"
+    >
       <template #content>
-        <div v-if="selectedMessage" class="p-6 bg-[#14141B] border border-[#2A2A38] rounded-2xl text-[#F5EEDC] space-y-5">
-          <!-- Cabecera del Modal -->
-          <div class="flex items-start justify-between pb-4 border-b border-[#2A2A38]">
-            <div>
-              <span class="text-[10px] font-bold uppercase tracking-wider text-[#E53924]">Detalle de Consulta Web</span>
-              <h2 class="text-xl font-black uppercase text-[#F5EEDC]">
-                {{ selectedMessage.name }}
-              </h2>
-              <span class="text-xs text-zinc-400">Recibido el {{ formatDate(selectedMessage.created_at) }}</span>
+        <div v-if="selectedMessage" class="p-6 sm:p-7 bg-[#14141B] border border-[#2A2A38] rounded-2xl text-[#F5EEDC] space-y-6 sm:min-h-[540px] flex flex-col justify-between overflow-y-auto">
+          <!-- Contenedor Superior (Cabecera, Contacto, Mensaje) -->
+          <div class="space-y-5">
+            <!-- Cabecera del Modal -->
+            <div class="flex items-start justify-between pb-4 border-b border-[#2A2A38]">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-[#E53924]">Detalle de Consulta Web</span>
+                <h2 class="text-xl sm:text-2xl font-black uppercase text-[#F5EEDC] tracking-tight">
+                  {{ selectedMessage.name }}
+                </h2>
+                <span class="text-xs text-zinc-400">Recibido el {{ formatDate(selectedMessage.created_at) }}</span>
+              </div>
+              <button
+                type="button"
+                class="text-zinc-400 hover:text-[#F5EEDC] p-1.5 rounded-lg hover:bg-[#1A1A22] transition-colors cursor-pointer"
+                title="Cerrar modal"
+                @click="isDetailOpen = false"
+              >
+                <UIcon name="i-heroicons-x-mark" class="w-6 h-6" />
+              </button>
             </div>
-            <button
-              type="button"
-              class="text-zinc-400 hover:text-[#F5EEDC] p-1"
-              @click="isDetailOpen = false"
-            >
-              <UIcon name="i-heroicons-x-mark" class="w-6 h-6" />
-            </button>
-          </div>
 
-          <!-- Datos de Contacto -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl bg-[#1A1A22] border border-[#2A2A38] text-xs">
-            <div>
-              <span class="text-zinc-500 block">Email:</span>
-              <a :href="`mailto:${selectedMessage.email}`" class="text-[#FF6B55] hover:underline font-bold">
-                {{ selectedMessage.email }}
-              </a>
+            <!-- Datos de Contacto -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 p-4 rounded-xl bg-[#1A1A22] border border-[#2A2A38] text-xs">
+              <div>
+                <span class="text-zinc-500 block mb-0.5">Email del pasajero:</span>
+                <a :href="`mailto:${selectedMessage.email}`" class="text-[#FF6B55] hover:underline font-bold inline-flex items-center gap-1">
+                  <UIcon name="i-heroicons-envelope" class="w-3.5 h-3.5 text-zinc-400" />
+                  <span>{{ selectedMessage.email }}</span>
+                </a>
+              </div>
+              <div>
+                <span class="text-zinc-500 block mb-0.5">Teléfono / WhatsApp:</span>
+                <span class="text-[#F5EEDC] font-bold inline-flex items-center gap-1">
+                  <UIcon name="i-heroicons-phone" class="w-3.5 h-3.5 text-zinc-400" />
+                  <span>{{ selectedMessage.phone || 'No especificado' }}</span>
+                </span>
+              </div>
+              <div class="sm:col-span-2 pt-1 border-t border-[#2A2A38]/50">
+                <span class="text-zinc-500 block mb-0.5">Show o evento de interés:</span>
+                <span class="text-emerald-400 font-bold inline-flex items-center gap-1">
+                  <UIcon name="i-heroicons-ticket" class="w-3.5 h-3.5 text-emerald-500" />
+                  <span>{{ selectedMessage.selected_event || 'Consulta general' }}</span>
+                </span>
+              </div>
             </div>
-            <div>
-              <span class="text-zinc-500 block">Teléfono / WhatsApp:</span>
-              <span class="text-[#F5EEDC] font-bold">
-                {{ selectedMessage.phone || 'No especificado' }}
-              </span>
-            </div>
-            <div class="sm:col-span-2">
-              <span class="text-zinc-500 block">Show de interés:</span>
-              <span class="text-emerald-400 font-bold">
-                {{ selectedMessage.selected_event || 'Consulta general' }}
-              </span>
-            </div>
-          </div>
 
-          <!-- Mensaje Completo -->
-          <div class="space-y-1.5">
-            <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">Contenido del Mensaje:</span>
-            <div class="p-4 rounded-xl bg-[#0F0F12] border border-[#2A2A38] text-xs sm:text-sm text-zinc-200 whitespace-pre-line leading-relaxed max-h-60 overflow-y-auto">
-              {{ selectedMessage.message }}
+            <!-- Mensaje Completo -->
+            <div class="space-y-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">Contenido del Mensaje:</span>
+              <div class="p-4 rounded-xl bg-[#0F0F12] border border-[#2A2A38] text-xs sm:text-sm text-zinc-200 whitespace-pre-line leading-relaxed min-h-[120px] max-h-72 overflow-y-auto">
+                {{ selectedMessage.message }}
+              </div>
             </div>
           </div>
 
           <!-- Gestión de Estados y Respuesta -->
-          <div class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#2A2A38]">
-            <div class="flex items-center gap-1.5 w-full sm:w-auto">
-              <span class="text-[11px] font-bold text-zinc-400 mr-1">Marcar como:</span>
-              <button
-                type="button"
-                class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-colors"
-                :class="selectedMessage.status === 'leido' ? 'bg-blue-600 text-white' : 'bg-[#1A1A22] text-zinc-400 border border-[#2A2A38]'"
-                @click="setStatus(selectedMessage, 'leido')"
-              >
-                Leído
-              </button>
-              <button
-                type="button"
-                class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-colors"
-                :class="selectedMessage.status === 'respondido' ? 'bg-purple-600 text-white' : 'bg-[#1A1A22] text-zinc-400 border border-[#2A2A38]'"
-                @click="setStatus(selectedMessage, 'respondido')"
-              >
-                Respondido
-              </button>
-              <button
-                type="button"
-                class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-colors"
-                :class="selectedMessage.status === 'archivado' ? 'bg-zinc-600 text-white' : 'bg-[#1A1A22] text-zinc-400 border border-[#2A2A38]'"
-                @click="setStatus(selectedMessage, 'archivado')"
-              >
-                Archivar
-              </button>
+          <div class="pt-4 border-t border-[#2A2A38] space-y-4">
+            <!-- Fila 1: Cambio de Estado Operativo (Fila Completa) -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 w-full bg-[#1A1A22] p-3 rounded-xl border border-[#2A2A38]">
+              <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                Marcar como:
+              </span>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <button
+                  type="button"
+                  class="px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer inline-flex items-center gap-1.5"
+                  :class="selectedMessage.status === 'nuevo' ? 'bg-[#E53924] text-white shadow-md shadow-[#E53924]/20' : 'bg-[#14141B] text-zinc-400 hover:text-white border border-[#2A2A38]'"
+                  @click="setStatus(selectedMessage, 'nuevo')"
+                >
+                  <span class="w-2 h-2 rounded-full" :class="selectedMessage.status === 'nuevo' ? 'bg-white' : 'bg-[#E53924]'" />
+                  Nuevo
+                </button>
+                <button
+                  type="button"
+                  class="px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer inline-flex items-center gap-1.5"
+                  :class="selectedMessage.status === 'leido' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'bg-[#14141B] text-zinc-400 hover:text-white border border-[#2A2A38]'"
+                  @click="setStatus(selectedMessage, 'leido')"
+                >
+                  <UIcon name="i-heroicons-eye" class="w-3.5 h-3.5" />
+                  Leído
+                </button>
+                <button
+                  type="button"
+                  class="px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer inline-flex items-center gap-1.5"
+                  :class="selectedMessage.status === 'respondido' ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'bg-[#14141B] text-zinc-400 hover:text-white border border-[#2A2A38]'"
+                  @click="setStatus(selectedMessage, 'respondido')"
+                >
+                  <UIcon name="i-heroicons-check-circle" class="w-3.5 h-3.5" />
+                  Respondido
+                </button>
+                <button
+                  type="button"
+                  class="px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer inline-flex items-center gap-1.5"
+                  :class="selectedMessage.status === 'archivado' ? 'bg-zinc-600 text-white shadow-md' : 'bg-[#14141B] text-zinc-400 hover:text-white border border-[#2A2A38]'"
+                  @click="setStatus(selectedMessage, 'archivado')"
+                >
+                  <UIcon name="i-heroicons-archive-box" class="w-3.5 h-3.5" />
+                  Archivar
+                </button>
+              </div>
             </div>
 
-            <!-- Botones de Acción de Respuesta -->
-            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <!-- Fila 2: Acciones de Respuesta (WhatsApp y Email) -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
               <a
                 v-if="selectedMessage.phone"
                 :href="getWhatsAppReplyUrl(selectedMessage)"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="px-3.5 py-2 rounded-xl text-xs font-bold uppercase bg-[#25D366] hover:bg-[#20ba5a] text-[#0F0F12] flex items-center gap-1.5 shadow-md shadow-[#25D366]/20 transition-all"
+                class="px-4 py-2.5 rounded-xl text-xs font-bold uppercase bg-[#25D366] hover:bg-[#20ba5a] text-[#0F0F12] flex items-center justify-center gap-2 shadow-md shadow-[#25D366]/20 transition-all cursor-pointer"
                 @click="setStatus(selectedMessage, 'respondido')"
               >
                 <UIcon name="i-heroicons-chat-bubble-oval-left-ellipsis" class="w-4 h-4 stroke-[2]" />
@@ -342,11 +371,11 @@ function getWhatsAppReplyUrl(msg: ContactMessage) {
 
               <a
                 :href="`mailto:${selectedMessage.email}?subject=${encodeURIComponent(`Respuesta Tripu - ${selectedMessage.selected_event || 'Consulta'}`)}`"
-                class="px-3.5 py-2 rounded-xl text-xs font-bold uppercase bg-[#1A1A22] hover:bg-[#2A2A38] text-white border border-[#2A2A38] flex items-center gap-1.5 transition-colors"
+                class="px-4 py-2.5 rounded-xl text-xs font-bold uppercase bg-[#1A1A22] hover:bg-[#2A2A38] text-white border border-[#2A2A38] hover:border-zinc-500 flex items-center justify-center gap-2 transition-colors cursor-pointer"
                 @click="setStatus(selectedMessage, 'respondido')"
               >
                 <UIcon name="i-heroicons-envelope" class="w-4 h-4" />
-                <span>Email</span>
+                <span>Responder por Email</span>
               </a>
             </div>
           </div>

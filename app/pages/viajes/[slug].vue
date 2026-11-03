@@ -60,9 +60,12 @@ useSeoMeta({
   twitterCard: 'summary_large_image'
 })
 
+const config = useRuntimeConfig()
+const defaultWhatsApp = computed(() => (config.public.whatsappNumber as string) || '5493564692598')
+
 // Generador de enlace contextual hacia WhatsApp (US-10)
 function getWhatsAppUrl(tierName?: string) {
-  const phone = '5493564000000'
+  const phone = defaultWhatsApp.value
   const ev = currentEvent.value
   const dateFormatted = formatEventDate(ev.event_date)
   const venue = ev.venue?.name || 'el recital'

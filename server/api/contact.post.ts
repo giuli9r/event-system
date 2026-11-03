@@ -51,7 +51,7 @@ export default defineEventHandler(async (event) => {
   // 4. Notificación vía Resend (asíncrona no bloqueante y resiliente)
   const config = useRuntimeConfig()
   const resendApiKey = config.resendApiKey
-  const receiverEmail = config.contactReceiverEmail || 'contacto@tripu.com.ar'
+  const receiverEmail = config.contactReceiverEmail || 'tripuproducciones@gmail.com'
 
   if (resendApiKey) {
     const emailHtml = `

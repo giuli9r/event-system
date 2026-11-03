@@ -22,6 +22,10 @@ const state = reactive<ContactMessageInput>({
   honeypot: ''
 })
 
+const config = useRuntimeConfig()
+const whatsappNumber = computed(() => (config.public.whatsappNumber as string) || '5493564692598')
+const contactEmail = computed(() => (config.public.contactEmail as string) || 'tripuproducciones@gmail.com')
+
 const isSubmitting = ref(false)
 const submitSuccess = ref(false)
 const errorMessage = ref<string | null>(null)
@@ -65,7 +69,8 @@ function resetForm() {
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- Encabezado de la página -->
       <div class="text-center max-w-3xl mx-auto mb-12 sm:mb-16 space-y-4">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1A1A22] border border-[#2A2A38] text-xs font-bold uppercase tracking-wider text-[#FF6B55]">
+        <div
+          class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1A1A22] border border-[#2A2A38] text-xs font-bold uppercase tracking-wider text-[#FF6B55]">
           <span class="w-1.5 h-1.5 rounded-full bg-[#E53924]" />
           <span>Atención al Pasajero</span>
         </div>
@@ -73,7 +78,8 @@ function resetForm() {
           Ponete en Contacto con Tripu
         </h1>
         <p class="text-zinc-400 text-sm sm:text-base leading-relaxed">
-          ¿Tenés consultas sobre las salidas, formas de pago, traslados grupales o viajes a medida? Dejanos tu mensaje y nuestro equipo te asesorará en el día.
+          ¿Tenés consultas sobre las salidas, formas de pago, traslados grupales o viajes a medida? Dejanos tu mensaje y
+          nuestro equipo te asesorará en el día.
         </p>
       </div>
 
@@ -82,24 +88,33 @@ function resetForm() {
         <div class="lg:col-span-5 space-y-6">
           <!-- Tarjeta de Conversión WhatsApp -->
           <div class="p-6 sm:p-8 rounded-2xl bg-[#14141B] border border-[#2A2A38] space-y-4">
-            <div class="w-12 h-12 rounded-xl bg-[#25D366]/10 border border-[#25D366]/30 flex items-center justify-center text-[#25D366]">
+            <div
+              class="w-12 h-12 rounded-xl bg-[#25D366]/10 border border-[#25D366]/30 flex items-center justify-center text-[#25D366]">
               <UIcon name="i-heroicons-chat-bubble-oval-left-ellipsis" class="w-6 h-6 stroke-[2]" />
             </div>
             <h2 class="text-xl font-black uppercase text-[#F5EEDC] tracking-tight">
               ¿Buscás respuesta inmediata?
             </h2>
             <p class="text-xs sm:text-sm text-zinc-400 leading-relaxed">
-              Atendemos todas las consultas de salidas, lugares disponibles y reservas directas a través de nuestro canal oficial de WhatsApp.
+              Atendemos todas las consultas de salidas, lugares disponibles y reservas directas a través de nuestro
+              canal oficial de WhatsApp.
             </p>
-            <a
-              href="https://wa.me/5493564000000?text=Hola%20Tripu!%20%F0%9F%91%8B%20Quería%20hacerles%20una%20consulta%20por%20los%20viajes%20a%20recitales."
-              target="_blank"
-              rel="noopener noreferrer"
-              class="w-full py-3.5 px-4 rounded-xl font-black uppercase text-xs tracking-wider bg-[#25D366] hover:bg-[#20ba5a] text-[#0F0F12] flex items-center justify-center gap-2 shadow-lg shadow-[#25D366]/20 transition-all active:scale-95"
-            >
+            <a :href="`https://wa.me/${whatsappNumber}?text=${encodeURIComponent('¡Hola Tripu! 👋 Quería hacerles una consulta por los viajes a recitales.')}`"
+              target="_blank" rel="noopener noreferrer"
+              class="w-full py-3.5 px-4 rounded-xl font-black uppercase text-xs tracking-wider bg-[#25D366] hover:bg-[#20ba5a] text-[#0F0F12] flex items-center justify-center gap-2 shadow-lg shadow-[#25D366]/20 transition-all active:scale-95">
               <UIcon name="i-heroicons-chat-bubble-left-right" class="w-4 h-4 stroke-[2.5]" />
               <span>Chatear por WhatsApp</span>
             </a>
+            <!-- <a href="https://www.instagram.com/tripuproducciones/" target="_blank" rel="noopener noreferrer"
+              class="w-full py-3.5 px-4 rounded-xl border-2 border-[#E53924] bg-[#14141B] hover:bg-[#1a1a1a] text-[#F5EEDC] font-black uppercase text-xs tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#E53924]/20 transition-all active:scale-95"
+              title="Seguinos en Instagram @tripuproducciones">
+              <svg class="w-4 h-4 text-[#FD1D1D] group-hover:scale-110 transition-transform shrink-0"
+                viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+              </svg>
+              <span>Seguinos en Instagram!</span>
+            </a> -->
           </div>
 
           <!-- Canales Oficiales y Ubicación -->
@@ -128,7 +143,9 @@ function resetForm() {
                 <UIcon name="i-heroicons-envelope" class="w-5 h-5 text-[#E53924] shrink-0 mt-0.5" />
                 <div>
                   <strong class="text-[#F5EEDC] block">Email:</strong>
-                  <span class="text-zinc-400">contacto@tripu.com.ar</span>
+                  <a :href="`mailto:${contactEmail}`" class="text-zinc-300 hover:text-[#E53924] transition-colors">
+                    {{ contactEmail }}
+                  </a>
                 </div>
               </div>
             </div>
@@ -140,7 +157,8 @@ function resetForm() {
           <div class="p-6 sm:p-10 rounded-2xl bg-[#14141B] border border-[#2A2A38] shadow-2xl">
             <!-- ESTADO DE ÉXITO TRAS ENVÍO -->
             <div v-if="submitSuccess" class="text-center py-10 space-y-5">
-              <div class="w-16 h-16 rounded-full bg-[#25D366]/10 border border-[#25D366]/30 flex items-center justify-center text-[#25D366] mx-auto">
+              <div
+                class="w-16 h-16 rounded-full bg-[#25D366]/10 border border-[#25D366]/30 flex items-center justify-center text-[#25D366] mx-auto">
                 <UIcon name="i-heroicons-check-circle" class="w-8 h-8" />
               </div>
               <div class="space-y-2">
@@ -148,22 +166,17 @@ function resetForm() {
                   ¡Mensaje Enviado con Éxito!
                 </h3>
                 <p class="text-xs sm:text-sm text-zinc-300 max-w-md mx-auto leading-relaxed">
-                  Muchas gracias por escribirnos. Registramos tu consulta y un coordinador de Tripu se pondrá en contacto con vos a la brevedad.
+                  Muchas gracias por escribirnos. Registramos tu consulta y un coordinador de Tripu se pondrá en
+                  contacto con vos a la brevedad.
                 </p>
               </div>
               <div class="pt-4 flex flex-wrap justify-center gap-3">
-                <UButton
-                  color="neutral"
-                  variant="subtle"
-                  class="font-bold uppercase text-xs px-5 py-2.5 rounded-xl border border-[#2A2A38]"
-                  @click="resetForm"
-                >
+                <UButton color="neutral" variant="subtle"
+                  class="font-bold uppercase text-xs px-5 py-2.5 rounded-xl border border-[#2A2A38]" @click="resetForm">
                   Enviar otra consulta
                 </UButton>
-                <NuxtLink
-                  to="/"
-                  class="px-5 py-2.5 rounded-xl font-bold uppercase text-xs bg-[#E53924] hover:bg-[#d0301d] text-[#F5EEDC] transition-colors"
-                >
+                <NuxtLink to="/"
+                  class="px-5 py-2.5 rounded-xl font-bold uppercase text-xs bg-[#E53924] hover:bg-[#d0301d] text-[#F5EEDC] transition-colors">
                   Ver Próximos Viajes
                 </NuxtLink>
               </div>
@@ -172,38 +185,22 @@ function resetForm() {
             <!-- FORMULARIO DE CONSULTA ACTIVO -->
             <form v-else class="space-y-5" @submit.prevent="onSubmit">
               <!-- Alerta de Error si ocurre -->
-              <div
-                v-if="errorMessage"
-                class="p-4 rounded-xl bg-red-950/40 border border-red-800 text-red-200 text-xs flex items-center gap-3"
-              >
+              <div v-if="errorMessage"
+                class="p-4 rounded-xl bg-red-950/40 border border-red-800 text-red-200 text-xs flex items-center gap-3">
                 <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5 text-[#E53924] shrink-0" />
                 <span>{{ errorMessage }}</span>
               </div>
 
-              <!-- Campo Honeypot Oculto (Antispam) -->
-              <input
-                v-model="state.honeypot"
-                type="text"
-                name="b_honey"
-                tabindex="-1"
-                autocomplete="off"
-                class="hidden"
-                aria-hidden="true"
-              />
+              <input v-model="state.honeypot" type="text" name="b_honey" tabindex="-1" autocomplete="off" class="hidden"
+                aria-hidden="true" />
 
               <!-- Nombre Completo -->
               <div class="space-y-1.5">
                 <label for="name" class="block text-xs font-bold uppercase tracking-wider text-zinc-300">
                   Nombre y Apellido <span class="text-[#E53924]">*</span>
                 </label>
-                <input
-                  id="name"
-                  v-model="state.name"
-                  type="text"
-                  required
-                  placeholder="Ej: Sofía Martínez"
-                  class="w-full px-4 py-3 rounded-xl bg-[#1A1A22] border border-[#2A2A38] text-sm text-[#F5EEDC] placeholder-zinc-500 focus:outline-none focus:border-[#E53924] focus:ring-1 focus:ring-[#E53924] transition-colors"
-                />
+                <input id="name" v-model="state.name" type="text" required placeholder="Ej: Sofía Martínez"
+                  class="w-full px-4 py-3 rounded-xl bg-[#1A1A22] border border-[#2A2A38] text-sm text-[#F5EEDC] placeholder-zinc-500 focus:outline-none focus:border-[#E53924] focus:ring-1 focus:ring-[#E53924] transition-colors" />
               </div>
 
               <!-- Fila: Email y Teléfono -->
@@ -212,27 +209,16 @@ function resetForm() {
                   <label for="email" class="block text-xs font-bold uppercase tracking-wider text-zinc-300">
                     Correo Electrónico <span class="text-[#E53924]">*</span>
                   </label>
-                  <input
-                    id="email"
-                    v-model="state.email"
-                    type="email"
-                    required
-                    placeholder="tu@email.com"
-                    class="w-full px-4 py-3 rounded-xl bg-[#1A1A22] border border-[#2A2A38] text-sm text-[#F5EEDC] placeholder-zinc-500 focus:outline-none focus:border-[#E53924] focus:ring-1 focus:ring-[#E53924] transition-colors"
-                  />
+                  <input id="email" v-model="state.email" type="email" required placeholder="tu@email.com"
+                    class="w-full px-4 py-3 rounded-xl bg-[#1A1A22] border border-[#2A2A38] text-sm text-[#F5EEDC] placeholder-zinc-500 focus:outline-none focus:border-[#E53924] focus:ring-1 focus:ring-[#E53924] transition-colors" />
                 </div>
 
                 <div class="space-y-1.5">
                   <label for="phone" class="block text-xs font-bold uppercase tracking-wider text-zinc-300">
                     Teléfono / WhatsApp <span class="text-zinc-500 text-[10px]">(Opcional)</span>
                   </label>
-                  <input
-                    id="phone"
-                    v-model="state.phone"
-                    type="tel"
-                    placeholder="Ej: 3564 123456"
-                    class="w-full px-4 py-3 rounded-xl bg-[#1A1A22] border border-[#2A2A38] text-sm text-[#F5EEDC] placeholder-zinc-500 focus:outline-none focus:border-[#E53924] focus:ring-1 focus:ring-[#E53924] transition-colors"
-                  />
+                  <input id="phone" v-model="state.phone" type="tel" placeholder="Ej: 3564 123456"
+                    class="w-full px-4 py-3 rounded-xl bg-[#1A1A22] border border-[#2A2A38] text-sm text-[#F5EEDC] placeholder-zinc-500 focus:outline-none focus:border-[#E53924] focus:ring-1 focus:ring-[#E53924] transition-colors" />
                 </div>
               </div>
 
@@ -241,13 +227,9 @@ function resetForm() {
                 <label for="selected_event" class="block text-xs font-bold uppercase tracking-wider text-zinc-300">
                   Show o Viaje de Interés <span class="text-zinc-500 text-[10px]">(Opcional)</span>
                 </label>
-                <input
-                  id="selected_event"
-                  v-model="state.selected_event"
-                  type="text"
+                <input id="selected_event" v-model="state.selected_event" type="text"
                   placeholder="Ej: Tan Biónica en River / Los Piojos"
-                  class="w-full px-4 py-3 rounded-xl bg-[#1A1A22] border border-[#2A2A38] text-sm text-[#F5EEDC] placeholder-zinc-500 focus:outline-none focus:border-[#E53924] focus:ring-1 focus:ring-[#E53924] transition-colors"
-                />
+                  class="w-full px-4 py-3 rounded-xl bg-[#1A1A22] border border-[#2A2A38] text-sm text-[#F5EEDC] placeholder-zinc-500 focus:outline-none focus:border-[#E53924] focus:ring-1 focus:ring-[#E53924] transition-colors" />
               </div>
 
               <!-- Mensaje / Consulta -->
@@ -255,22 +237,14 @@ function resetForm() {
                 <label for="message" class="block text-xs font-bold uppercase tracking-wider text-zinc-300">
                   Tu Consulta <span class="text-[#E53924]">*</span>
                 </label>
-                <textarea
-                  id="message"
-                  v-model="state.message"
-                  required
-                  rows="4"
+                <textarea id="message" v-model="state.message" required rows="4"
                   placeholder="Contanos tu consulta: cantidad de lugares que necesitan, dudas sobre horarios, paradas intermedias, etc."
-                  class="w-full px-4 py-3 rounded-xl bg-[#1A1A22] border border-[#2A2A38] text-sm text-[#F5EEDC] placeholder-zinc-500 focus:outline-none focus:border-[#E53924] focus:ring-1 focus:ring-[#E53924] transition-colors resize-y min-h-[100px]"
-                />
+                  class="w-full px-4 py-3 rounded-xl bg-[#1A1A22] border border-[#2A2A38] text-sm text-[#F5EEDC] placeholder-zinc-500 focus:outline-none focus:border-[#E53924] focus:ring-1 focus:ring-[#E53924] transition-colors resize-y min-h-[100px]" />
               </div>
 
               <!-- Botón Submit -->
-              <button
-                type="submit"
-                :disabled="isSubmitting"
-                class="w-full py-4 rounded-xl font-black uppercase text-xs tracking-wider bg-[#E53924] hover:bg-[#d0301d] text-white shadow-xl shadow-[#E53924]/20 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
+              <button type="submit" :disabled="isSubmitting"
+                class="w-full py-4 rounded-xl font-black uppercase text-xs tracking-wider bg-[#E53924] hover:bg-[#d0301d] text-white shadow-xl shadow-[#E53924]/20 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer">
                 <UIcon v-if="isSubmitting" name="i-heroicons-arrow-path" class="w-4 h-4 animate-spin" />
                 <UIcon v-else name="i-heroicons-paper-airplane" class="w-4 h-4" />
                 <span>{{ isSubmitting ? 'Enviando consulta...' : 'Enviar Consulta' }}</span>
