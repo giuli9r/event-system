@@ -64,26 +64,20 @@ export default defineNuxtConfig({
     }
   },
 
-  // Cabeceras HTTP de seguridad global y reglas de rendimiento en el Edge (SWR / SPA)
+  // Cabeceras HTTP de seguridad global y reglas de rendimiento en el Edge (ISR / SPA)
   routeRules: {
-    // 1. Portada: SWR de 2 minutos (120s) con soporte de invalidación bajo demanda
+    // 1. Portada: ISR de 2 minutos (120s) con soporte de invalidación bajo demanda
     '/': {
-      swr: 120,
-      headers: {
-        'Cache-Control': 'public, max-age=30, s-maxage=120, stale-while-revalidate=300'
-      }
+      isr: 120
     },
-    // 2. Fichas de recitales y traslados: SWR de 5 minutos (300s)
+    // 2. Fichas de recitales y traslados: ISR de 5 minutos (300s)
     '/viajes/**': {
-      swr: 300,
-      headers: {
-        'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=600'
-      }
+      isr: 300
     },
-    // 3. Páginas institucionales y contacto
-    '/contacto': { swr: 3600 },
-    '/politica-de-privacidad': { swr: 86400 },
-    '/terminos-y-condiciones': { swr: 86400 },
+    // 3. Páginas institucionales y contacto (24hs de caché, libres de purga frecuente)
+    '/contacto': { isr: 86400 },
+    '/politica-de-privacidad': { isr: 86400 },
+    '/terminos-y-condiciones': { isr: 86400 },
     // 4. Panel Administrativo: Renderizado del lado del cliente (SPA), elimina costo de SSR para operadores
     '/admin/**': {
       ssr: false
@@ -101,7 +95,7 @@ export default defineNuxtConfig({
 
   // Configuración de SEO y Sitemap
   site: {
-    url: process.env.NUXT_PUBLIC_SITE_URL || 'https://www.tripu.com.ar'
+    url: process.env.NUXT_PUBLIC_SITE_URL || 'https://tripu-producciones.vercel.app'
   },
 
   sitemap: {
@@ -115,8 +109,9 @@ export default defineNuxtConfig({
     contactReceiverEmail: process.env.CONTACT_RECEIVER_EMAIL || 'contacto@tripu.com.ar',
     vercelBypassToken: process.env.VERCEL_BYPASS_TOKEN || 'tripu_revalidate_secret_token_bypass_2026_secure_key_32chars',
     public: {
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://www.tripu.com.ar',
-      whatsappNumber: process.env.NUXT_PUBLIC_WHATSAPP_NUMBER || '5493410000000'
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://tripu-producciones.vercel.app',
+      whatsappNumber: process.env.NUXT_PUBLIC_WHATSAPP_NUMBER || '5493410000000',
+      bypassToken: process.env.VERCEL_BYPASS_TOKEN || 'tripu_revalidate_secret_token_bypass_2026_secure_key_32chars'
     }
   }
 })
