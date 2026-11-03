@@ -7,7 +7,28 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 
 ---
 
-## [1.1.2] - 2026-11-03
+## [1.2.2] - 2026-11-03
+### Añadido
+* **Manejo Amigable de Duplicidad de Slug / Enlaces Únicos (`events_slug_key`):**
+  * **Intercepción a Nivel Composable (`app/composables/useEvents.ts`):**
+    * Detección defensiva del código de error PostgreSQL `23505` (violación de restricción única `events_slug_key` / HTTP `409 Conflict` de Supabase PostgREST) en `createEventWithTiers`, `updateEvent` y `updateEventWithTiers`.
+    * Consulta automática e inmediata a Supabase para recuperar la información del viaje preexistente (`id`, `title`, `artist_headliner`, `slug`, `event_date`).
+    * Emisión de un error enriquecido con flags (`isSlugDuplicate: true`), datos del conflicto (`existingTitle`, `existingId`, `searchQuery`) y mensaje contextualizado para la capa visual.
+  * **Experiencia de Usuario en Creación y Edición (`app/pages/admin/viajes/nuevo.vue` y `app/pages/admin/viajes/[id]/editar.vue`):**
+    * Alerta interactiva destacada (`UAlert`) en la cabecera del formulario indicando con claridad que el viaje ya fue creado previamente y exhibiendo el **nombre exacto** registrado en el catálogo para buscarlo con el filtro de salidas.
+    * Acciones directas con un solo clic:
+      * **"Buscar por filtro en salidas"**: redirige al catálogo general aplicando automáticamente el término en el buscador.
+      * **"Editar viaje existente"**: botón directo para abrir y gestionar la salida ya existente.
+      * **"Diferenciar enlace de este viaje"**: sufija secuencialmente el slug actual (ej. `...-2`, `...-3`) para permitir registrar un segundo micro, refuerzo u horario sin fricciones ni recargas.
+    * Feedback inline en el campo de entrada del slug: borde de advertencia dinámico en tono ámbar y caja de asistencia contextual con acceso directo a la búsqueda y al asistente de diferenciación.
+    * Auto-limpieza reactiva del estado de conflicto en cuanto el operador tipea una modificación en el campo de slug.
+  * **Sincronización Reactiva de Búsqueda en Catálogo de Salidas (`app/pages/admin/viajes/index.vue`):**
+    * Lectura y vigilancia reactiva del parámetro de consulta `route.query.q` en `onMounted` y mediante `watch(() => route.query.q)`.
+    * Población inmediata del campo `searchQuery` al acceder con `?q=...`, filtrando instantáneamente la grilla de viajes sin interacción manual adicional.
+
+---
+
+## [1.2.1] - 2026-11-03
 ### Corregido
 * **Revalidación e Invalidación Bajo Demanda en Edge CDN de Vercel (ISR On-Demand):**
   * Corrección del error de sintaxis en `app/composables/useEvents.ts` (`triggerPublicRevalidation`): reemplazo de la expresión coma inválida `('/api/revalidate', { ... })` por la invocación asíncrona real `$fetch('/api/revalidate', ...)` con token de bypass seguro de 32 caracteres.

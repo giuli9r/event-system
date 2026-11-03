@@ -192,7 +192,28 @@ export function useEvents() {
         .select()
         .single()
 
-      if (eventErr) throw eventErr
+      if (eventErr) {
+        if (eventErr.code === '23505' || eventErr.message?.includes('events_slug_key')) {
+          const { data: existing } = await supabase
+            .from('events')
+            .select('id, title, artist_headliner, slug, event_date')
+            .eq('slug', eventPayload.slug)
+            .maybeSingle()
+
+          const conflictError = {
+            code: '23505',
+            isSlugDuplicate: true,
+            slug: eventPayload.slug,
+            existingId: existing?.id,
+            existingTitle: existing?.title || eventPayload.title,
+            existingEvent: existing || null,
+            searchQuery: existing?.title || existing?.artist_headliner || eventPayload.artist_headliner || eventPayload.title,
+            message: `Ya existe un viaje registrado con el enlace "/viajes/${eventPayload.slug}". El viaje ya fue creado con el nombre: "${existing?.title || eventPayload.title}".`
+          }
+          throw conflictError
+        }
+        throw eventErr
+      }
       if (!newEvent) throw new Error('No se pudo registrar el evento')
 
       // 2. Insertar los package_tiers asociados
@@ -316,7 +337,29 @@ export function useEvents() {
         .update({ ...eventPayload, updated_at: new Date().toISOString() })
         .eq('id', id)
 
-      if (err) throw err
+      if (err) {
+        if (err.code === '23505' || err.message?.includes('events_slug_key')) {
+          const targetSlug = eventPayload.slug || ''
+          const { data: existing } = await supabase
+            .from('events')
+            .select('id, title, artist_headliner, slug, event_date')
+            .eq('slug', targetSlug)
+            .maybeSingle()
+
+          const conflictError = {
+            code: '23505',
+            isSlugDuplicate: true,
+            slug: targetSlug,
+            existingId: existing?.id,
+            existingTitle: existing?.title || eventPayload.title,
+            existingEvent: existing || null,
+            searchQuery: existing?.title || existing?.artist_headliner || eventPayload.artist_headliner || eventPayload.title,
+            message: `Ya existe otro viaje registrado con el enlace "/viajes/${targetSlug}". El viaje fue creado con el nombre: "${existing?.title || eventPayload.title}".`
+          }
+          throw conflictError
+        }
+        throw err
+      }
 
       // Re-consultar el registro completo con relaciones
       const { data: fullEvent, error: fetchErr } = await supabase
@@ -471,7 +514,29 @@ export function useEvents() {
         .update({ ...eventPayload, updated_at: new Date().toISOString() })
         .eq('id', eventId)
 
-      if (eventErr) throw eventErr
+      if (eventErr) {
+        if (eventErr.code === '23505' || eventErr.message?.includes('events_slug_key')) {
+          const targetSlug = eventPayload.slug || ''
+          const { data: existing } = await supabase
+            .from('events')
+            .select('id, title, artist_headliner, slug, event_date')
+            .eq('slug', targetSlug)
+            .maybeSingle()
+
+          const conflictError = {
+            code: '23505',
+            isSlugDuplicate: true,
+            slug: targetSlug,
+            existingId: existing?.id,
+            existingTitle: existing?.title || eventPayload.title,
+            existingEvent: existing || null,
+            searchQuery: existing?.title || existing?.artist_headliner || eventPayload.artist_headliner || eventPayload.title,
+            message: `Ya existe otro viaje registrado con el enlace "/viajes/${targetSlug}". El viaje fue creado con el nombre: "${existing?.title || eventPayload.title}".`
+          }
+          throw conflictError
+        }
+        throw eventErr
+      }
 
       // 2. Reconciliación de package_tiers
       const { data: currentTiers, error: curErr } = await supabase
