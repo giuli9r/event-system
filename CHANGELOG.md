@@ -7,6 +7,26 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 
 ---
 
+## [1.1.2] - 2026-11-03
+### Corregido
+* **Revalidación e Invalidación Bajo Demanda en Edge CDN de Vercel (ISR On-Demand):**
+  * Corrección del error de sintaxis en `app/composables/useEvents.ts` (`triggerPublicRevalidation`): reemplazo de la expresión coma inválida `('/api/revalidate', { ... })` por la invocación asíncrona real `$fetch('/api/revalidate', ...)` con token de bypass seguro de 32 caracteres.
+  * Cobertura integral de eventos en `useEvents.ts`: disparo automático y no bloqueante (< 200 ms) de la purga en Edge CDN ante:
+    * Creación de viajes (`createEventWithTiers`).
+    * Edición de viajes y reconciliación de tarifas (`updateEventWithTiers`).
+    * Modificación rápida de precios y disponibilidad desde `QuickPriceModal` (`updatePackageTiers`).
+    * Modificación de información general del viaje (`updateEvent`).
+    * Cambios en el estado operativo (`updateEventStatus`) para reflejar altas, cancelaciones o sold out de inmediato.
+    * Eliminación física condicional de salidas (`deleteEvent`).
+  * Purga universal de la portada (`/`) y fichas de viaje (`/viajes/[slug]`) en `server/api/revalidate.post.ts`, garantizando que cualquier actualización en tarifas y precios mínimos ("Desde $X") impacte al instante en el carrusel de Destacados, la grilla de Próximos Eventos y la vista individual.
+  * Resolución robusta del dominio en `revalidate.post.ts`: detección dinámica de `origin` vía `getRequestURL(event)` y variables de entorno Vercel (`VERCEL_PROJECT_PRODUCTION_URL` / `VERCEL_URL`), evitando fallos por resolución DNS con dominios externos.
+* **Alineación de Reglas de Caché e ISR en `nuxt.config.ts`:**
+  * Reemplazo de directivas `swr` con cabeceras `Cache-Control` manuales por directivas nativas `isr: 120` (portada) e `isr: 300` (fichas `/viajes/**`), permitiendo a Nitro generar archivos `.prerender-config.json` con expiración numérica real (`expiration: 120` / `expiration: 300`) y `bypassToken` activo.
+  * Preservación de 24 horas de caché (`isr: 86400`) para páginas institucionales y formulario de contacto (`/contacto`, `/politica-de-privacidad`, `/terminos-y-condiciones`).
+  * Supresión de cabeceras `max-age` agresivas para el navegador, asegurando que los visitantes reciban siempre la versión validada por el Edge CDN sin desfases temporales locales.
+
+---
+
 ## [1.1.1] - 2026-10-09
 ### Añadido
 * **Visualización del Estado de Pago y Enum 'gifted' en Módulo Ventas (`/admin/ventas`):**

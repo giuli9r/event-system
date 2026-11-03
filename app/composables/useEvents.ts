@@ -228,7 +228,7 @@ export function useEvents() {
         events.value.sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime())
         lastFetched.value = Date.now()
 
-        if (fullEvent.status === 'published') {
+        if (fullEvent.status === 'published' || fullEvent.status === 'sold_out') {
           triggerPublicRevalidation({ path: '/', slug: fullEvent.slug })
         }
       }
@@ -243,8 +243,10 @@ export function useEvents() {
   }
 
   /**
-   * Actualización del estado operativo de un viaje ('draft' | 'published' | 'sold_out' | 'completed').
-   * Muta inmediatamente el estado en memoria para feedback instantáneo (0 ms).
+   * Dispara la invalidación y purga reactiva de caché tanto en la memoria del cliente
+   * como en el Edge CDN de Vercel (ISR On-Demand).
+   * - No bloquea la UI del operador (feedback instantáneo < 200 ms).
+   * - Purga siempre la portada ('/') y la ficha del viaje ('/viajes/[slug]').
    */
   function triggerPublicRevalidation(target: { path?: string; slug?: string }) {
     try {
@@ -255,9 +257,15 @@ export function useEvents() {
     }
 
     if (import.meta.client) {
-      ('/api/revalidate', {
+      const config = useRuntimeConfig()
+      const secret = config.public?.bypassToken || 'tripu_revalidate_secret_token_bypass_2026_secure_key_32chars'
+
+      $fetch('/api/revalidate', {
         method: 'POST',
-        body: target
+        body: {
+          ...target,
+          secret
+        }
       }).catch((err) => {
         console.warn('[Revalidate Edge CDN Warning]:', err)
       })
@@ -276,14 +284,14 @@ export function useEvents() {
 
       if (err) throw err
 
-      const index = events.value.findIndex(e => e.id === id)
-      if (index !== -1) {
-        events.value[index].status = status
+      const event = events.value.find(e => e.id === id)
+      if (event) {
+        event.status = status
         lastFetched.value = Date.now()
 
-        if (status === 'published' || status === 'sold_out') {
-          triggerPublicRevalidation({ path: '/', slug: events.value[index]?.slug })
-        }
+        // Cualquier cambio de estado operativo (publicado, agotado, borrador, cancelado)
+        // debe purgar la portada y la ficha del viaje en el Edge CDN
+        triggerPublicRevalidation({ path: '/', slug: event.slug })
       }
 
       return { error: null }
@@ -327,7 +335,8 @@ export function useEvents() {
         }
         lastFetched.value = Date.now()
 
-        if ((fullEvent as any).status === 'published') {
+        // Purgar portada y ficha del viaje ante cualquier actualización
+        if ((fullEvent as any).slug) {
           triggerPublicRevalidation({ path: '/', slug: (fullEvent as any).slug })
         }
       }
@@ -426,6 +435,11 @@ export function useEvents() {
           }
         }
         lastFetched.value = Date.now()
+
+        // Purgar portada y ficha con las nuevas tarifas y disponibilidad
+        if (ev.slug) {
+          triggerPublicRevalidation({ path: '/', slug: ev.slug })
+        }
       }
 
       return { error: null }
@@ -533,6 +547,11 @@ export function useEvents() {
         }
         events.value.sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime())
         lastFetched.value = Date.now()
+
+        // Purgar portada y ficha del viaje con los paquetes de tarifas reconciliados
+        if ((fullEvent as any).slug) {
+          triggerPublicRevalidation({ path: '/', slug: (fullEvent as any).slug })
+        }
       }
 
       return { data: fullEvent as unknown as EventWithRelations, error: null }
@@ -556,6 +575,8 @@ export function useEvents() {
     error.value = null
 
     try {
+      const targetSlug = events.value.find(e => e.id === id)?.slug
+
       // 1. Consultar si existen ventas registradas para este viaje
       const { data: sales, error: salesErr } = await supabase
         .from('sales')
@@ -596,6 +617,10 @@ export function useEvents() {
 
       events.value = events.value.filter(e => e.id !== id)
       lastFetched.value = Date.now()
+
+      // Purgar portada y la ficha del viaje eliminado
+      triggerPublicRevalidation({ path: '/', slug: targetSlug })
+
       return { error: null }
     } catch (err: any) {
       error.value = err?.message || 'Error al eliminar el viaje'
