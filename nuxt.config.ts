@@ -106,11 +106,13 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     resendApiKey: process.env.RESEND_API_KEY,
-    contactReceiverEmail: process.env.CONTACT_RECEIVER_EMAIL || 'contacto@tripu.com.ar',
+    contactReceiverEmail: process.env.CONTACT_RECEIVER_EMAIL || 'tripuproducciones@gmail.com',
     vercelBypassToken: process.env.VERCEL_BYPASS_TOKEN || 'tripu_revalidate_secret_token_bypass_2026_secure_key_32chars',
     public: {
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://tripu-producciones.vercel.app',
-      whatsappNumber: process.env.NUXT_PUBLIC_WHATSAPP_NUMBER || '5493410000000',
+      whatsappNumber: process.env.NUXT_PUBLIC_WHATSAPP_NUMBER || '5493564692598',
+      whatsappFormatted: process.env.NUXT_PUBLIC_WHATSAPP_FORMATTED || '+54 9 3564 692598',
+      contactEmail: process.env.NUXT_PUBLIC_CONTACT_EMAIL || 'tripuproducciones@gmail.com',
       bypassToken: process.env.VERCEL_BYPASS_TOKEN || 'tripu_revalidate_secret_token_bypass_2026_secure_key_32chars'
     }
   }

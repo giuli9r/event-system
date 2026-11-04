@@ -100,7 +100,7 @@ useSeoMeta({
             <span>Derechos de Acceso, Rectificación y Supresión</span>
           </h2>
           <p>
-            En virtud de la Ley 25.326, tenés derecho a solicitar el acceso, actualización, rectificación o eliminación definitiva de tus datos personales de nuestros registros en cualquier momento, enviando un correo a <strong class="text-[#F5EEDC]">contacto@tripu.com.ar</strong> con el asunto "Protección de Datos Personales".
+            En virtud de la Ley 25.326, tenés derecho a solicitar el acceso, actualización, rectificación o eliminación definitiva de tus datos personales de nuestros registros en cualquier momento, enviando un correo a <strong class="text-[#F5EEDC]">tripuproducciones@gmail.com</strong> con el asunto "Protección de Datos Personales".
           </p>
         </section>
       </main>

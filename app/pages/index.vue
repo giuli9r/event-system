@@ -82,8 +82,11 @@ function handleSelectEvent(event: PublicFeaturedEvent) {
   reservationModalOpen.value = true
 }
 
+const config = useRuntimeConfig()
+const defaultWhatsApp = computed(() => (config.public.whatsappNumber as string) || '5493564692598')
+
 function getWhatsAppReservationUrl(event: PublicFeaturedEvent) {
-  const phone = '5493564000000'
+  const phone = defaultWhatsApp.value
   const dateFormatted = formatEventDate(event.event_date)
   const venue = event.venue?.name || 'recital'
   const text = encodeURIComponent(
@@ -124,7 +127,7 @@ const tripCities = [
           </h2>
         </div>
 
-        <a href="https://wa.me/5493564000000" target="_blank" rel="noopener noreferrer"
+        <a :href="`https://wa.me/${defaultWhatsApp}`" target="_blank" rel="noopener noreferrer"
           class="inline-flex items-center gap-2 text-xs sm:text-sm font-bold uppercase text-[#25D366] hover:text-[#32e776] transition-colors">
           <span>¿No encontrás tu show? Consultanos</span>
           <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
@@ -174,7 +177,7 @@ const tripCities = [
             class="px-5 py-2.5 rounded-xl text-xs font-bold uppercase bg-[#E53924] hover:bg-[#d0301d] text-[#F5EEDC] transition-colors">
             Ver todos los recitales
           </UButton>
-          <a href="https://wa.me/5493564000000" target="_blank" rel="noopener noreferrer"
+          <a :href="`https://wa.me/${defaultWhatsApp}`" target="_blank" rel="noopener noreferrer"
             class="px-5 py-2.5 rounded-xl text-xs font-bold uppercase border border-[#25D366]/40 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-colors flex items-center gap-1.5">
             <UIcon name="i-heroicons-chat-bubble-oval-left-ellipsis" class="w-4 h-4" />
             <span>Consultar por WhatsApp</span>

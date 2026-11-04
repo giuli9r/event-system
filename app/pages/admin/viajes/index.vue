@@ -238,8 +238,19 @@ async function handleCancelEventInstead(ev?: EventWithRelations | null) {
   }
 }
 
+const route = useRoute()
+
 onMounted(() => {
   fetchEvents()
+  if (route.query.q) {
+    searchQuery.value = String(route.query.q)
+  }
+})
+
+watch(() => route.query.q, (newQ) => {
+  if (newQ !== undefined) {
+    searchQuery.value = String(newQ)
+  }
 })
 </script>
 

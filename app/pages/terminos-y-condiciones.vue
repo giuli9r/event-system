@@ -104,7 +104,7 @@ useSeoMeta({
           <p>
             Para consultas adicionales sobre estos términos, podés comunicarte con nuestro equipo a través del formulario de
             <NuxtLink to="/contacto" class="text-[#E53924] underline hover:text-[#FF6B55]">contacto oficial</NuxtLink>
-            o escribiéndonos a <strong class="text-[#F5EEDC]">contacto@tripu.com.ar</strong>.
+            o escribiéndonos a <strong class="text-[#F5EEDC]">tripuproducciones@gmail.com</strong>.
           </p>
         </section>
       </main>

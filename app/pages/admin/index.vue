@@ -348,9 +348,9 @@ onMounted(() => {
               {{ upcomingEvents.length }} salidas
             </span>
           </div>
-          <p class="text-xs text-zinc-400 mt-0.5">
+          <!-- <p class="text-xs text-zinc-400 mt-0.5">
             Primer paneo de los próximos viajes programados en la cartelera operativa.
-          </p>
+          </p> -->
         </div>
 
         <div class="flex items-center gap-2 flex-wrap">

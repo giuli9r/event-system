@@ -105,7 +105,7 @@ function openCreateModal() {
   formState.name = ''
   formState.vehicle_type = 'Combi'
   formState.capacity = 19
-  formState.origin = 'Rosario'
+  formState.origin = 'San Francisco'
   formState.license_plate = ''
   formState.driver_id = null
   formState.cellphone = ''
@@ -509,8 +509,8 @@ onMounted(async () => {
               <UInput v-model="formState.license_plate" placeholder="AF 123 CD" class="w-full uppercase font-mono" />
             </UFormField>
 
-            <UFormField label="Ciudad de Salida" name="origin" required help="Ej. Rosario">
-              <UInput v-model="formState.origin" placeholder="Rosario" class="w-full" />
+            <UFormField label="Ciudad de Salida" name="origin" required help="Ej. San Francisco">
+              <UInput v-model="formState.origin" placeholder="San Francisco" class="w-full" />
             </UFormField>
           </div>
 
@@ -560,7 +560,7 @@ onMounted(async () => {
             Estás a punto de retirar de la flota a:
             <strong class="text-white">{{ transportToDelete?.name }}</strong>
             <span v-if="transportToDelete?.license_plate" class="text-zinc-400"> ({{ transportToDelete?.license_plate
-              }})</span>.
+            }})</span>.
           </p>
           <div class="p-3 rounded-lg bg-red-950/30 border border-red-800/50 text-red-200 text-xs space-y-1">
             <div class="flex items-center gap-1.5 font-semibold">

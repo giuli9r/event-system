@@ -1,6 +1,11 @@
 <script setup lang="ts">
 const mobileMenuOpen = ref(false)
 
+const config = useRuntimeConfig()
+const whatsappNumber = computed(() => (config.public.whatsappNumber as string) || '5493564692598')
+const whatsappFormatted = computed(() => (config.public.whatsappFormatted as string) || '+54 9 3564 692598')
+const contactEmail = computed(() => (config.public.contactEmail as string) || 'tripuproducciones@gmail.com')
+
 const navLinks = [
   { label: 'Próximos Shows', to: '/#proximos-shows', icon: 'i-heroicons-musical-note' },
   { label: 'La Experiencia', to: '/#experiencia', icon: 'i-heroicons-sparkles' },
@@ -26,7 +31,7 @@ const navLinks = [
           <span class="text-zinc-600">•</span>
 
           <!-- WhatsApp -->
-          <a href="https://wa.me/5493564000000" target="_blank" rel="noopener noreferrer"
+          <a :href="`https://wa.me/${whatsappNumber}`" target="_blank" rel="noopener noreferrer"
             class="inline-flex items-center gap-1.5 text-zinc-300 hover:text-[#25D366] transition-colors group"
             title="Escribinos por WhatsApp">
             <svg class="w-3.5 h-3.5 text-[#25D366] group-hover:scale-110 transition-transform shrink-0"
@@ -34,7 +39,7 @@ const navLinks = [
               <path
                 d="M17.472 14.382c-.301-.15-1.782-.879-2.058-.979-.276-.1-.476-.15-.677.15-.201.3-.778.98-1.028 1.256-.251.275-.502.3-.803.15-.301-.15-1.27-.468-2.42-1.493-.895-.798-1.5-1.784-1.676-2.085-.176-.301-.019-.464.132-.614.136-.134.301-.35.452-.526.15-.175.201-.3.301-.501.101-.2.05-.376-.025-.526-.075-.15-.677-1.631-.928-2.233-.245-.587-.494-.508-.677-.517-.175-.009-.376-.009-.577-.009-.201 0-.527.075-.803.376-.276.3-1.054 1.029-1.054 2.511 0 1.482 1.079 2.912 1.23 3.113.15.201 2.124 3.243 5.146 4.549.719.311 1.28.497 1.718.636.723.23 1.381.198 1.901.12.579-.087 1.782-.728 2.033-1.431.251-.703.251-1.305.176-1.431-.075-.126-.276-.201-.577-.351zM12.04 21.75c-1.737 0-3.385-.45-4.834-1.242l-.347-.19-3.601.944.961-3.51-.225-.358a9.69 9.69 0 0 1-1.487-5.184c0-5.385 4.383-9.768 9.77-9.768 2.61 0 5.064 1.018 6.91 2.864a9.72 9.72 0 0 1 2.858 6.904c0 5.386-4.384 9.77-9.769 9.77zm8.307-16.598A11.66 11.66 0 0 0 12.04 1.75C5.419 1.75.029 7.14.029 13.76c0 2.112.55 4.174 1.597 5.992L0 23.75l4.116-1.583a11.96 11.96 0 0 0 5.924 1.583c6.621 0 12.01-5.39 12.01-12.01 0-3.21-1.25-6.226-3.703-8.588z" />
             </svg>
-            <span class="font-mono text-[11px] font-bold text-[#25D366]"> +54 9 3564 000000</span>
+            <span class="font-mono text-[11px] font-bold text-[#25D366]"> {{ whatsappFormatted }}</span>
           </a>
 
           <span class="text-zinc-600">•</span>
@@ -87,7 +92,7 @@ const navLinks = [
             </a>
 
             <!-- WhatsApp -->
-            <a href="https://wa.me/5493564000000" target="_blank" rel="noopener noreferrer"
+            <a :href="`https://wa.me/${whatsappNumber}`" target="_blank" rel="noopener noreferrer"
               class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#25D366]/15 hover:bg-[#25D366]/25 border border-[#25D366]/40 text-[#25D366] transition-all">
               <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
                 <path
@@ -128,7 +133,7 @@ const navLinks = [
           </a>
 
           <!-- Botón WhatsApp Mobile -->
-          <a href="https://wa.me/5493564000000" target="_blank" rel="noopener noreferrer"
+          <a :href="`https://wa.me/${whatsappNumber}`" target="_blank" rel="noopener noreferrer"
             class="flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold uppercase bg-[#25D366]/15 border border-[#25D366]/40 text-[#25D366]">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
               <path
@@ -198,13 +203,18 @@ const navLinks = [
                 <UIcon name="i-heroicons-map-pin" class="w-4 h-4 text-[#E53924]" />
                 <span>San Francisco, Córdoba</span>
               </p>
-              <a href="https://wa.me/5493564000000" target="_blank" rel="noopener noreferrer"
+              <a :href="`https://wa.me/${whatsappNumber}`" target="_blank" rel="noopener noreferrer"
                 class="flex items-center gap-2 hover:text-[#25D366] transition-colors" title="Contactanos por WhatsApp">
                 <svg class="w-4 h-4 text-[#25D366] shrink-0" viewBox="0 0 24 24" fill="currentColor">
                   <path
                     d="M17.472 14.382c-.301-.15-1.782-.879-2.058-.979-.276-.1-.476-.15-.677.15-.201.3-.778.98-1.028 1.256-.251.275-.502.3-.803.15-.301-.15-1.27-.468-2.42-1.493-.895-.798-1.5-1.784-1.676-2.085-.176-.301-.019-.464.132-.614.136-.134.301-.35.452-.526.15-.175.201-.3.301-.501.101-.2.05-.376-.025-.526-.075-.15-.677-1.631-.928-2.233-.245-.587-.494-.508-.677-.517-.175-.009-.376-.009-.577-.009-.201 0-.527.075-.803.376-.276.3-1.054 1.029-1.054 2.511 0 1.482 1.079 2.912 1.23 3.113.15.201 2.124 3.243 5.146 4.549.719.311 1.28.497 1.718.636.723.23 1.381.198 1.901.12.579-.087 1.782-.728 2.033-1.431.251-.703.251-1.305.176-1.431-.075-.126-.276-.201-.577-.351zM12.04 21.75c-1.737 0-3.385-.45-4.834-1.242l-.347-.19-3.601.944.961-3.51-.225-.358a9.69 9.69 0 0 1-1.487-5.184c0-5.385 4.383-9.768 9.77-9.768 2.61 0 5.064 1.018 6.91 2.864a9.72 9.72 0 0 1 2.858 6.904c0 5.386-4.384 9.77-9.769 9.77zm8.307-16.598A11.66 11.66 0 0 0 12.04 1.75C5.419 1.75.029 7.14.029 13.76c0 2.112.55 4.174 1.597 5.992L0 23.75l4.116-1.583a11.96 11.96 0 0 0 5.924 1.583c6.621 0 12.01-5.39 12.01-12.01 0-3.21-1.25-6.226-3.703-8.588z" />
                 </svg>
-                <span>WhatsApp: +54 9 3564 000000</span>
+                <span>WhatsApp: {{ whatsappFormatted }}</span>
+              </a>
+              <a :href="`mailto:${contactEmail}`"
+                class="flex items-center gap-2 hover:text-[#E53924] transition-colors" title="Contactanos por Email">
+                <UIcon name="i-heroicons-envelope" class="w-4 h-4 text-[#E53924] shrink-0" />
+                <span>{{ contactEmail }}</span>
               </a>
               <a href="https://www.instagram.com/tripuproducciones/" target="_blank" rel="noopener noreferrer"
                 class="flex items-center gap-2 hover:text-[#FD1D1D] transition-colors"

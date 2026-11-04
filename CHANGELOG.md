@@ -7,7 +7,45 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 
 ---
 
-## [1.1.2] - 2026-11-03
+## [1.2.2] - 2026-11-03
+### Añadido
+* **Manejo Amigable de Duplicidad de Slug / Enlaces Únicos (`events_slug_key`):**
+  * **Intercepción a Nivel Composable (`app/composables/useEvents.ts`):**
+    * Detección defensiva del código de error PostgreSQL `23505` (violación de restricción única `events_slug_key` / HTTP `409 Conflict` de Supabase PostgREST) en `createEventWithTiers`, `updateEvent` y `updateEventWithTiers`.
+    * Consulta automática e inmediata a Supabase para recuperar la información del viaje preexistente (`id`, `title`, `artist_headliner`, `slug`, `event_date`).
+    * Emisión de un error enriquecido con flags (`isSlugDuplicate: true`), datos del conflicto (`existingTitle`, `existingId`, `searchQuery`) y mensaje contextualizado para la capa visual.
+  * **Experiencia de Usuario en Creación y Edición (`app/pages/admin/viajes/nuevo.vue` y `app/pages/admin/viajes/[id]/editar.vue`):**
+    * Alerta interactiva destacada (`UAlert`) en la cabecera del formulario indicando con claridad que el viaje ya fue creado previamente y exhibiendo el **nombre exacto** registrado en el catálogo para buscarlo con el filtro de salidas.
+    * Acciones directas con un solo clic:
+      * **"Buscar por filtro en salidas"**: redirige al catálogo general aplicando automáticamente el término en el buscador.
+      * **"Editar viaje existente"**: botón directo para abrir y gestionar la salida ya existente.
+      * **"Diferenciar enlace de este viaje"**: sufija secuencialmente el slug actual (ej. `...-2`, `...-3`) para permitir registrar un segundo micro, refuerzo u horario sin fricciones ni recargas.
+    * Feedback inline en el campo de entrada del slug: borde de advertencia dinámico en tono ámbar y caja de asistencia contextual con acceso directo a la búsqueda y al asistente de diferenciación.
+    * Auto-limpieza reactiva del estado de conflicto en cuanto el operador tipea una modificación en el campo de slug.
+  * **Sincronización Reactiva de Búsqueda en Catálogo de Salidas (`app/pages/admin/viajes/index.vue`):**
+    * Lectura y vigilancia reactiva del parámetro de consulta `route.query.q` en `onMounted` y mediante `watch(() => route.query.q)`.
+    * Población inmediata del campo `searchQuery` al acceder con `?q=...`, filtrando instantáneamente la grilla de viajes sin interacción manual adicional.
+* **Unificación de Canales Oficiales de Contacto y Redes (WhatsApp & Email):**
+  * Configuración centralizada y reactiva en `nuxt.config.ts` y `.env.example` con las credenciales oficiales de Tripu Producciones:
+    * WhatsApp oficial: `+54 9 3564 692598` (enlace canónico `5493564692598`).
+    * Correo administrativo y de notificaciones: `tripuproducciones@gmail.com`.
+  * Reemplazo de enlaces y números dummy estáticos por consumo dinámico mediante `useRuntimeConfig().public.whatsappNumber` y `contactEmail` a lo largo de toda la plataforma:
+    * Marquee superior, encabezados desktop/mobile y pie de página (`app/layouts/default.vue`).
+    * Carrusel destacado de portada (`app/components/FeaturedCarousel.vue`).
+    * Cartelera principal, sección de experiencia y modal de reserva (`app/pages/index.vue`).
+    * Ficha de viaje, selector de paquetes y barra flotante mobile (`app/pages/viajes/[slug].vue`).
+    * Página pública de contacto (`app/pages/contacto.vue`).
+    * Despacho serverless de notificaciones por Resend (`server/api/contact.post.ts`).
+    * Canales legales y de privacidad (`app/pages/terminos-y-condiciones.vue` y `app/pages/politica-de-privacidad.vue`).
+* **Optimización de UX en Visor de Mensajes Administrativo (`app/pages/admin/mensajes/index.vue`):**
+  * Reestructuración del bloque de acciones dentro del modal de detalle de consulta:
+    * Fila superior completa (`w-full`) para el cambio de estado operativo (*"Marcar como"*), con botones y badges distintivos para *Nuevo*, *Leído*, *Respondido* y *Archivar*.
+    * Fila inferior independiente para acciones de comunicación directa hacia el pasajero: botones destacados para *Responder por WhatsApp* (verde con apertura de chat) y *Responder por Email* (apertura de cliente de correo vía `mailto:`).
+  * Ampliación dimensional del modal (`+20%` de ancho a `sm:max-w-[620px]` y `+15%` de alto a `sm:min-h-[540px]`), aumentando el área de lectura del mensaje con soporte responsive fluido y límite visual de `max-h-[92dvh]`.
+
+---
+
+## [1.2.1] - 2026-11-03
 ### Corregido
 * **Revalidación e Invalidación Bajo Demanda en Edge CDN de Vercel (ISR On-Demand):**
   * Corrección del error de sintaxis en `app/composables/useEvents.ts` (`triggerPublicRevalidation`): reemplazo de la expresión coma inválida `('/api/revalidate', { ... })` por la invocación asíncrona real `$fetch('/api/revalidate', ...)` con token de bypass seguro de 32 caracteres.

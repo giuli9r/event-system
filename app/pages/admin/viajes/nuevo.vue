@@ -89,6 +89,41 @@ function resetAutoSlug() {
   formState.slug = generateSlug(formState.artist_headliner, venueName, formState.event_date)
 }
 
+// Detección reactiva de conflicto de slug duplicado (PostgreSQL 23505)
+const slugConflict = ref<{
+  slug: string
+  existingTitle: string
+  existingId?: string
+  searchQuery: string
+} | null>(null)
+
+watch(() => formState.slug, (newSlug) => {
+  if (slugConflict.value && newSlug.trim() !== slugConflict.value.slug) {
+    slugConflict.value = null
+  }
+})
+
+function differentiateSlug() {
+  isSlugManual.value = true;
+  const current = formState.slug.trim();
+  formState.slug = `${current}-2`;
+
+  // const matchNum = current.match(/-(\d+)$/)
+  // if (matchNum) {
+  //   const nextNum = parseInt(matchNum[1], 10) + 1
+  //   formState.slug = current.replace(/-(\d+)$/, `-${nextNum}`)
+  // } else {
+  //   formState.slug = `${current}-2`
+  // }
+  slugConflict.value = null
+  toast.add({
+    title: 'Enlace diferenciado',
+    description: `Nuevo slug generado: "/viajes/${formState.slug}". Ya podés publicar la salida.`,
+    color: 'info',
+    icon: 'i-heroicons-sparkles'
+  })
+}
+
 // Gestión del Repeater de Tarifas
 function addTier() {
   formState.tiers.push({
@@ -175,6 +210,34 @@ async function handleSubmit() {
     await router.push('/admin/viajes')
   } catch (err: any) {
     console.error('Error al guardar viaje:', err)
+
+    // Detección y tratamiento amigable para conflicto de slug duplicado (PostgreSQL 23505)
+    if (err?.code === '23505' || err?.isSlugDuplicate || err?.message?.includes('events_slug_key')) {
+      const conflictingSlug = formState.slug.trim()
+      const existingTitle = err?.existingTitle || formState.title || 'Viaje previamente registrado'
+      const existingId = err?.existingId
+      const searchQuery = err?.searchQuery || existingTitle
+
+      slugConflict.value = {
+        slug: conflictingSlug,
+        existingTitle,
+        existingId,
+        searchQuery
+      }
+
+      toast.add({
+        title: 'El viaje ya fue creado previamente',
+        description: `Existe una salida con este mismo enlace. Nombre en catálogo: "${existingTitle}". Podés buscarlo con el filtro o diferenciar el enlace.`,
+        color: 'warning',
+        icon: 'i-heroicons-exclamation-triangle'
+      })
+
+      if (import.meta.client) {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+      return
+    }
+
     let errorMessage = err?.message || 'Ocurrió un error al registrar el viaje'
 
     // Tratamiento amigable para errores de validación de Zod
@@ -223,6 +286,57 @@ onMounted(() => {
         tarifas.
       </p>
     </div>
+
+    <!-- Alerta amigable de Viaje Duplicado / Slug en uso (PostgreSQL 23505) -->
+    <UAlert v-if="slugConflict" title="¡Este viaje ya fue creado previamente!" color="warning" variant="subtle"
+      icon="i-heroicons-exclamation-triangle"
+      :close-button="{ icon: 'i-heroicons-x-mark', color: 'neutral', variant: 'link' }" @close="slugConflict = null">
+      <template #description>
+        <div class="space-y-2 text-xs text-zinc-300">
+          <p>
+            Ya existe una salida registrada con el enlace permanente:
+            <code class="font-mono text-amber-300 bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-900/50">
+              /viajes/{{ slugConflict.slug }}
+            </code>.
+          </p>
+          <div
+            class="p-3 rounded-lg bg-[#14141A] border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <span class="text-[11px] uppercase tracking-wider text-amber-400 font-bold block">
+                Nombre para buscar por filtro en salidas:
+              </span>
+              <p class="text-sm font-bold text-white">
+                "{{ slugConflict.existingTitle }}"
+              </p>
+            </div>
+            <UButton :to="`/admin/viajes?q=${encodeURIComponent(slugConflict.searchQuery)}`" size="xs" color="warning"
+              variant="solid" icon="i-heroicons-magnifying-glass" class="font-bold shrink-0 cursor-pointer">
+              Buscar por filtro en salidas
+            </UButton>
+          </div>
+          <p class="text-zinc-400">
+            Si estás organizando un segundo micro u otro horario para la misma fecha, hacé clic en <strong>"Diferenciar
+              enlace de este viaje"</strong> o modificá el slug manualmente abajo para poder publicar.
+          </p>
+        </div>
+      </template>
+      <template #actions>
+        <div class="flex items-center gap-2 flex-wrap mt-2">
+          <UButton :to="`/admin/viajes?q=${encodeURIComponent(slugConflict.searchQuery)}`" size="xs" color="warning"
+            variant="solid" icon="i-heroicons-magnifying-glass" class="font-bold cursor-pointer">
+            Buscar en salidas programadas
+          </UButton>
+          <UButton v-if="slugConflict.existingId" :to="`/admin/viajes/${slugConflict.existingId}/editar`" size="xs"
+            color="neutral" variant="outline" icon="i-heroicons-pencil-square" class="cursor-pointer">
+            Editar viaje existente
+          </UButton>
+          <UButton size="xs" color="neutral" variant="ghost" icon="i-heroicons-sparkles" class="cursor-pointer"
+            @click="differentiateSlug">
+            Diferenciar enlace de este viaje
+          </UButton>
+        </div>
+      </template>
+    </UAlert>
 
     <form class="space-y-6" @submit.prevent="handleSubmit">
       <!-- BLOQUE 1: Datos del Show y Espectáculo -->
@@ -273,16 +387,41 @@ onMounted(() => {
           <UFormField label="Identificador de URL (Slug)" name="slug" required
             help="Ruta única en la web (ej. /viajes/los-piojos-river-plate-2026-10-15)">
             <div class="flex items-center gap-2">
-              <div class="flex-1 flex items-center rounded-md bg-[#14141A] border border-[#2A2A38] px-3 py-1.5 text-xs">
+              <div class="flex-1 flex items-center rounded-md bg-[#14141A] border px-3 py-1.5 text-xs transition-colors"
+                :class="slugConflict && slugConflict.slug === formState.slug ? 'border-amber-500 ring-1 ring-amber-500/50' : 'border-[#2A2A38]'">
                 <span class="text-zinc-500 font-mono select-none">/viajes/</span>
                 <input v-model="formState.slug" type="text"
-                  class="bg-transparent text-emerald-400 font-mono w-full focus:outline-none ml-1"
+                  class="bg-transparent font-mono w-full focus:outline-none ml-1"
+                  :class="slugConflict && slugConflict.slug === formState.slug ? 'text-amber-400 font-bold' : 'text-emerald-400'"
                   placeholder="artista-recinto-fecha" @input="onSlugInput" />
               </div>
               <UButton size="xs" variant="subtle" color="neutral" icon="i-heroicons-arrow-path"
                 title="Regenerar automáticamente" @click="resetAutoSlug">
                 Auto
               </UButton>
+            </div>
+            <!-- Feedback inline de slug duplicado -->
+            <div v-if="slugConflict && slugConflict.slug === formState.slug"
+              class="mt-2 p-2.5 rounded-lg bg-amber-950/30 border border-amber-900/50 text-xs text-amber-300 space-y-1">
+              <div class="flex items-center gap-1.5 font-bold">
+                <UIcon name="i-heroicons-exclamation-triangle" class="w-4 h-4 text-amber-400 shrink-0" />
+                <span>Este enlace ya está en uso por: "{{ slugConflict.existingTitle }}".</span>
+              </div>
+              <p class="text-[11px] text-zinc-400">
+                Podés buscar por filtro: <strong>"{{ slugConflict.searchQuery }}"</strong> o hacer clic en "Diferenciar
+                enlace".
+              </p>
+              <div class="pt-1 flex items-center gap-3">
+                <NuxtLink :to="`/admin/viajes?q=${encodeURIComponent(slugConflict.searchQuery)}`"
+                  class="text-amber-400 hover:text-white underline font-bold inline-flex items-center gap-1 cursor-pointer">
+                  <UIcon name="i-heroicons-magnifying-glass" class="w-3.5 h-3.5" />
+                  Buscar por filtro en el catálogo
+                </NuxtLink>
+                <button type="button" class="text-zinc-300 hover:text-white underline cursor-pointer"
+                  @click="differentiateSlug">
+                  Diferenciar enlace
+                </button>
+              </div>
             </div>
           </UFormField>
         </div>

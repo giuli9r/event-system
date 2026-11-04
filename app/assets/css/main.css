@@ -23,3 +23,256 @@
   }
 }
 
+/* ==========================================================================
+   TEMA CLARO ADMINISTRATIVO (ADMIN LIGHT MODE)
+   Cumple con estándares WCAG 2.1 AA de contraste, superficies limpias,
+   bordes suaves y fidelidad al color de acento de marca Tripu (#E53924).
+   ========================================================================== */
+
+/* Variables de tema UI de Nuxt UI en modo claro administrativo */
+html.admin-light {
+  --ui-bg: #FFFFFF;
+  --ui-bg-muted: #F0F1F4;
+  --ui-bg-elevated: #FFFFFF;
+  --ui-bg-accented: #F0F1F4;
+  --ui-text: #18181B;
+  --ui-text-muted: #71717A;
+  --ui-text-dimmed: #A1A1AA;
+  --ui-text-highlighted: #18181B;
+  --ui-border: #E2E4E9;
+  --ui-border-muted: #E2E4E9;
+  --ui-border-accented: #D4D4D8;
+}
+
+/* 1. Fondo principal y estructura del layout */
+html.admin-light,
+html.admin-light body,
+html.admin-light #admin-layout {
+  background-color: #F5F6F8 !important;
+  color: #18181B !important;
+}
+
+/* 2. Superficies principales: Tarjetas, Paneles, Modales y Tablas */
+html.admin-light .bg-\[\#1A1A22\],
+html.admin-light [class*="bg-[#1A1A22]"],
+html.admin-light .bg-\[\#14141B\],
+html.admin-light [class*="bg-[#14141B]"] {
+  background-color: #FFFFFF !important;
+}
+
+/* 3. Superficies secundarias: Encabezados de tabla, barras de filtros y badges */
+html.admin-light .bg-\[\#14141A\],
+html.admin-light [class*="bg-[#14141A]"],
+html.admin-light .bg-\[\#0F0F12\],
+html.admin-light [class*="bg-[#0F0F12]"] {
+  background-color: #F0F1F4 !important;
+}
+
+/* 4. Bordes y Líneas Divisorias */
+html.admin-light .border-\[\#2A2A38\],
+html.admin-light [class*="border-[#2A2A38]"],
+html.admin-light [class*="border-[#2A2A38]/50"],
+html.admin-light [class*="border-[#2A2A38]/30"],
+html.admin-light [data-slot="header"],
+html.admin-light [data-slot="footer"] {
+  border-color: #E2E4E9 !important;
+}
+
+html.admin-light .divide-\[\#2A2A38\] > :not([hidden]) ~ :not([hidden]),
+html.admin-light [class*="divide-[#2A2A38]"] > :not([hidden]) ~ :not([hidden]) {
+  border-color: #E2E4E9 !important;
+}
+
+/* 5. Encabezados de Bienvenida / Principales (Index de cada página) */
+html.admin-light h1,
+html.admin-light h2,
+html.admin-light h3,
+html.admin-light .text-\[\#F5EEDC\],
+html.admin-light [class*="text-[#F5EEDC]"] {
+  color: #18181B !important;
+}
+
+html.admin-light p[class*="text-zinc-400"],
+html.admin-light span[class*="text-zinc-400"],
+html.admin-light div[class*="text-zinc-400"] {
+  color: #71717A !important;
+}
+
+html.admin-light [class*="text-zinc-300"],
+html.admin-light [class*="text-zinc-200"] {
+  color: #27272A !important;
+}
+
+html.admin-light [class*="text-zinc-500"]:not([class*="bg-"]) {
+  color: #71717A !important;
+}
+
+html.admin-light [class*="hover:text-[#F5EEDC]"]:hover {
+  color: #18181B !important;
+}
+
+/* 6. Barra de Métricas y KPIs */
+html.admin-light [class*="bg-red-950"] {
+  background-color: rgba(229, 57, 36, 0.1) !important;
+}
+html.admin-light [class*="border-red-900"] {
+  border-color: rgba(229, 57, 36, 0.25) !important;
+}
+html.admin-light [class*="bg-emerald-950"] {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+}
+html.admin-light [class*="border-emerald-900"] {
+  border-color: rgba(16, 185, 129, 0.25) !important;
+}
+html.admin-light [class*="bg-blue-950"] {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+html.admin-light [class*="border-blue-900"] {
+  border-color: rgba(59, 130, 246, 0.25) !important;
+}
+html.admin-light [class*="bg-purple-950"] {
+  background-color: rgba(168, 85, 247, 0.1) !important;
+}
+html.admin-light [class*="border-purple-900"] {
+  border-color: rgba(168, 85, 247, 0.25) !important;
+}
+html.admin-light [class*="bg-zinc-800"]:not([class*="bg-zinc-800/80"]) {
+  background-color: #F0F1F4 !important;
+}
+html.admin-light [class*="border-zinc-700"]:not([class*="border-zinc-700/60"]) {
+  border-color: #E2E4E9 !important;
+}
+
+/* 7. Barra de Búsqueda, Inputs, Textareas y Selects */
+html.admin-light input:not([type="checkbox"]):not([type="radio"]),
+html.admin-light textarea,
+html.admin-light select {
+  background-color: #FFFFFF !important;
+  border-color: #E2E4E9 !important;
+  color: #18181B !important;
+}
+
+html.admin-light input::placeholder,
+html.admin-light textarea::placeholder {
+  color: #71717A !important;
+}
+
+html.admin-light input:focus,
+html.admin-light textarea:focus,
+html.admin-light select:focus {
+  border-color: #E53924 !important;
+}
+
+/* Botones de filtros rápidos inactivos */
+html.admin-light button[class*="bg-[#14141B]"],
+html.admin-light button[class*="bg-[#14141A]"] {
+  background-color: #F0F1F4 !important;
+  border-color: #E2E4E9 !important;
+  color: #71717A !important;
+}
+
+html.admin-light button[class*="bg-[#14141B]"]:hover,
+html.admin-light button[class*="bg-[#14141A]"]:hover {
+  background-color: #E2E4E9 !important;
+  color: #18181B !important;
+}
+
+/* 8. Tablas de Choferes, Mensajes, Viajes y demás entidades */
+html.admin-light thead,
+html.admin-light thead[class*="bg-[#14141A]"],
+html.admin-light [class*="bg-[#1A1A22]/60"] {
+  background-color: #F0F1F4 !important;
+}
+
+html.admin-light thead th {
+  color: #71717A !important;
+  font-weight: 600 !important;
+}
+
+html.admin-light tbody {
+  background-color: #FFFFFF !important;
+}
+
+html.admin-light tbody tr {
+  background-color: #FFFFFF !important;
+}
+
+html.admin-light tbody tr:hover,
+html.admin-light [class*="hover:bg-[#20202B]"]:hover {
+  background-color: #F8F9FA !important;
+}
+
+html.admin-light td [class*="text-[#F5EEDC]"] {
+  color: #18181B !important;
+}
+
+html.admin-light td [class*="text-zinc-400"],
+html.admin-light td [class*="text-zinc-500"] {
+  color: #71717A !important;
+}
+
+html.admin-light [class*="hover:bg-[#2A2A38]"]:hover,
+html.admin-light [class*="hover:bg-[#2A2A38]/50"]:hover,
+html.admin-light [class*="hover:bg-[#2A2A38]/60"]:hover {
+  background-color: #F0F1F4 !important;
+  color: #18181B !important;
+}
+
+/* 9. Modales de Creación, Edición y Confirmación (UModal con Teleport a Body) */
+html.admin-light [role="dialog"],
+html.admin-light [data-reka-portal] [role="dialog"],
+html.admin-light [data-slot="content"],
+html.admin-light [data-reka-dialog-content] {
+  background-color: #FFFFFF !important;
+  border-color: #E2E4E9 !important;
+  color: #18181B !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+html.admin-light [role="dialog"] h2,
+html.admin-light [role="dialog"] h3,
+html.admin-light [data-reka-dialog-title] {
+  color: #18181B !important;
+}
+
+html.admin-light [role="dialog"] p,
+html.admin-light [data-reka-dialog-description] {
+  color: #71717A !important;
+}
+
+html.admin-light [role="dialog"] label,
+html.admin-light [data-slot="label"] {
+  color: #18181B !important;
+  font-weight: 600 !important;
+}
+
+html.admin-light [role="dialog"] [data-slot="help"] {
+  color: #71717A !important;
+}
+
+/* Subcajas dentro de modales (ej. avisos de eliminación o detalles de mensaje) */
+html.admin-light [role="dialog"] [class*="bg-amber-950"] {
+  background-color: #FFFBEB !important;
+  border-color: #FDE68A !important;
+  color: #92400E !important;
+}
+
+html.admin-light [role="dialog"] [class*="text-amber-200"],
+html.admin-light [role="dialog"] [class*="text-amber-400"] {
+  color: #92400E !important;
+}
+
+html.admin-light [role="dialog"] [class*="border-amber-800"] {
+  border-color: #FDE68A !important;
+}
+
+/* Botones secundarios / de cancelación en modales */
+html.admin-light [role="dialog"] button:not([class*="bg-red-"]):not([class*="bg-[#E53924]"]) {
+  color: #71717A;
+}
+
+html.admin-light [role="dialog"] button:not([class*="bg-red-"]):not([class*="bg-[#E53924]"]):hover {
+  background-color: #F0F1F4;
+  color: #18181B;
+}
+

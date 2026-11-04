@@ -128,9 +128,12 @@ function handleKeydown(e: KeyboardEvent) {
   }
 }
 
+const config = useRuntimeConfig()
+const defaultWhatsApp = computed(() => (config.public.whatsappNumber as string) || '5493564692598')
+
 // Link a WhatsApp
 function getWhatsAppLink(event: PublicFeaturedEvent) {
-  const phone = '5493564000000' // Número de atención de Tripu
+  const phone = defaultWhatsApp.value // Número de atención de Tripu
   const dateFormatted = formatEventDate(event.event_date)
   const venueName = event.venue?.name || 'el recital'
   const text = encodeURIComponent(
@@ -225,7 +228,7 @@ onUnmounted(() => {
             </svg>
             <span>Seguinos en Instagram!</span>
           </a>
-          <a href="https://wa.me/5493564000000" target="_blank" rel="noopener noreferrer"
+          <a :href="`https://wa.me/${defaultWhatsApp}`" target="_blank" rel="noopener noreferrer"
             class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-[#25D366]/40 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#25D366] text-sm font-semibold transition-colors">
             <UIcon name="i-heroicons-chat-bubble-left-right" class="w-4 h-4" />
             <span>Consultas por WhatsApp</span>
