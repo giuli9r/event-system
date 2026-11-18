@@ -23,87 +23,18 @@ export type MerchInsert = Omit<MerchItem, 'id' | 'created_at' | 'updated_at'> & 
 
 export type MerchUpdate = Partial<MerchInsert>
 
-// Catálogo semilla/demostrativo para previsualización antes de la migración en Supabase
-const INITIAL_DEMO_MERCH: MerchItem[] = [
-  {
-    id: 'merch-demo-1',
-    name: 'Remera Oficial Tripu Tour 2026',
-    slug: 'remera-oficial-tripu-tour-2026',
-    category: 'indumentaria',
-    description: 'Remera 100% algodón peinado 24/1 con estampa serigráfica en pecho y espalda. Diseño oficial del tour de recitales.',
-    price: 25000,
-    stock: 20,
-    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-    image_url: null,
-    is_active: true,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: 'merch-demo-2',
-    name: 'Buzo Canguro Oversize "El Viaje"',
-    slug: 'buzo-canguro-oversize-el-viaje',
-    category: 'indumentaria',
-    description: 'Frisa invisible premium con capucha forrada y bolsillo delantero. Bordado de alta densidad en el pecho.',
-    price: 48000,
-    stock: 10,
-    sizes: ['M', 'L', 'XL'],
-    image_url: null,
-    is_active: true,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: 'merch-demo-3',
-    name: 'Gorra Trucker Bordada Tripu Red',
-    slug: 'gorra-trucker-bordada-tripu-red',
-    category: 'accesorios',
-    description: 'Gorra clásica con malla respirable y cierre snapback ajustable. Frente acolchado con parche bordado.',
-    price: 12500,
-    stock: 20,
-    sizes: ['Único'],
-    image_url: null,
-    is_active: true,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: 'merch-demo-4',
-    name: 'Pack 5 Stickers Holográficos',
-    slug: 'pack-5-stickers-holograficos',
-    category: 'calcos',
-    description: 'Calcomanías resistentes al agua y al sol con acabado holográfico tornasolado especial para termos y fundas.',
-    price: 4500,
-    stock: 80,
-    sizes: null,
-    image_url: null,
-    is_active: true,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: 'merch-demo-5',
-    name: 'Combo Pasajero VIP (Remera + Gorra + Calco)',
-    slug: 'combo-pasajero-vip',
-    category: 'combos',
-    description: 'Kit de bienvenida para pasajeros frecuentes con descuento promocional en salida grupal.',
-    price: 48000,
-    stock: 15,
-    sizes: ['M', 'L', 'XL'],
-    image_url: null,
-    is_active: true,
-    created_at: new Date().toISOString()
-  }
-]
-
 // TTL de caché en memoria: 15 minutos
 const CACHE_TTL_MS = 15 * 60 * 1000
 
 export function useMerch() {
   const supabase = useSupabaseClient<Database>()
 
-  // Estado global reactivo
-  const merchItems = useState<MerchItem[]>('tripu-merch-data', () => [...INITIAL_DEMO_MERCH])
+  // Estado global reactivo inicializado vacío (solo datos persistidos en Supabase)
+  const merchItems = useState<MerchItem[]>('tripu-merch-data', () => [])
   const lastFetched = useState<number | null>('tripu-merch-timestamp', () => null)
   const loading = useState<boolean>('tripu-merch-loading', () => false)
   const error = ref<string | null>(null)
-  const isDbReady = ref<boolean>(false)
+  const isDbReady = ref<boolean>(true)
 
   const isCacheValid = computed(() => {
     if (!lastFetched.value || merchItems.value.length === 0) return false
@@ -111,8 +42,7 @@ export function useMerch() {
   })
 
   /**
-   * Obtiene los productos de Merchandising.
-   * Conecta con Supabase si la tabla existe; de lo contrario mantiene los registros modelo para desarrollo continuo.
+   * Obtiene los productos de Merchandising desde Supabase.
    */
   async function fetchMerch(options: { force?: boolean } = {}) {
     if (!options.force && isCacheValid.value) {
@@ -125,37 +55,27 @@ export function useMerch() {
     error.value = null
 
     try {
-      // Intentar consulta a tabla en Supabase (cuando se cree en la BD)
       const { data, error: err } = await (supabase as any)
         .from('merchandise')
         .select('*')
         .order('name', { ascending: true })
 
-      if (err) {
-        // Si la tabla aún no existe en Supabase (código 42P01 u otro error de esquema), mantenemos demo
-        console.info('Tabla "merchandise" aún no inicializada en base de datos. Usando catálogo de arquitectura.')
-        isDbReady.value = false
-        if (merchItems.value.length === 0) {
-          merchItems.value = [...INITIAL_DEMO_MERCH]
-        }
-      } else if (data) {
-        merchItems.value = data
-        isDbReady.value = true
-      }
+      if (err) throw err
+
+      merchItems.value = (data as MerchItem[]) || []
+      isDbReady.value = true
       lastFetched.value = Date.now()
     } catch (err: any) {
-      // Fallback transparente
+      error.value = err?.message || 'Error al cargar catálogo de merchandising'
+      console.error('Error fetching merchandise:', err)
       isDbReady.value = false
-      if (merchItems.value.length === 0) {
-        merchItems.value = [...INITIAL_DEMO_MERCH]
-      }
     } finally {
       loading.value = false
     }
   }
 
   /**
-   * Alta de un nuevo producto
+   * Alta de un nuevo producto en Supabase
    */
   async function createMerchItem(payload: MerchInsert) {
     loading.value = true
@@ -188,14 +108,20 @@ export function useMerch() {
     }
 
     try {
-      // Intentar persistencia remota en Supabase
       const { data, error: err } = await (supabase as any)
         .from('merchandise')
         .insert([dbPayload])
         .select()
         .single()
 
-      if (!err && data) {
+      if (err) {
+        console.error('Error insertando merchandise en Supabase:', err)
+        error.value = err.message || 'Error al guardar en base de datos'
+        loading.value = false
+        return { data: null, error: err }
+      }
+
+      if (data) {
         merchItems.value.unshift(data)
         isDbReady.value = true
         lastFetched.value = Date.now()
@@ -203,74 +129,50 @@ export function useMerch() {
         return { data, error: null }
       }
 
-      if (err) {
-        console.error('Error insertando merchandise en Supabase:', err)
-        error.value = err.message || 'Error de base de datos'
-        loading.value = false
-        return { data: null, error: err }
-      }
+      loading.value = false
+      return { data: null, error: new Error('No se recibieron datos de confirmación') }
     } catch (e: any) {
-      console.warn('Excepción de conexión con Supabase merchandise:', e)
+      console.error('Excepción al conectar con Supabase merchandise:', e)
+      error.value = e?.message || 'Error de conexión con la base de datos'
+      loading.value = false
+      return { data: null, error: e }
     }
-
-    // Fallback en memoria si la base de datos está offline
-    const fallbackItem: MerchItem = {
-      id: payload.id || `merch-${Date.now()}`,
-      name: payload.name,
-      slug,
-      category: payload.category,
-      description: payload.description || null,
-      price: payload.price,
-      stock: payload.stock,
-      sizes: payload.sizes || null,
-      image_url: payload.image_url || null,
-      is_active: payload.is_active ?? true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
-
-    merchItems.value.unshift(fallbackItem)
-    lastFetched.value = Date.now()
-    loading.value = false
-    return { data: fallbackItem, error: null }
   }
 
   /**
-   * Edición de un producto existente
+   * Edición de un producto existente en Supabase
    */
   async function updateMerchItem(id: string, updates: MerchUpdate) {
     loading.value = true
     error.value = null
 
     try {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-      if (isUuid.test(id)) {
-        const { error: err } = await (supabase as any)
-          .from('merchandise')
-          .update({
-            ...updates,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', id)
+      const { data, error: err } = await (supabase as any)
+        .from('merchandise')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single()
 
-        if (err) {
-          console.error('Error actualizando merchandise en Supabase:', err)
-          error.value = err.message || 'Error al actualizar en base de datos'
-          loading.value = false
-          return { error: err }
-        }
+      if (err) {
+        console.error('Error actualizando merchandise en Supabase:', err)
+        error.value = err.message || 'Error al actualizar en base de datos'
+        loading.value = false
+        return { error: err }
+      }
+
+      const index = merchItems.value.findIndex(item => item.id === id)
+      if (index !== -1 && data) {
+        merchItems.value[index] = data
       }
     } catch (e: any) {
-      console.warn('Excepción al actualizar merchandise en Supabase:', e)
-    }
-
-    const index = merchItems.value.findIndex(item => item.id === id)
-    if (index !== -1) {
-      merchItems.value[index] = {
-        ...merchItems.value[index],
-        ...updates,
-        updated_at: new Date().toISOString()
-      } as MerchItem
+      console.error('Excepción al actualizar merchandise en Supabase:', e)
+      error.value = e?.message || 'Error de conexión con la base de datos'
+      loading.value = false
+      return { error: e }
     }
 
     loading.value = false
@@ -278,32 +180,33 @@ export function useMerch() {
   }
 
   /**
-   * Eliminación de un producto
+   * Eliminación de un producto en Supabase
    */
   async function deleteMerchItem(id: string) {
     loading.value = true
     error.value = null
 
     try {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-      if (isUuid.test(id)) {
-        const { error: err } = await (supabase as any)
-          .from('merchandise')
-          .delete()
-          .eq('id', id)
+      const { error: err } = await (supabase as any)
+        .from('merchandise')
+        .delete()
+        .eq('id', id)
 
-        if (err) {
-          console.error('Error eliminando merchandise en Supabase:', err)
-          error.value = err.message || 'Error al eliminar en base de datos'
-          loading.value = false
-          return { error: err }
-        }
+      if (err) {
+        console.error('Error eliminando merchandise en Supabase:', err)
+        error.value = err.message || 'Error al eliminar en base de datos'
+        loading.value = false
+        return { error: err }
       }
+
+      merchItems.value = merchItems.value.filter(item => item.id !== id)
     } catch (e: any) {
-      console.warn('Excepción al eliminar merchandise en Supabase:', e)
+      console.error('Excepción al eliminar merchandise en Supabase:', e)
+      error.value = e?.message || 'Error de conexión con la base de datos'
+      loading.value = false
+      return { error: e }
     }
 
-    merchItems.value = merchItems.value.filter(item => item.id !== id)
     loading.value = false
     return { error: null }
   }
