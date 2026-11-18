@@ -55,30 +55,77 @@ const minPrice = computed(() => getMinPrice(currentEvent.value.package_tiers))
 const merchandiseList = computed<MerchItem[]>(() => currentEvent.value.merchandise || [])
 const hasMerchAvailable = computed(() => Boolean(currentEvent.value.has_merchandise && merchandiseList.value.length > 0))
 
-// Selección interactiva de merchandising para el viaje
-const selectedMerchIds = ref<string[]>([])
-const selectedMerchItems = computed(() => {
-  return merchandiseList.value.filter(item => selectedMerchIds.value.includes(item.id))
-})
-const selectedMerchTotal = computed(() => {
-  return selectedMerchItems.value.reduce((acc, item) => acc + (Number(item.price) || 0), 0)
-})
+// Límite máximo de unidades por producto (UX Guardrail)
+const MAX_MERCH_QTY = 10
 
-function isMerchSelected(id: string) {
-  return selectedMerchIds.value.includes(id)
+// Diccionario reactivo de cantidades: { [productId: string]: number }
+const selectedMerchQuantities = ref<Record<string, number>>({})
+
+function getMerchQuantity(id: string): number {
+  return selectedMerchQuantities.value[id] || 0
 }
 
-function toggleMerchItem(item: MerchItem) {
-  if (isMerchSelected(item.id)) {
-    selectedMerchIds.value = selectedMerchIds.value.filter(id => id !== item.id)
+function isMerchSelected(id: string): boolean {
+  return getMerchQuantity(id) > 0
+}
+
+function incrementMerch(item: MerchItem) {
+  const current = getMerchQuantity(item.id)
+  if (current < MAX_MERCH_QTY) {
+    selectedMerchQuantities.value = {
+      ...selectedMerchQuantities.value,
+      [item.id]: current + 1
+    }
+  }
+}
+
+function decrementMerch(id: string) {
+  const current = getMerchQuantity(id)
+  if (current <= 1) {
+    const updated = { ...selectedMerchQuantities.value }
+    delete updated[id]
+    selectedMerchQuantities.value = updated
   } else {
-    selectedMerchIds.value.push(item.id)
+    selectedMerchQuantities.value = {
+      ...selectedMerchQuantities.value,
+      [id]: current - 1
+    }
   }
 }
 
 function clearSelectedMerch() {
-  selectedMerchIds.value = []
+  selectedMerchQuantities.value = {}
 }
+
+export interface SelectedMerchEntry {
+  item: MerchItem
+  quantity: number
+  subtotal: number
+}
+
+// Entradas de productos seleccionados con cantidades y subtotales
+const selectedMerchEntries = computed<SelectedMerchEntry[]>(() => {
+  return merchandiseList.value
+    .filter(item => getMerchQuantity(item.id) > 0)
+    .map(item => {
+      const quantity = getMerchQuantity(item.id)
+      return {
+        item,
+        quantity,
+        subtotal: (Number(item.price) || 0) * quantity
+      }
+    })
+})
+
+// Cantidad total de artículos/unidades de merchandising
+const totalMerchUnits = computed(() => {
+  return selectedMerchEntries.value.reduce((acc, entry) => acc + entry.quantity, 0)
+})
+
+// Monto acumulado de merchandising seleccionado en ARS
+const selectedMerchTotal = computed(() => {
+  return selectedMerchEntries.value.reduce((acc, entry) => acc + entry.subtotal, 0)
+})
 
 // Modal de detalles informativos del producto (+ Info)
 const isMerchModalOpen = ref(false)
@@ -102,7 +149,7 @@ useSeoMeta({
 const config = useRuntimeConfig()
 const defaultWhatsApp = computed(() => (config.public.whatsappNumber as string) || '5493564692598')
 
-// Generador de enlace contextual hacia WhatsApp (US-10) con soporte para Merchandising
+// Generador de enlace contextual hacia WhatsApp (US-10) con soporte para Merchandising y Cantidades
 function getWhatsAppUrl(tierName?: string) {
   const phone = defaultWhatsApp.value
   const ev = currentEvent.value
@@ -111,11 +158,16 @@ function getWhatsAppUrl(tierName?: string) {
   const packageContext = tierName ? ` (Opción: *${tierName}*)` : ''
 
   let merchContext = ''
-  if (selectedMerchItems.value.length > 0) {
-    const itemsLines = selectedMerchItems.value
-      .map(item => `  • ${item.name} (${formatCurrency(item.price)})`)
+  if (selectedMerchEntries.value.length > 0) {
+    const itemsLines = selectedMerchEntries.value
+      .map(entry => {
+        if (entry.quantity > 1) {
+          return `  • ${entry.quantity}x ${entry.item.name} (${formatCurrency(entry.item.price)} c/u) — Subtotal: ${formatCurrency(entry.subtotal)}`
+        }
+        return `  • 1x ${entry.item.name} (${formatCurrency(entry.item.price)})`
+      })
       .join('\n')
-    merchContext = `\n\n👕 *Merchandising oficial que deseo sumar:*\n${itemsLines}\n*Total adicional Merch:* ${formatCurrency(selectedMerchTotal.value)}`
+    merchContext = `\n\n👕 *Merchandising oficial que deseo sumar:*\n${itemsLines}\n*Total adicional Merch (${totalMerchUnits.value} ${totalMerchUnits.value === 1 ? 'unidad' : 'unidades'}):* ${formatCurrency(selectedMerchTotal.value)}`
   }
 
   const text = encodeURIComponent(
@@ -316,12 +368,12 @@ function getWhatsAppUrl(tierName?: string) {
                 </p>
               </div>
 
-              <!-- Contador de ítems sumados -->
-              <div v-if="selectedMerchItems.length > 0" class="shrink-0 self-start sm:self-auto">
+              <!-- Contador de unidades sumadas -->
+              <div v-if="totalMerchUnits > 0" class="shrink-0 self-start sm:self-auto">
                 <span
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-xs">
                   <UIcon name="i-heroicons-check-circle" class="w-4 h-4" />
-                  <span>{{ selectedMerchItems.length }} {{ selectedMerchItems.length === 1 ? 'ítem sumado' : 'ítems sumados' }}</span>
+                  <span>{{ totalMerchUnits }} {{ totalMerchUnits === 1 ? 'unidad sumada' : 'unidades sumadas' }}</span>
                 </span>
               </div>
             </div>
@@ -352,7 +404,7 @@ function getWhatsAppUrl(tierName?: string) {
 
                     <span v-if="isMerchSelected(item.id)"
                       class="absolute top-2 right-2 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-[#E53924] text-white shadow-md">
-                      ✓ En tu viaje
+                      ✓ {{ getMerchQuantity(item.id) }} en tu viaje
                     </span>
                   </div>
 
@@ -365,35 +417,70 @@ function getWhatsAppUrl(tierName?: string) {
                 <!-- Pie de la tarjeta -->
                 <div class="pt-4 mt-4 border-t border-[#2A2A38] space-y-3">
                   <div class="flex items-baseline justify-between">
-                    <span class="text-xs text-zinc-400 font-medium">Precio</span>
+                    <span class="text-xs text-zinc-400 font-medium">
+                      {{ getMerchQuantity(item.id) > 1 ? `${getMerchQuantity(item.id)} × ${formatCurrency(item.price)}` : 'Precio' }}
+                    </span>
                     <span class="text-xl font-black text-[#F5EEDC]">
-                      {{ formatCurrency(item.price) }}
+                      {{ formatCurrency(item.price * (getMerchQuantity(item.id) || 1)) }}
                     </span>
                   </div>
 
                   <div class="flex items-center gap-2">
                     <button type="button" @click="openMerchDetail(item)"
-                      class="py-2.5 px-3 rounded-xl text-xs font-bold text-zinc-300 hover:text-white bg-[#1A1A22] hover:bg-[#252532] border border-[#2A2A38] inline-flex items-center gap-1 transition-colors cursor-pointer"
+                      class="py-2.5 px-3 rounded-xl text-xs font-bold text-zinc-300 hover:text-white bg-[#1A1A22] hover:bg-[#252532] border border-[#2A2A38] inline-flex items-center gap-1 transition-colors cursor-pointer shrink-0"
                       title="Ver detalles del producto">
                       <UIcon name="i-heroicons-information-circle" class="w-4 h-4 text-[#FF6B55]" />
                       <span>+ Info</span>
                     </button>
 
-                    <button type="button" @click="toggleMerchItem(item)"
-                      class="flex-1 py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md"
-                      :class="isMerchSelected(item.id)
-                        ? 'bg-[#E53924] hover:bg-[#c9321f] text-white shadow-[#E53924]/20'
-                        : 'bg-[#E53924]/10 hover:bg-[#E53924] text-[#E53924] hover:text-white border border-[#E53924]/30'">
-                      <UIcon :name="isMerchSelected(item.id) ? 'i-heroicons-check' : 'i-heroicons-plus'" class="w-4 h-4" />
-                      <span>{{ isMerchSelected(item.id) ? 'Agregado' : 'Sumar al viaje' }}</span>
-                    </button>
+                    <!-- Morphing Stepper: Botón inicial o Stepper de cantidad -->
+                    <div v-if="!isMerchSelected(item.id)" class="flex-1 flex">
+                      <button type="button" @click="incrementMerch(item)"
+                        class="w-full py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md bg-[#E53924]/10 hover:bg-[#E53924] text-[#E53924] hover:text-white border border-[#E53924]/30">
+                        <UIcon name="i-heroicons-plus" class="w-4 h-4" />
+                        <span>Sumar al viaje</span>
+                      </button>
+                    </div>
+
+                    <div v-else
+                      class="flex-1 flex items-center justify-between bg-[#E53924] rounded-xl p-1 shadow-md shadow-[#E53924]/20 border border-[#E53924]">
+                      <!-- Decrementar / Eliminar -->
+                      <button type="button" @click="decrementMerch(item.id)"
+                        class="w-8 h-8 rounded-lg bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-colors cursor-pointer"
+                        :title="getMerchQuantity(item.id) === 1 ? 'Quitar del viaje' : 'Restar una unidad'">
+                        <UIcon :name="getMerchQuantity(item.id) === 1 ? 'i-heroicons-trash' : 'i-heroicons-minus'"
+                          class="w-4 h-4" />
+                      </button>
+
+                      <!-- Cantidad central -->
+                      <div class="px-2 text-center">
+                        <span class="text-xs font-black text-white block leading-none">
+                          {{ getMerchQuantity(item.id) }}
+                        </span>
+                        <span
+                          class="text-[9px] font-bold text-white/80 uppercase tracking-tighter block leading-none mt-0.5">
+                          {{ getMerchQuantity(item.id) === 1 ? 'unidad' : 'unidades' }}
+                        </span>
+                      </div>
+
+                      <!-- Incrementar hasta 10 -->
+                      <button type="button" @click="incrementMerch(item)"
+                        :disabled="getMerchQuantity(item.id) >= MAX_MERCH_QTY"
+                        class="w-8 h-8 rounded-lg bg-black/20 text-white flex items-center justify-center transition-colors"
+                        :class="getMerchQuantity(item.id) >= MAX_MERCH_QTY
+                          ? 'opacity-40 cursor-not-allowed'
+                          : 'hover:bg-black/40 cursor-pointer'"
+                        :title="getMerchQuantity(item.id) >= MAX_MERCH_QTY ? 'Límite máximo alcanzado (10)' : 'Sumar otra unidad'">
+                        <UIcon name="i-heroicons-plus" class="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
             <!-- Resumen de selección -->
-            <div v-if="selectedMerchItems.length > 0"
+            <div v-if="selectedMerchEntries.length > 0"
               class="p-4 rounded-xl bg-[#0F0F12] border border-[#E53924]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
               <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-lg bg-[#E53924]/20 text-[#E53924] flex items-center justify-center shrink-0">
@@ -402,7 +489,10 @@ function getWhatsAppUrl(tierName?: string) {
                 <div>
                   <p class="text-xs text-zinc-400">Merchandising sumado a tu reserva:</p>
                   <p class="text-sm font-bold text-[#F5EEDC]">
-                    {{ selectedMerchItems.length }} {{ selectedMerchItems.length === 1 ? 'artículo' : 'artículos' }} —
+                    {{ totalMerchUnits }} {{ totalMerchUnits === 1 ? 'artículo' : 'artículos' }}
+                    <span v-if="selectedMerchEntries.length > 1" class="text-xs text-zinc-400 font-normal">
+                      ({{ selectedMerchEntries.length }} productos diferentes)
+                    </span> —
                     <span class="text-[#E53924]">{{ formatCurrency(selectedMerchTotal) }}</span>
                   </p>
                 </div>
@@ -519,19 +609,19 @@ function getWhatsAppUrl(tierName?: string) {
             </div>
 
             <!-- Resumen de Merchandising Añadido en Tarjeta de Reserva -->
-            <div v-if="selectedMerchItems.length > 0"
+            <div v-if="selectedMerchEntries.length > 0"
               class="p-3.5 rounded-xl bg-[#E53924]/10 border border-[#E53924]/30 space-y-2">
               <div class="flex items-center justify-between text-xs font-bold text-[#FF6B55]">
                 <span class="flex items-center gap-1.5">
                   <UIcon name="i-heroicons-shopping-bag" class="w-4 h-4 text-[#E53924]" />
-                  <span>Merch sumado ({{ selectedMerchItems.length }})</span>
+                  <span>Merch sumado ({{ totalMerchUnits }})</span>
                 </span>
                 <span>+ {{ formatCurrency(selectedMerchTotal) }}</span>
               </div>
-              <ul class="text-[11px] text-zinc-300 space-y-1 pl-1">
-                <li v-for="it in selectedMerchItems" :key="it.id" class="flex items-center justify-between gap-1">
-                  <span class="truncate">• {{ it.name }}</span>
-                  <span class="text-zinc-400 shrink-0">{{ formatCurrency(it.price) }}</span>
+              <ul class="text-[11px] text-zinc-300 space-y-1.5 pl-1">
+                <li v-for="entry in selectedMerchEntries" :key="entry.item.id" class="flex items-center justify-between gap-1">
+                  <span class="truncate">• {{ entry.quantity }}x {{ entry.item.name }}</span>
+                  <span class="text-zinc-400 shrink-0 font-medium">{{ formatCurrency(entry.subtotal) }}</span>
                 </li>
               </ul>
               <p class="text-[10px] text-zinc-400 pt-1 border-t border-[#E53924]/20 leading-tight">
@@ -567,9 +657,9 @@ function getWhatsAppUrl(tierName?: string) {
         <span v-else class="text-xs font-bold text-zinc-400">
           A consultar
         </span>
-        <span v-if="selectedMerchItems.length > 0"
+        <span v-if="totalMerchUnits > 0"
           class="text-[10px] font-black text-[#FF6B55] block animate-pulse">
-          + {{ formatCurrency(selectedMerchTotal) }} Merch ({{ selectedMerchItems.length }})
+          + {{ formatCurrency(selectedMerchTotal) }} Merch ({{ totalMerchUnits }} {{ totalMerchUnits === 1 ? 'u.' : 'u.' }})
         </span>
       </div>
 
@@ -639,19 +729,51 @@ function getWhatsAppUrl(tierName?: string) {
       </template>
 
       <template #footer>
-        <div v-if="activeModalProduct" class="flex items-center justify-between w-full gap-3">
-          <UButton variant="ghost" color="neutral" class="cursor-pointer" @click="isMerchModalOpen = false">
+        <div v-if="activeModalProduct" class="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-3">
+          <UButton variant="ghost" color="neutral" class="cursor-pointer order-2 sm:order-1" @click="isMerchModalOpen = false">
             Cerrar
           </UButton>
-          <button type="button" @click="toggleMerchItem(activeModalProduct); isMerchModalOpen = false"
-            class="py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-wider inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
-            :class="isMerchSelected(activeModalProduct.id)
-              ? 'bg-zinc-700 hover:bg-zinc-600 text-white'
-              : 'bg-[#E53924] hover:bg-[#c9321f] text-white shadow-[#E53924]/20'">
-            <UIcon :name="isMerchSelected(activeModalProduct.id) ? 'i-heroicons-x-mark' : 'i-heroicons-plus'"
-              class="w-4 h-4" />
-            <span>{{ isMerchSelected(activeModalProduct.id) ? 'Quitar de mi viaje' : 'Sumar este producto' }}</span>
-          </button>
+
+          <!-- Stepper en la modal -->
+          <div class="order-1 sm:order-2 flex items-center justify-end gap-3 w-full sm:w-auto">
+            <div v-if="!isMerchSelected(activeModalProduct.id)">
+              <button type="button" @click="incrementMerch(activeModalProduct)"
+                class="py-2.5 px-5 rounded-xl text-xs font-black uppercase tracking-wider inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-md bg-[#E53924] hover:bg-[#c9321f] text-white shadow-[#E53924]/20">
+                <UIcon name="i-heroicons-plus" class="w-4 h-4" />
+                <span>Sumar este producto</span>
+              </button>
+            </div>
+
+            <div v-else class="flex items-center gap-3">
+              <span class="text-xs text-zinc-400 font-medium hidden sm:inline">
+                Subtotal: <strong class="text-[#F5EEDC]">{{ formatCurrency(activeModalProduct.price * getMerchQuantity(activeModalProduct.id)) }}</strong>
+              </span>
+
+              <div class="flex items-center bg-[#E53924] rounded-xl p-1 shadow-md shadow-[#E53924]/20 border border-[#E53924]">
+                <button type="button" @click="decrementMerch(activeModalProduct.id)"
+                  class="w-8 h-8 rounded-lg bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-colors cursor-pointer"
+                  :title="getMerchQuantity(activeModalProduct.id) === 1 ? 'Quitar del viaje' : 'Restar una unidad'">
+                  <UIcon :name="getMerchQuantity(activeModalProduct.id) === 1 ? 'i-heroicons-trash' : 'i-heroicons-minus'" class="w-4 h-4" />
+                </button>
+
+                <div class="px-3 text-center min-w-16">
+                  <span class="text-xs font-black text-white block leading-none">
+                    {{ getMerchQuantity(activeModalProduct.id) }} {{ getMerchQuantity(activeModalProduct.id) === 1 ? 'unidad' : 'unidades' }}
+                  </span>
+                </div>
+
+                <button type="button" @click="incrementMerch(activeModalProduct)"
+                  :disabled="getMerchQuantity(activeModalProduct.id) >= MAX_MERCH_QTY"
+                  class="w-8 h-8 rounded-lg bg-black/20 text-white flex items-center justify-center transition-colors"
+                  :class="getMerchQuantity(activeModalProduct.id) >= MAX_MERCH_QTY
+                    ? 'opacity-40 cursor-not-allowed'
+                    : 'hover:bg-black/40 cursor-pointer'"
+                  :title="getMerchQuantity(activeModalProduct.id) >= MAX_MERCH_QTY ? 'Límite máximo alcanzado (10)' : 'Sumar otra unidad'">
+                  <UIcon name="i-heroicons-plus" class="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </template>
     </UModal>
