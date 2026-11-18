@@ -7,6 +7,60 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 
 ---
 
+## [1.3.0] - 2026-11-18
+### Añadido
+* **Módulo Oficial de Merchandising en Panel Administrativo (`/admin/merch`):**
+  * **Persistencia Relacional y Modelo de Datos (`public.merchandise` y `public.event_merchandise`):**
+    * Creación de la tabla `merchandise` con soporte para `name`, `slug` único, `category` (`indumentaria`, `accesorios`, `calcos`, `combos`, `otros`), `price`, `stock`, `sizes` (array de talles), `image_url` y estado de disponibilidad `is_active`.
+    * Creación de la tabla intermedia `event_merchandise` con claves foráneas hacia `events` y `merchandise`, soportando asignación múltiple (0, 1 o N productos) y soft-delete mediante `is_active`.
+    * Incorporación de la columna `has_merchandise: boolean` en `events` para filtrado y consulta optimizada.
+    * Políticas de seguridad Row Level Security (RLS) y privilegios de tabla (`GRANT ALL TO authenticated`, `GRANT SELECT TO anon`).
+  * **Composable de Gestión Reactiva (`app/composables/useMerch.ts`):**
+    * Soporte integral para Create, Read, Update y Delete con caché en memoria (TTL 15 min).
+    * Normalización del payload de inserción para respetar la generación nativa de UUID en PostgreSQL (`DEFAULT gen_random_uuid()`).
+    * Purga completa de catálogos semilla y datos demostrativos mockeados; persistencia 100% productiva contra Supabase.
+  * **Panel de Inventario y Control de Stock (`app/pages/admin/merch/index.vue`):**
+    * Tarjetas de telemetría y métricas en vivo: total de artículos activos, unidades en stock físico, valor monetario total del inventario y categorías activas.
+    * Grilla de productos con filtros por categoría, buscador reactivo por nombre/descripción y badges visuales según categoría.
+    * Modales interactivos para alta/edición de artículos y confirmación de baja con advertencia de impacto en inventario.
+  * **Asignación M:N de Merchandising a Viajes (`/admin/viajes/nuevo` y `/admin/viajes/[id]/editar`):**
+    * Sub-bloque de merchandising integrado en el *Paso 3: Paquetes y Opciones de Precios*.
+    * Selector dinámico con chips interactivos para vincular productos del catálogo al viaje de forma no obligatoria.
+    * Sincronización relacional automática en `useEvents.ts` (`syncEventMerchandise`).
+    * Badge identificador `[Merch]` en la tabla del catálogo de viajes y en el panel general operativo.
+
+* **Promoción de Merchandising y Venta Contextual en la Ficha Pública del Viaje (`/viajes/[slug]`):**
+  * **Sección "Kit Recitalero Oficial" en Columna Principal:**
+    * Ubicación destacada en la cabecera del cuerpo de la salida (arriba de *"¿Qué incluye?"*), maximizando la visibilidad del catálogo oficial.
+    * Renderizado condicional exclusivo para viajes con `has_merchandise = true` y productos activos vinculados.
+    * Tarjetas de producto compactas optimizadas para e-commerce (relación de imagen `aspect-[2/1]`, categoría, nombre y precio).
+    * Modal de `+ Info` para explorar imágenes en tamaño completo, descripciones detalladas de confección/tela y talles disponibles.
+  * **Patrón de Interacción "Morphing Stepper" (Límite 10 Unidades):**
+    * Transición fluida de botón inicial `[+ Sumar al viaje]` a controlador de cantidad `[ - ] [ N unidades ] [ + ]` al interactuar.
+    * Límite de seguridad máximo de 10 unidades por producto con deshabilitación visual y tooltip explicativo.
+    * Desglose matemático inmediato en la tarjeta: visualización de `N × $Precio` y subtotal calculado en caliente.
+    * Stepper integrado de forma idéntica dentro del pie de la modal de `+ Info`.
+  * **Sincronización en Todo el Embudo de Reserva y Conversión:**
+    * **Tarjeta Sticky de Escritorio:** Desglose en tiempo real de unidades sumadas (`• Nx Producto`) y subtotal acumulado.
+    * **Barra Flotante Móvil:** Indicador visual resaltado `+ $Total Merch (N u.)` junto al valor base del viaje.
+    * **Enlace y Mensaje Dinámico de WhatsApp:** Inyección automática del bloque detallado de Merchandising en el texto de consulta:
+      `👕 *Merchandising oficial que deseo sumar:*` con desglose de cantidades, subtotales y total acumulado.
+
+* **Reorganización de Navegación y Usabilidad en Layout Administrativo (`app/layouts/admin.vue`):**
+  * Reestructuración del Navbar con jerarquía visual clara:
+    * Accesos directos principales: *Tablero*, *Viajes*, *Ventas* y *Mensajes*.
+    * Agrupador desplegable (dropdown) *Administración* con acceso a *Clientes*, *Recintos*, *Choferes*, *Flota* y *Merchandising*.
+  * Separación espacial ergonómica (50px) entre enlaces de navegación y acciones de usuario (selector de tema, perfil, cerrar sesión).
+  * Optimización del Toggle Theme: soporte de Modo Claro en tablas de datos, encabezados principales, filtros y modales del panel.
+
+### Corregido
+* **Compatibilidad de Props en Nuxt UI (`UTextarea`):**
+  * Enlace dinámico con `:rows` numérico en lugar de atributo estático de texto `rows="..."` en todos los formularios administrativos (`merch`, `viajes/nuevo`, `viajes/editar`, `choferes`, `clientes`, `transportes`, `ventas`), eliminando warnings de validación de tipos en consola de Vue.
+* **Sintaxis de Plantillas en `app/pages/viajes/[slug].vue`:**
+  * Corrección de cierre de etiquetas duplicadas en el bloque de resumen de selección.
+
+---
+
 ## [1.2.2] - 2026-11-03
 ### Añadido
 * **Manejo Amigable de Duplicidad de Slug / Enlaces Únicos (`events_slug_key`):**
