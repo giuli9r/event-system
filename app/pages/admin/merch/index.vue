@@ -130,7 +130,7 @@ function openCreateModal() {
   formState.price = 0
   formState.stock = 0
   formState.description = ''
-  formState.sizesString = 'S, M, L, XL'
+  formState.sizesString = ''
   formState.is_active = true
   isModalOpen.value = true
 }
@@ -242,15 +242,6 @@ onMounted(() => {
           <h1 class="text-2xl font-black text-[#F5EEDC] tracking-tight">
             Merchandising Oficial
           </h1>
-          <!-- <span
-            class="text-xs px-2.5 py-0.5 rounded-full bg-[#E53924]/10 text-[#E53924] border border-[#E53924]/30 font-bold uppercase tracking-wider">
-            Mejoras • En Preparación
-          </span> -->
-          <!-- <span
-            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">
-            <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-            Estructura Inicial
-          </span> -->
         </div>
         <p class="text-xs text-zinc-400 mt-1">
           Catálogo oficial de productos, indumentaria para recitales, control de talles y stock de Tripu Producciones.
@@ -267,51 +258,6 @@ onMounted(() => {
         </UButton>
       </div>
     </div>
-
-    <!-- Barra de Estado: Sección en Construcción -->
-    <!-- <div
-      class="relative overflow-hidden rounded-2xl border border-[#E53924]/30 bg-gradient-to-r from-[#1A1A22] via-[#14141B] to-[#1A1A22] p-5 shadow-xl">
-      <div class="absolute -right-10 -bottom-10 w-44 h-44 rounded-full bg-[#E53924]/10 blur-3xl pointer-events-none" />
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-        <div class="flex items-start gap-3.5">
-          <div
-            class="w-10 h-10 rounded-xl bg-[#E53924]/15 border border-[#E53924]/30 flex items-center justify-center text-[#E53924] shrink-0 mt-0.5">
-            <UIcon name="i-heroicons-sparkles" class="w-5 h-5 animate-pulse" />
-          </div>
-          <div class="space-y-1">
-            <div class="flex items-center gap-2">
-              <span class="text-sm font-bold text-[#F5EEDC]">
-                Próximamente: Módulo de Merchandising Tripu
-              </span>
-              <span
-                class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/25">
-                En Construcción
-              </span>
-            </div>
-            <p class="text-xs text-zinc-300 max-w-3xl leading-relaxed">
-              Integración visual y arquitectónica del catálogo de Merch. Acá podrás crear, editar, fijar precios y
-              gestionar el stock físico de remeras, buzos, gorras y combos exclusivos.
-              La vinculación con la base de datos Supabase se activará en la próxima fase.
-            </p>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-2 shrink-0 self-end md:self-center">
-          <div class="text-right hidden lg:block">
-            <p class="text-[11px] text-zinc-400">Estado de arquitectura</p>
-            <p class="text-xs font-bold text-emerald-400 flex items-center justify-end gap-1">
-              <UIcon name="i-heroicons-check-circle" class="w-3.5 h-3.5" />
-              <span>CRUD local operativo</span>
-            </p>
-          </div>
-          <UButton size="xs" variant="outline" color="neutral" class="cursor-pointer"
-            icon="i-heroicons-question-mark-circle"
-            @click="toast.add({ title: 'Módulo en Construcción', description: 'El esquema de base de datos se creará próximamente junto con la vinculación a ventas.', color: 'info' })">
-            Detalles
-          </UButton>
-        </div>
-      </div>
-    </div> -->
 
     <!-- Barra de Métricas y KPIs de Merchandising -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
