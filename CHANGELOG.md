@@ -7,6 +7,40 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 
 ---
 
+## [1.4.0] - 2026-11-18
+### Añadido
+* **Módulo de Almacenamiento y Gestión Multimedia en Panel Administrativo (`/admin/media`):**
+  * **Persistencia Dual en Supabase (Storage + Tabla Relacional `public.media_assets`):**
+    * Configuración y conexión con el bucket público `tripu-assets` en Supabase Storage, organizado en subcarpetas temáticas (`flyers/`, `merch/`, `venues/`, `banners/`, `general/`).
+    * Creación de la tabla `public.media_assets` con almacenamiento de metadatos técnicos: `name`, `slug`, `file_path`, `public_url`, `asset_type`, `mime_type`, `file_size_bytes`, `width`, `height`, `is_active` y marcas temporales.
+    * Políticas de seguridad RLS en `storage.objects`: lectura pública (`SELECT`) para visualización sin tokens temporales y control exclusivo (`INSERT`, `UPDATE`, `DELETE`) para usuarios autenticados.
+  * **Convención de Nomenclatura Automática:**
+    * Generación estandarizada en cliente al momento de la subida: `[slug-nombre]-[hash-corto]-[fecha-AAAAMMDD].[extension]` dentro de su subcarpeta correspondiente (ej: `flyers/duki-river-plate-2026-c7a8b9-20261118.webp`).
+  * **Análisis Técnico en Navegador (`analyzeImageFile` en `app/composables/useMedia.ts`):**
+    * Detección en caliente de resolución (`width` × `height`), relación de aspecto y peso en bytes antes de la subida física.
+    * Validación de proporción recomendada para afiches de recitales: **4:5 vertical** (ej. 1080×1350 px o 800×1000 px).
+    * Validación de proporción recomendada para artículos de merchandising: **1:1 cuadrada** (ej. 1000×1000 px).
+    * Alerta visual preventiva si el archivo supera **1.5 MB** recomendando exportar en WebP para máxima velocidad de carga.
+    * Límite estricto de seguridad: máximo **5 MB por archivo**.
+  * **Panel Operativo de Multimedia (`app/pages/admin/media/index.vue`):**
+    * Tarjetas de telemetría en tiempo real: Total de Archivos, Flyers de Viajes, Fotos de Merch y Espacio Total Almacenado en Storage (KB/MB).
+    * Filtros por categoría de activo (*Todos*, *Flyers de Viajes*, *Merchandise*, *Recintos & Sedes*, *Banners & General*) y buscador reactivo por nombre o ruta.
+    * Grilla interactiva con previsualización en ratio 4:5, badges temáticos por tipo, resolución técnica y tamaño de archivo.
+    * Modal de inspección y detalles en alta resolución con copia de URL al portapapeles en un click.
+    * Modal de subida inteligente con drag & drop, inspección en vivo de dimensiones y previsualización de la ruta normalizada.
+    * Eliminación dual atómica: borrado del archivo físico en Supabase Storage y `DELETE` directo en `public.media_assets`.
+  * **Selector Modal de Afiches en Creación y Edición de Viajes (Paso 4):**
+    * Nuevo componente reutilizable `app/components/admin/MediaSelectorModal.vue`.
+    * Integración en `app/pages/admin/viajes/nuevo.vue` y `app/pages/admin/viajes/[id]/editar.vue`:
+      * La **Opción 1 (Principal)** es ahora la selección interactiva desde la biblioteca de afiches con buscador por recital y subida directa sin salir del formulario.
+      * Tarjeta de afiche asignado con miniatura vertical, URL limpia de Supabase y botones para cambiar o quitar el afiche.
+      * La carga de URL externa manual queda preservada como respaldo secundario.
+  * **Navegación en Panel (`app/layouts/admin.vue`):**
+    * Incorporación del enlace *Multimedia* (`/admin/media`) dentro del menú desplegable *Administración* (Gestión Operativa) tanto en versión de escritorio como en el menú móvil.
+    * Limpieza de caché de medios (`clearMediaState()`) al cerrar sesión administrativa.
+
+---
+
 ## [1.3.0] - 2026-11-18
 ### Añadido
 * **Módulo Oficial de Merchandising en Panel Administrativo (`/admin/merch`):**

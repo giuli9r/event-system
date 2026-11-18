@@ -565,6 +565,54 @@ export type Database = {
           }
         ]
       }
+      media_assets: {
+        Row: {
+          id: string
+          created_at: string
+          updated_at: string
+          name: string
+          slug: string
+          file_path: string
+          public_url: string
+          asset_type: 'flyer' | 'merch' | 'venue' | 'banner' | 'general'
+          mime_type: string | null
+          file_size_bytes: number | null
+          width: number | null
+          height: number | null
+          is_active: boolean
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          name: string
+          slug: string
+          file_path: string
+          public_url: string
+          asset_type?: 'flyer' | 'merch' | 'venue' | 'banner' | 'general'
+          mime_type?: string | null
+          file_size_bytes?: number | null
+          width?: number | null
+          height?: number | null
+          is_active?: boolean
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          name?: string
+          slug?: string
+          file_path?: string
+          public_url?: string
+          asset_type?: 'flyer' | 'merch' | 'venue' | 'banner' | 'general'
+          mime_type?: string | null
+          file_size_bytes?: number | null
+          width?: number | null
+          height?: number | null
+          is_active?: boolean
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -600,3 +648,7 @@ export type MerchandiseUpdate = Database['public']['Tables']['merchandise']['Upd
 export type EventMerchandiseRow = Database['public']['Tables']['event_merchandise']['Row']
 export type EventMerchandiseInsert = Database['public']['Tables']['event_merchandise']['Insert']
 export type EventMerchandiseUpdate = Database['public']['Tables']['event_merchandise']['Update']
+
+export type MediaAssetRow = Database['public']['Tables']['media_assets']['Row']
+export type MediaAssetInsert = Database['public']['Tables']['media_assets']['Insert']
+export type MediaAssetUpdate = Database['public']['Tables']['media_assets']['Update']

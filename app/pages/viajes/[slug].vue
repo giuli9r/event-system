@@ -274,7 +274,7 @@ function getWhatsAppUrl(tierName?: string) {
                   <p class="text-sm sm:text-base font-black text-[#F5EEDC]">
                     {{ currentEvent.venue?.name || 'Recinto a confirmar' }}
                     <span v-if="currentEvent.venue?.city" class="text-zinc-400 font-medium">({{ currentEvent.venue.city
-                      }})</span>
+                    }})</span>
                   </p>
                 </div>
               </div>
@@ -351,7 +351,8 @@ function getWhatsAppUrl(tierName?: string) {
           <!-- SECCIÓN KIT RECITALERO: MERCHANDISING OFICIAL ASIGNADO -->
           <section v-if="hasMerchAvailable"
             class="relative overflow-hidden p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-[#1A1A22] via-[#14141B] to-[#171720] border-2 border-[#E53924]/40 shadow-2xl shadow-[#E53924]/5 space-y-6">
-            <div class="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-[#E53924]/10 blur-3xl pointer-events-none" />
+            <div
+              class="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-[#E53924]/10 blur-3xl pointer-events-none" />
 
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
               <div>
@@ -364,7 +365,8 @@ function getWhatsAppUrl(tierName?: string) {
                   Equipate para el Recital
                 </h2>
                 <p class="text-xs sm:text-sm text-zinc-300 mt-1 max-w-xl">
-                  Sumá indumentaria y accesorios oficiales a tu salida. Los reservás ahora y los recibís coordinados durante el viaje.
+                  Sumá indumentaria y accesorios oficiales a tu salida. Los reservás ahora y los recibís coordinados
+                  durante el viaje.
                 </p>
               </div>
 
@@ -418,7 +420,8 @@ function getWhatsAppUrl(tierName?: string) {
                 <div class="pt-4 mt-4 border-t border-[#2A2A38] space-y-3">
                   <div class="flex items-baseline justify-between">
                     <span class="text-xs text-zinc-400 font-medium">
-                      {{ getMerchQuantity(item.id) > 1 ? `${getMerchQuantity(item.id)} × ${formatCurrency(item.price)}` : 'Precio' }}
+                      {{ getMerchQuantity(item.id) > 1 ? `${getMerchQuantity(item.id)} × ${formatCurrency(item.price)}`
+                        : 'Precio' }}
                     </span>
                     <span class="text-xl font-black text-[#F5EEDC]">
                       {{ formatCurrency(item.price * (getMerchQuantity(item.id) || 1)) }}
@@ -483,7 +486,8 @@ function getWhatsAppUrl(tierName?: string) {
             <div v-if="selectedMerchEntries.length > 0"
               class="p-4 rounded-xl bg-[#0F0F12] border border-[#E53924]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
               <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-lg bg-[#E53924]/20 text-[#E53924] flex items-center justify-center shrink-0">
+                <div
+                  class="w-9 h-9 rounded-lg bg-[#E53924]/20 text-[#E53924] flex items-center justify-center shrink-0">
                   <UIcon name="i-heroicons-shopping-bag" class="w-5 h-5" />
                 </div>
                 <div>
@@ -619,7 +623,8 @@ function getWhatsAppUrl(tierName?: string) {
                 <span>+ {{ formatCurrency(selectedMerchTotal) }}</span>
               </div>
               <ul class="text-[11px] text-zinc-300 space-y-1.5 pl-1">
-                <li v-for="entry in selectedMerchEntries" :key="entry.item.id" class="flex items-center justify-between gap-1">
+                <li v-for="entry in selectedMerchEntries" :key="entry.item.id"
+                  class="flex items-center justify-between gap-1">
                   <span class="truncate">• {{ entry.quantity }}x {{ entry.item.name }}</span>
                   <span class="text-zinc-400 shrink-0 font-medium">{{ formatCurrency(entry.subtotal) }}</span>
                 </li>
@@ -657,9 +662,9 @@ function getWhatsAppUrl(tierName?: string) {
         <span v-else class="text-xs font-bold text-zinc-400">
           A consultar
         </span>
-        <span v-if="totalMerchUnits > 0"
-          class="text-[10px] font-black text-[#FF6B55] block animate-pulse">
-          + {{ formatCurrency(selectedMerchTotal) }} Merch ({{ totalMerchUnits }} {{ totalMerchUnits === 1 ? 'u.' : 'u.' }})
+        <span v-if="totalMerchUnits > 0" class="text-[10px] font-black text-[#FF6B55] block animate-pulse">
+          + {{ formatCurrency(selectedMerchTotal) }} Merch ({{ totalMerchUnits }} {{ totalMerchUnits === 1 ? 'u.' : 'u.'
+          }})
         </span>
       </div>
 
@@ -675,8 +680,7 @@ function getWhatsAppUrl(tierName?: string) {
     </div>
 
     <!-- MODAL DETALLE DE MERCHANDISING (+ INFO) -->
-    <UModal v-model:open="isMerchModalOpen"
-      :title="activeModalProduct?.name || 'Detalles de Merchandising'"
+    <UModal v-model:open="isMerchModalOpen" :title="activeModalProduct?.name || 'Detalles de Merchandising'"
       description="Indumentaria y accesorios oficiales de Tripu Producciones.">
       <template #body>
         <div v-if="activeModalProduct" class="space-y-4 pt-1">
@@ -722,7 +726,8 @@ function getWhatsAppUrl(tierName?: string) {
             <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Descripción del producto:</span>
             <p
               class="text-sm text-zinc-300 leading-relaxed whitespace-pre-line p-3 rounded-xl bg-[#14141B] border border-[#2A2A38]">
-              {{ activeModalProduct.description || 'Artículo oficial de producción exclusiva para el viaje. Materiales y estampados de alta durabilidad.' }}
+              {{ activeModalProduct.description }} || 'Artículo oficial de producción exclusiva para el viaje.
+              Materiales y estampados de alta durabilidad.'
             </p>
           </div>
         </div>
@@ -730,7 +735,8 @@ function getWhatsAppUrl(tierName?: string) {
 
       <template #footer>
         <div v-if="activeModalProduct" class="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-3">
-          <UButton variant="ghost" color="neutral" class="cursor-pointer order-2 sm:order-1" @click="isMerchModalOpen = false">
+          <UButton variant="ghost" color="neutral" class="cursor-pointer order-2 sm:order-1"
+            @click="isMerchModalOpen = false">
             Cerrar
           </UButton>
 
@@ -746,19 +752,24 @@ function getWhatsAppUrl(tierName?: string) {
 
             <div v-else class="flex items-center gap-3">
               <span class="text-xs text-zinc-400 font-medium hidden sm:inline">
-                Subtotal: <strong class="text-[#F5EEDC]">{{ formatCurrency(activeModalProduct.price * getMerchQuantity(activeModalProduct.id)) }}</strong>
+                Subtotal: <strong class="text-[#F5EEDC]">{{ formatCurrency(activeModalProduct.price *
+                  getMerchQuantity(activeModalProduct.id)) }}</strong>
               </span>
 
-              <div class="flex items-center bg-[#E53924] rounded-xl p-1 shadow-md shadow-[#E53924]/20 border border-[#E53924]">
+              <div
+                class="flex items-center bg-[#E53924] rounded-xl p-1 shadow-md shadow-[#E53924]/20 border border-[#E53924]">
                 <button type="button" @click="decrementMerch(activeModalProduct.id)"
                   class="w-8 h-8 rounded-lg bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-colors cursor-pointer"
                   :title="getMerchQuantity(activeModalProduct.id) === 1 ? 'Quitar del viaje' : 'Restar una unidad'">
-                  <UIcon :name="getMerchQuantity(activeModalProduct.id) === 1 ? 'i-heroicons-trash' : 'i-heroicons-minus'" class="w-4 h-4" />
+                  <UIcon
+                    :name="getMerchQuantity(activeModalProduct.id) === 1 ? 'i-heroicons-trash' : 'i-heroicons-minus'"
+                    class="w-4 h-4" />
                 </button>
 
                 <div class="px-3 text-center min-w-16">
                   <span class="text-xs font-black text-white block leading-none">
-                    {{ getMerchQuantity(activeModalProduct.id) }} {{ getMerchQuantity(activeModalProduct.id) === 1 ? 'unidad' : 'unidades' }}
+                    {{ getMerchQuantity(activeModalProduct.id) }} {{ getMerchQuantity(activeModalProduct.id) === 1 ?
+                      'unidad' : 'unidades' }}
                   </span>
                 </div>
 
