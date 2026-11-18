@@ -7,6 +7,7 @@ import {
   type EventStatus,
   type EventWithRelations
 } from '~/composables/useEvents'
+import { useMerch, type MerchItem } from '~/composables/useMerch'
 
 definePageMeta({
   layout: 'admin',
@@ -22,11 +23,39 @@ const eventId = computed(() => route.params.id as string)
 const {
   fetchEventById,
   updateEventWithTiers,
+  fetchEventMerchandiseIds,
   loading: composableLoading
 } = useEvents()
 
 const { venues, fetchVenues } = useVenues()
 const { transports, fetchTransports } = useTransports()
+const { merchItems, fetchMerch } = useMerch()
+
+// Merchandising opcional asignado al viaje (0, 1 o más items)
+const selectedMerchIds = ref<string[]>([])
+const merchToAdd = ref<string>('')
+
+const availableMerchOptions = computed(() => {
+  return merchItems.value.filter(item => !selectedMerchIds.value.includes(item.id) && item.is_active)
+})
+
+const selectedMerchItems = computed(() => {
+  return selectedMerchIds.value
+    .map(id => merchItems.value.find(i => i.id === id))
+    .filter(Boolean) as MerchItem[]
+})
+
+function addMerchItem() {
+  if (!merchToAdd.value) return
+  if (!selectedMerchIds.value.includes(merchToAdd.value)) {
+    selectedMerchIds.value.push(merchToAdd.value)
+  }
+  merchToAdd.value = ''
+}
+
+function removeMerchItem(id: string) {
+  selectedMerchIds.value = selectedMerchIds.value.filter(mId => mId !== id)
+}
 
 const pageLoading = ref(true)
 const submitting = ref(false)
@@ -171,7 +200,8 @@ async function loadData() {
     // 1. Cargar catálogos maestros si no están cargados (ADR-05 resuelve en 0ms si hay caché)
     await Promise.all([
       fetchVenues(),
-      fetchTransports()
+      fetchTransports(),
+      fetchMerch()
     ])
 
     // 2. Recuperar el viaje por ID
@@ -182,6 +212,13 @@ async function loadData() {
     }
 
     loadedEvent.value = ev
+
+    // Hidratar artículos de merchandising asignados
+    if (ev.merchandise_ids && ev.merchandise_ids.length > 0) {
+      selectedMerchIds.value = [...ev.merchandise_ids]
+    } else {
+      selectedMerchIds.value = await fetchEventMerchandiseIds(ev.id)
+    }
 
     // 3. Hidratar el formulario
     formState.title = ev.title
@@ -274,7 +311,12 @@ async function handleSubmit() {
       is_available: Boolean(t.is_available)
     }))
 
-    const { data, error: err } = await updateEventWithTiers(eventId.value, eventPayload, tiersPayload)
+    const { data, error: err } = await updateEventWithTiers(
+      eventId.value,
+      eventPayload,
+      tiersPayload,
+      selectedMerchIds.value
+    )
     if (err) throw err
 
     toast.add({
@@ -618,7 +660,7 @@ onMounted(() => {
 
             <UFormField label="Servicios y Beneficios Incluidos" name="includes_summary"
               help="Resumen para la tarjeta pública">
-              <UTextarea v-model="formState.includes_summary" rows="2"
+              <UTextarea v-model="formState.includes_summary" :rows="2"
                 placeholder="Traslado ida y vuelta, coordinación en viaje, seguro y bebidas..." class="w-full" />
             </UFormField>
           </div>
@@ -699,6 +741,119 @@ onMounted(() => {
                     class="rounded bg-[#0F0F12] border-[#2A2A38] text-emerald-500 focus:ring-0 w-4 h-4 cursor-pointer" />
                   <span>Habilitado para reserva</span>
                 </label>
+              </div>
+            </div>
+
+            <!-- SUB-BLOQUE: Merchandising Oficial Asignado al Viaje (Opcional: 0, 1 o N items) -->
+            <div class="pt-5 border-t border-[#2A2A38] space-y-3">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <div
+                    class="w-7 h-7 rounded-lg bg-[#E53924]/10 border border-[#E53924]/30 flex items-center justify-center text-[#E53924] shrink-0">
+                    <UIcon name="i-heroicons-shopping-bag" class="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 class="text-xs font-bold text-[#F5EEDC] flex items-center gap-2">
+                      <span>Merchandising Oficial Asignado</span>
+                      <span
+                        class="text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-colors"
+                        :class="selectedMerchIds.length > 0 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-zinc-800 text-zinc-400 border-zinc-700'"
+                      >
+                        {{ selectedMerchIds.length === 0 ? 'Opcional (Sin artículos)' : `${selectedMerchIds.length} ítem(s) asignado(s)` }}
+                      </span>
+                    </h3>
+                    <p class="text-[11px] text-zinc-400">
+                      Artículos y prendas oficiales promocionadas o disponibles para este contingente.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Indicador del campo has_merchandise -->
+                <div class="flex items-center gap-1.5 self-start sm:self-center bg-[#14141A] px-2.5 py-1 rounded-full border border-[#2A2A38]">
+                  <span
+                    class="w-2 h-2 rounded-full"
+                    :class="selectedMerchIds.length > 0 ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-600'"
+                  />
+                  <span
+                    class="text-[11px] font-mono font-bold"
+                    :class="selectedMerchIds.length > 0 ? 'text-emerald-400' : 'text-zinc-500'"
+                  >
+                    has_merchandise: {{ selectedMerchIds.length > 0 ? 'true' : 'false' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Menú Selector de Merchandising -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end pt-1">
+                <div class="sm:col-span-2">
+                  <label class="block text-xs font-semibold text-zinc-300 mb-1">
+                    Sumar producto del catálogo oficial:
+                  </label>
+                  <select
+                    v-model="merchToAdd"
+                    class="w-full rounded-md bg-[#14141A] border border-[#2A2A38] text-zinc-200 text-xs px-3 py-2.5 focus:outline-none focus:border-[#E53924]"
+                  >
+                    <option value="">-- Seleccionar artículo para vincular (Opcional) --</option>
+                    <option
+                      v-for="item in availableMerchOptions"
+                      :key="item.id"
+                      :value="item.id"
+                    >
+                      {{ item.name }} (${{ item.price.toLocaleString('es-AR') }}) [{{ item.category }}] - Stock: {{ item.stock }}
+                    </option>
+                  </select>
+                </div>
+
+                <div>
+                  <UButton
+                    size="sm"
+                    class="w-full bg-[#E53924] hover:bg-[#c9321f] text-white font-semibold cursor-pointer h-[38px] flex items-center justify-center gap-1.5 shadow-sm shadow-[#E53924]/20"
+                    icon="i-heroicons-plus"
+                    :disabled="!merchToAdd"
+                    @click="addMerchItem"
+                  >
+                    Asignar al Viaje
+                  </UButton>
+                </div>
+              </div>
+
+              <!-- Bandeja de Artículos Asignados (Chips / Cards) -->
+              <div v-if="selectedMerchItems.length > 0" class="pt-2 space-y-2">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block">
+                  Artículos vinculados al viaje:
+                </span>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                  <div
+                    v-for="item in selectedMerchItems"
+                    :key="item.id"
+                    class="p-2.5 rounded-lg bg-[#14141A] border border-[#2A2A38] flex items-center justify-between gap-2 shadow-xs group hover:border-zinc-700 transition-colors"
+                  >
+                    <div class="flex items-center gap-2.5 min-w-0">
+                      <div class="w-8 h-8 rounded bg-[#1A1A22] border border-[#2A2A38] flex items-center justify-center text-[#E53924] shrink-0 text-xs">
+                        <UIcon name="i-heroicons-tag" class="w-4 h-4" />
+                      </div>
+                      <div class="min-w-0">
+                        <p class="text-xs font-bold text-[#F5EEDC] truncate" :title="item.name">
+                          {{ item.name }}
+                        </p>
+                        <p class="text-[10px] text-zinc-400">
+                          ${{ item.price.toLocaleString('es-AR') }} • <span class="capitalize text-zinc-300">{{ item.category }}</span>
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      class="p-1 rounded text-zinc-400 hover:text-red-400 hover:bg-red-950/30 transition-colors cursor-pointer shrink-0"
+                      title="Desvincular artículo"
+                      @click="removeMerchItem(item.id)"
+                    >
+                      <UIcon name="i-heroicons-x-mark" class="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="p-3 rounded-lg bg-[#14141A]/50 border border-[#2A2A38] text-center text-xs text-zinc-500">
+                No hay artículos de merchandising asignados a esta salida. Podés continuar sin seleccionar ninguno (0 ítems) o sumar los que desees.
               </div>
             </div>
           </div>

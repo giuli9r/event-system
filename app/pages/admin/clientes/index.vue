@@ -650,7 +650,7 @@ function calculateAge(daybirth: string | null | undefined): number | null {
             <UFormField label="Observaciones Operativas / Notas Médicas" name="notes">
               <UTextarea v-model="formState.notes"
                 placeholder="Alergias, requerimientos de movilidad reducida, vegetariano, notas del coordinador..."
-                rows="2" class="w-full" />
+                :rows="2" class="w-full" />
             </UFormField>
 
             <!-- Switch de Estado Activo -->

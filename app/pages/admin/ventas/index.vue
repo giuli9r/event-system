@@ -1375,7 +1375,7 @@ onMounted(() => {
               <UTextarea
                 v-model="saleForm.notes"
                 placeholder="Ej: Viaja con Marcos Díaz (DNI 38.123.456). Resta abonar última cuota en la terminal."
-                rows="2"
+                :rows="2"
                 class="w-full"
               />
             </UFormField>

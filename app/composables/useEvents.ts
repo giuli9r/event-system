@@ -18,6 +18,7 @@ export interface EventWithRelations extends Event {
   venue: Venue | null
   transport: (TransportWithDriver) | null
   package_tiers: PackageTier[]
+  merchandise_ids?: string[]
 }
 
 // TTL estándar para entidades operativas dinámicas: 5 minutos
@@ -167,6 +168,77 @@ export function useEvents() {
   }
 
   /**
+   * Obtiene los IDs de artículos de merchandising activos vinculados a un viaje.
+   */
+  async function fetchEventMerchandiseIds(eventId: string): Promise<string[]> {
+    try {
+      const { data, error: err } = await (supabase as any)
+        .from('event_merchandise')
+        .select('merchandise_id')
+        .eq('event_id', eventId)
+        .eq('is_active', true)
+
+      if (err) return []
+      return (data || []).map((r: any) => r.merchandise_id)
+    } catch {
+      return []
+    }
+  }
+
+  /**
+   * Sincroniza la tabla intermedia event_merchandise (relación N:M) con soporte de soft-delete.
+   */
+  async function syncEventMerchandise(eventId: string, merchandiseIds: string[]) {
+    try {
+      const { data: currentRows, error: curErr } = await (supabase as any)
+        .from('event_merchandise')
+        .select('id, merchandise_id, is_active')
+        .eq('event_id', eventId)
+
+      if (curErr) {
+        console.warn('Tabla event_merchandise no disponible aún:', curErr.message)
+        return
+      }
+
+      const currentMap = new Map((currentRows || []).map((r: any) => [r.merchandise_id, r]))
+
+      // 1. Soft-delete: desactivar relaciones desmarcadas
+      const toDeactivate = (currentRows || []).filter(
+        (r: any) => r.is_active && !merchandiseIds.includes(r.merchandise_id)
+      )
+      for (const row of toDeactivate) {
+        await (supabase as any)
+          .from('event_merchandise')
+          .update({ is_active: false, updated_at: new Date().toISOString() })
+          .eq('id', row.id)
+      }
+
+      // 2. Reactivar existentes o insertar nuevas relaciones
+      for (const mId of merchandiseIds) {
+        const existing: any = currentMap.get(mId)
+        if (existing) {
+          if (!existing.is_active) {
+            await (supabase as any)
+              .from('event_merchandise')
+              .update({ is_active: true, updated_at: new Date().toISOString() })
+              .eq('id', existing.id)
+          }
+        } else {
+          await (supabase as any)
+            .from('event_merchandise')
+            .insert({
+              event_id: eventId,
+              merchandise_id: mId,
+              is_active: true
+            })
+        }
+      }
+    } catch (err) {
+      console.warn('Error sincronizando event_merchandise:', err)
+    }
+  }
+
+  /**
    * Purga el estado al cerrar sesión para garantizar aislamiento en terminales compartidas.
    */
   function clearEventsState() {
@@ -175,20 +247,26 @@ export function useEvents() {
   }
 
   /**
-   * Creación atómica de un evento junto con sus opciones de paquetes de tarifas.
+   * Creación atómica de un evento junto con sus opciones de paquetes de tarifas y merchandising vinculado.
    */
   async function createEventWithTiers(
     eventPayload: Omit<EventInsert, 'id' | 'created_at' | 'updated_at'>,
-    tiersPayload: Omit<PackageTierInsert, 'id' | 'created_at' | 'event_id'>[]
+    tiersPayload: Omit<PackageTierInsert, 'id' | 'created_at' | 'event_id'>[],
+    merchandiseIds: string[] = []
   ) {
     loading.value = true
     error.value = null
 
     try {
+      const payloadWithMerch = {
+        ...eventPayload,
+        has_merchandise: Boolean(merchandiseIds && merchandiseIds.length > 0)
+      }
+
       // 1. Insertar el evento principal
       const { data: newEvent, error: eventErr } = await supabase
         .from('events')
-        .insert(eventPayload)
+        .insert(payloadWithMerch)
         .select()
         .single()
 
@@ -235,7 +313,12 @@ export function useEvents() {
         }
       }
 
-      // 3. Consultar el evento completo con sus relaciones resueltas
+      // 3. Sincronizar artículos de merchandising seleccionados
+      if (merchandiseIds.length > 0) {
+        await syncEventMerchandise(newEvent.id, merchandiseIds)
+      }
+
+      // 4. Consultar el evento completo con sus relaciones resueltas
       const { data: fullEvent, error: fetchErr } = await supabase
         .from('events')
         .select(RELATIONS_QUERY)
@@ -245,6 +328,7 @@ export function useEvents() {
       if (fetchErr) throw fetchErr
 
       if (fullEvent) {
+        (fullEvent as any).merchandise_ids = merchandiseIds
         events.value.push(fullEvent as unknown as EventWithRelations)
         events.value.sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime())
         lastFetched.value = Date.now()
@@ -418,6 +502,7 @@ export function useEvents() {
 
       if (err) throw err
       const fullEvent = data as unknown as EventWithRelations
+      fullEvent.merchandise_ids = await fetchEventMerchandiseIds(fullEvent.id)
 
       const idx = events.value.findIndex(e => e.id === id)
       if (idx !== -1) {
@@ -502,16 +587,25 @@ export function useEvents() {
   async function updateEventWithTiers(
     eventId: string,
     eventPayload: EventUpdate,
-    tiersPayload: PackageTierFormInput[]
+    tiersPayload: PackageTierFormInput[],
+    merchandiseIds?: string[]
   ) {
     loading.value = true
     error.value = null
 
     try {
+      const payloadWithMerch: EventUpdate = {
+        ...eventPayload,
+        updated_at: new Date().toISOString()
+      }
+      if (merchandiseIds !== undefined) {
+        payloadWithMerch.has_merchandise = Boolean(merchandiseIds && merchandiseIds.length > 0)
+      }
+
       // 1. Actualizar el evento principal
       const { error: eventErr } = await supabase
         .from('events')
-        .update({ ...eventPayload, updated_at: new Date().toISOString() })
+        .update(payloadWithMerch)
         .eq('id', eventId)
 
       if (eventErr) {
@@ -594,7 +688,12 @@ export function useEvents() {
         }
       }
 
-      // 3. Re-consultar el registro completo con sus relaciones actualizadas
+      // 3. Sincronizar artículos de merchandising si se proporcionaron
+      if (merchandiseIds !== undefined) {
+        await syncEventMerchandise(eventId, merchandiseIds)
+      }
+
+      // 4. Re-consultar el registro completo con sus relaciones actualizadas
       const { data: fullEvent, error: fetchErr } = await supabase
         .from('events')
         .select(RELATIONS_QUERY)
@@ -604,6 +703,11 @@ export function useEvents() {
       if (fetchErr) throw fetchErr
 
       if (fullEvent) {
+        if (merchandiseIds !== undefined) {
+          (fullEvent as any).merchandise_ids = merchandiseIds
+        } else {
+          (fullEvent as any).merchandise_ids = await fetchEventMerchandiseIds(eventId)
+        }
         const index = events.value.findIndex(e => e.id === eventId)
         if (index !== -1) {
           events.value[index] = fullEvent as unknown as EventWithRelations
@@ -708,6 +812,8 @@ export function useEvents() {
     updatePackageTiers,
     updateEventWithTiers,
     deleteEvent,
+    fetchEventMerchandiseIds,
+    syncEventMerchandise,
     invalidateCache,
     clearEventsState
   }

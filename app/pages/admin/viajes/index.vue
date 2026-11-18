@@ -486,9 +486,15 @@ watch(() => route.query.q, (newQ) => {
                     />
                   </div>
                   <div class="min-w-0">
-                    <p class="font-bold text-[#F5EEDC] text-xs sm:text-sm truncate max-w-[140px] md:max-w-[170px] lg:max-w-[210px] xl:max-w-[270px]" :title="ev.title">
-                      {{ ev.title }}
-                    </p>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <p class="font-bold text-[#F5EEDC] text-xs sm:text-sm truncate max-w-[140px] md:max-w-[170px] lg:max-w-[210px] xl:max-w-[270px]" :title="ev.title">
+                        {{ ev.title }}
+                      </p>
+                      <span v-if="ev.has_merchandise" class="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 font-semibold inline-flex items-center gap-0.5" title="Tiene merchandising oficial asignado">
+                        <UIcon name="i-heroicons-shopping-bag" class="w-2.5 h-2.5" />
+                        <span>Merch</span>
+                      </span>
+                    </div>
                     <p class="text-[11px] text-zinc-400 flex items-center gap-1 truncate max-w-[140px] md:max-w-[170px] lg:max-w-[210px] xl:max-w-[270px]" :title="ev.artist_headliner">
                       <UIcon name="i-heroicons-user" class="w-3 h-3 text-zinc-500 shrink-0" />
                       <span class="truncate">{{ ev.artist_headliner }}</span>
