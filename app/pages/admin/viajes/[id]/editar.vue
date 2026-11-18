@@ -8,6 +8,8 @@ import {
   type EventWithRelations
 } from '~/composables/useEvents'
 import { useMerch, type MerchItem } from '~/composables/useMerch'
+import type { MediaAsset } from '~/composables/useMedia'
+import MediaSelectorModal from '~/components/admin/MediaSelectorModal.vue'
 
 definePageMeta({
   layout: 'admin',
@@ -55,6 +57,20 @@ function addMerchItem() {
 
 function removeMerchItem(id: string) {
   selectedMerchIds.value = selectedMerchIds.value.filter(mId => mId !== id)
+}
+
+// Selector de Flyers de la Biblioteca Multimedia
+const isMediaModalOpen = ref(false)
+const manualUrlMode = ref(false)
+
+function onFlyerSelected(asset: MediaAsset) {
+  formState.image_url = asset.public_url
+  manualUrlMode.value = false
+  toast.add({
+    title: 'Afiche vinculado',
+    description: `Se asignó "${asset.name}" como portada de la salida.`,
+    color: 'success'
+  })
 }
 
 const pageLoading = ref(true)
@@ -876,11 +892,61 @@ onMounted(() => {
 
           <div class="space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <UFormField label="URL del Flyer / Afiche Oficial" name="image_url"
-                help="Enlace web directo HTTPS a la imagen">
-                <UInput v-model="formState.image_url" placeholder="https://ejemplo.com/flyer-recital.jpg"
-                  icon="i-heroicons-photo" class="w-full" />
-              </UFormField>
+              <!-- Selector de Flyer: Opción 1 Biblioteca de Medios (Principal), Opción 2 URL de Respaldo -->
+              <div class="space-y-2">
+                <label class="block text-xs font-bold text-zinc-300">
+                  Flyer / Afiche Oficial
+                </label>
+
+                <!-- Opción 1: Selector de Biblioteca (Principal) -->
+                <div v-if="!manualUrlMode" class="space-y-2">
+                  <UButton
+                    size="sm"
+                    color="primary"
+                    variant="solid"
+                    icon="i-heroicons-photo"
+                    class="cursor-pointer font-bold w-full justify-center shadow-md shadow-[#E53924]/15"
+                    @click="isMediaModalOpen = true"
+                  >
+                    {{ formState.image_url ? 'Cambiar Flyer de Biblioteca' : 'Elegir Flyer de Biblioteca' }}
+                  </UButton>
+
+                  <div class="flex items-center justify-between text-[11px] text-zinc-400">
+                    <span class="flex items-center gap-1 text-emerald-400">
+                      <UIcon name="i-heroicons-check-badge" class="w-3.5 h-3.5" />
+                      <span>Almacenamiento Supabase</span>
+                    </span>
+                    <button
+                      type="button"
+                      class="text-[#E53924] hover:underline cursor-pointer"
+                      @click="manualUrlMode = true"
+                    >
+                      Ingresar URL manual
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Opción 2: URL Manual (Respaldo) -->
+                <div v-else class="space-y-2">
+                  <UInput
+                    v-model="formState.image_url"
+                    placeholder="https://ejemplo.com/flyer-recital.jpg"
+                    icon="i-heroicons-link"
+                    class="w-full"
+                  />
+                  <div class="flex items-center justify-between text-[11px] text-zinc-400">
+                    <span>Modo URL de respaldo</span>
+                    <button
+                      type="button"
+                      class="text-emerald-400 hover:underline cursor-pointer flex items-center gap-1"
+                      @click="manualUrlMode = false; isMediaModalOpen = true"
+                    >
+                      <UIcon name="i-heroicons-photo" class="w-3.5 h-3.5" />
+                      <span>Volver a Biblioteca</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
 
               <UFormField label="Estado de la Salida" name="status" help="Visibilidad para los pasajeros">
                 <select v-model="formState.status"
@@ -895,12 +961,43 @@ onMounted(() => {
               </UFormField>
             </div>
 
-            <!-- Previsualización del Flyer -->
-            <div v-if="formState.image_url" class="p-3 rounded-lg bg-[#14141A] border border-[#2A2A38]">
-              <span class="text-xs text-zinc-400 block mb-2">Vista previa del afiche:</span>
-              <div class="max-w-xs h-48 rounded-lg overflow-hidden border border-[#2A2A38] bg-[#0F0F12]">
-                <img :src="formState.image_url" alt="Vista previa del afiche" class="w-full h-full object-cover"
-                  @error="(e: any) => e.target.classList.add('hidden')" />
+            <!-- Previsualización del Flyer Seleccionado -->
+            <div v-if="formState.image_url" class="p-3.5 rounded-xl bg-[#14141A] border border-[#2A2A38] space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+                  <UIcon name="i-heroicons-check-circle" class="w-4 h-4 text-emerald-400" />
+                  <span>Afiche asignado a la salida:</span>
+                </span>
+                <button
+                  type="button"
+                  class="text-xs text-red-400 hover:text-red-300 hover:underline cursor-pointer"
+                  @click="formState.image_url = ''"
+                >
+                  Quitar afiche
+                </button>
+              </div>
+              <div class="flex items-center gap-4">
+                <div class="w-20 h-28 rounded-lg overflow-hidden border border-[#2A2A38] bg-[#0F0F12] shrink-0 shadow">
+                  <img :src="formState.image_url" alt="Vista previa del afiche" class="w-full h-full object-cover"
+                    @error="(e: any) => e.target.classList.add('hidden')" />
+                </div>
+                <div class="min-w-0 text-xs space-y-1.5">
+                  <p class="font-mono text-[11px] text-zinc-400 truncate max-w-md select-all">
+                    {{ formState.image_url }}
+                  </p>
+                  <div class="flex items-center gap-2">
+                    <UButton
+                      size="xs"
+                      color="neutral"
+                      variant="outline"
+                      icon="i-heroicons-arrow-path"
+                      class="cursor-pointer"
+                      @click="isMediaModalOpen = true"
+                    >
+                      Cambiar afiche
+                    </UButton>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -927,6 +1024,14 @@ onMounted(() => {
           </UButton>
         </div>
       </form>
+
+      <!-- Modal Selector de Flyers de la Biblioteca -->
+      <MediaSelectorModal
+        v-model:open="isMediaModalOpen"
+        target-type="flyer"
+        :selected-url="formState.image_url"
+        @select="onFlyerSelected"
+      />
     </template>
   </div>
 </template>

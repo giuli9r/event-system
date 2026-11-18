@@ -440,7 +440,7 @@ Operador Tripu -> Ingresa datos en formulario Nuxt UI
 
 ## 11. Database Architecture
 
-La base de datos relacional PostgreSQL cuenta con 9 tablas principales formalizadas en `DB/schema.sql`:
+La base de datos relacional PostgreSQL cuenta con 12 tablas principales formalizadas en `DB/schema.sql`:
 
 ### Tipos Enumerados (ENUMs)
 1. `user_type_enum`: `'MASTER'`, `'CHIEF_TRIPU'`, `'JEFE'`, `'COORDINADOR'`, `'MARINERO'`, `'PASAJERO'`.
@@ -460,6 +460,9 @@ La base de datos relacional PostgreSQL cuenta con 9 tablas principales formaliza
 * **`public.contact_messages`:** Mensajes recibidos desde el formulario web con estado por defecto `'pending'`.
 * **`public.sales`:** Asientos contables de ventas de pasajes asociadas a un viaje y cliente, con congelamiento histórico de precios (`unit_price`, `total_amount`), cuotas (`installments`), control de señas y saldos para cobro en caliente (`amount_paid`, `balance_due`), butaca alfanumérica (`seat_number`) y comprobantes.
   * **Regla de Integridad Contable Estricta (`ON DELETE RESTRICT`):** La relación `sales_event_id_fkey` prohíbe terminantemente la eliminación física (`DELETE`) de un viaje que contenga ventas registradas (PostgreSQL error `23503`). Ante un intento de baja, el sistema intercepta la excepción, despliega una alerta preventiva (`UAlert`), recomienda cambiar el estado de la salida a `"Cancelado"` para preservar los libros contables históricos, y ofrece un enlace de auditoría directa a `/admin/ventas` pre-filtrando reactivamente las ventas por el título del evento (`v-model="searchQuery"`).
+* **`public.merchandise`:** Catálogo de indumentaria, accesorios, calcomanías y combos oficiales con control de stock, talles disponibles y precio unitario.
+* **`public.event_merchandise`:** Tabla intermedia de vinculación M:N para asociar 0, 1 o múltiples artículos del catálogo de merch a un viaje determinado.
+* **`public.media_assets`:** Registro centralizado y metadatos técnicos de imágenes subidas a Supabase Storage (`name`, `slug`, `file_path`, `public_url`, `asset_type`, `mime_type`, `file_size_bytes`, `width`, `height`, `is_active`).
 
 ---
 
@@ -483,7 +486,7 @@ El sistema distingue de forma estricta entre **Autenticación** y **Autorizació
 
 ## 14. Row Level Security
 
-El sistema aplica **Row Level Security (RLS) obligatorio** sobre el 100% de las 9 tablas relacionales:
+El sistema aplica **Row Level Security (RLS) obligatorio** sobre el 100% de las 12 tablas relacionales:
 
 ```sql
 alter table public.users enable row level security;
@@ -495,6 +498,9 @@ alter table public.package_tiers enable row level security;
 alter table public.contact_messages enable row level security;
 alter table public.customers enable row level security;
 alter table public.sales enable row level security;
+alter table public.merchandise enable row level security;
+alter table public.event_merchandise enable row level security;
+alter table public.media_assets enable row level security;
 ```
 
 ### Matriz de Políticas RLS Activas
@@ -514,14 +520,43 @@ alter table public.sales enable row level security;
 | **`transports`** | `ALL` | `authenticated` | `true` (Solo operadores autenticados gestionan flota). |
 | **`customers`** | `ALL` | `authenticated` | `true` (Privacidad estricta: solo operadores gestionan clientes). |
 | **`sales`** | `ALL` | `authenticated` | `true` (Privacidad financiera estricta: solo operadores gestionan ventas). |
+| **`merchandise`** | `SELECT` | `anon`, `authenticated` | `is_active = true` (Catálogo público de productos disponibles). |
+| **`merchandise`** | `ALL` | `authenticated` | `true` (Control de inventario por operadores). |
+| **`event_merchandise`**| `SELECT` | `anon`, `authenticated` | `is_active = true` (Merch asignado a salidas públicas). |
+| **`event_merchandise`**| `ALL` | `authenticated` | `true` (Asignación M:N por operadores). |
+| **`media_assets`** | `SELECT` | `anon`, `authenticated` | `is_active = true` (Lectura pública de metadatos de medios). |
+| **`media_assets`** | `ALL` | `authenticated` | `true` (Gestión centralizada de activos multimedia). |
 
 ---
 
 ## 15. Storage Architecture
 
-* **Bucket Principal:** `tripu-assets` (Público para lectura de imágenes optimizadas).
-* **Carpetas:** `flyers/` (Afiches de recitales), `gallery/` (Fotos reales de contingentes), `venues/` (Fotos de recintos).
-* **Políticas:** Lectura pública para cualquier usuario; subida y borrado restringido a usuarios `authenticated`.
+La infraestructura de almacenamiento de archivos multimedia opera sobre **Supabase Storage** con persistencia dual (archivo físico + metadatos relacionales):
+
+* **Bucket Principal:** `tripu-assets` (Configurado como público en `storage.buckets` para entrega rápida vía CDN mediante etiquetas `<img>`).
+* **Estructura de Subcarpetas:**
+  * `flyers/`: Afiches oficiales de recitales y portadas de viajes.
+  * `merch/`: Fotografías de catálogo de indumentaria y accesorios.
+  * `venues/`: Fotografías de recintos y estadios.
+  * `banners/`: Gráfica institucional y carrusel hero.
+  * `general/`: Activos auxiliares y fotografías de contingentes.
+* **Convención de Nomenclatura Estandarizada:**
+  * Cada archivo se renombra automáticamente al momento de la subida respetando el patrón:
+    `[slug-nombre]-[hash-corto]-[fecha-AAAAMMDD].[extension]`
+  * *Ejemplo:* Si el operador ingresa `"Duki River Plate 2026"`, el archivo se almacena físicamente como:
+    `flyers/duki-river-plate-2026-c7a8b9-20261118.webp`
+* **Políticas de Seguridad en `storage.objects`:**
+  * **Lectura (`SELECT`):** Concedida a `public` con condición `bucket_id = 'tripu-assets'`. Permite visualización directa sin requerir tokens firmados temporales.
+  * **Subida (`INSERT`), Modificación (`UPDATE`) y Borrado (`DELETE`):** Concedidos exclusivamente a `authenticated` con condición `bucket_id = 'tripu-assets'`. Protege la cuota de almacenamiento contra accesos no autorizados.
+* **Validaciones Técnicas en Cliente (`useMedia.ts`):**
+  * **Límite Estricto:** Máximo 5 MB por archivo.
+  * **Alerta Preventiva:** Notificación visual al superar 1.5 MB recomendando compresión a formato WebP.
+  * **Análisis de Proporción:**
+    * Para afiches de viajes: Proporción recomendada **4:5 vertical** (ej. 1080×1350 px o 800×1000 px).
+    * Para artículos de merchandising: Proporción recomendada **1:1 cuadrada** (ej. 1000×1000 px o 800×800 px).
+* **Integración con Viajes:**
+  * Componente modal reutilizable `MediaSelectorModal.vue` integrado en el *Paso 4: Flyer Promocional y Estado* de `/admin/viajes/nuevo` y `/admin/viajes/[id]/editar`.
+  * La **Opción 1** es la selección interactiva de afiches con buscador y subida directa; la carga manual de URL externa queda disponible como respaldo secundario.
 
 ---
 

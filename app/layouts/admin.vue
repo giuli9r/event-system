@@ -18,7 +18,8 @@ const adminEntityLinks = [
   { label: 'Recintos', to: '/admin/recintos', icon: 'i-heroicons-building-office-2', desc: 'Estadios y sedes' },
   { label: 'Choferes', to: '/admin/choferes', icon: 'i-heroicons-user-group', desc: 'Conductores de guardia' },
   { label: 'Flota', to: '/admin/transportes', icon: 'i-heroicons-truck', desc: 'Colectivos y combis' },
-  { label: 'Merchandising', to: '/admin/merch', icon: 'i-heroicons-shopping-bag', desc: 'Indumentaria y stock oficial' }
+  { label: 'Merchandising', to: '/admin/merch', icon: 'i-heroicons-shopping-bag', desc: 'Indumentaria y stock oficial' },
+  { label: 'Multimedia', to: '/admin/media', icon: 'i-heroicons-photo', desc: 'Flyers, fotos y banco de imágenes' }
 ]
 
 const loggingOut = ref(false)
@@ -122,6 +123,7 @@ async function handleLogout() {
     useCustomers().clearCustomersState()
     useSales().clearSalesState()
     useMerch().clearMerchState()
+    useMedia().clearMediaState()
     loggingOut.value = false
 
     if (remoteLogoutFailed) {
