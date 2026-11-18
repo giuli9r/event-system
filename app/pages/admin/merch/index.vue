@@ -171,7 +171,8 @@ async function handleSaveItem() {
     }
 
     if (isEditing.value && selectedItemId.value) {
-      await updateMerchItem(selectedItemId.value, payload)
+      const { error: updateErr } = await updateMerchItem(selectedItemId.value, payload)
+      if (updateErr) throw new Error(updateErr.message || 'Error al actualizar producto en la base de datos')
       toast.add({
         title: 'Producto actualizado',
         description: `"${payload.name}" fue actualizado correctamente.`,
@@ -179,7 +180,8 @@ async function handleSaveItem() {
         icon: 'i-heroicons-check-circle'
       })
     } else {
-      await createMerchItem(payload)
+      const { data, error: createErr } = await createMerchItem(payload)
+      if (createErr) throw new Error(createErr.message || 'Error al registrar producto en la base de datos')
       toast.add({
         title: 'Producto registrado',
         description: `"${payload.name}" se agregó al inventario de merchandising.`,
@@ -204,7 +206,8 @@ async function handleConfirmDelete() {
   if (!itemToDelete.value) return
   deleting.value = true
   try {
-    await deleteMerchItem(itemToDelete.value.id)
+    const { error: deleteErr } = await deleteMerchItem(itemToDelete.value.id)
+    if (deleteErr) throw new Error(deleteErr.message || 'No se pudo eliminar el artículo de la base de datos')
     toast.add({
       title: 'Producto eliminado',
       description: `"${itemToDelete.value.name}" fue dado de baja del catálogo.`,
@@ -239,15 +242,15 @@ onMounted(() => {
           <h1 class="text-2xl font-black text-[#F5EEDC] tracking-tight">
             Merchandising Oficial
           </h1>
-          <span
+          <!-- <span
             class="text-xs px-2.5 py-0.5 rounded-full bg-[#E53924]/10 text-[#E53924] border border-[#E53924]/30 font-bold uppercase tracking-wider">
             Mejoras • En Preparación
-          </span>
-          <span
+          </span> -->
+          <!-- <span
             class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">
             <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
             Estructura Inicial
-          </span>
+          </span> -->
         </div>
         <p class="text-xs text-zinc-400 mt-1">
           Catálogo oficial de productos, indumentaria para recitales, control de talles y stock de Tripu Producciones.
@@ -266,7 +269,7 @@ onMounted(() => {
     </div>
 
     <!-- Barra de Estado: Sección en Construcción -->
-    <div
+    <!-- <div
       class="relative overflow-hidden rounded-2xl border border-[#E53924]/30 bg-gradient-to-r from-[#1A1A22] via-[#14141B] to-[#1A1A22] p-5 shadow-xl">
       <div class="absolute -right-10 -bottom-10 w-44 h-44 rounded-full bg-[#E53924]/10 blur-3xl pointer-events-none" />
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
@@ -308,7 +311,7 @@ onMounted(() => {
           </UButton>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- Barra de Métricas y KPIs de Merchandising -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -531,7 +534,7 @@ onMounted(() => {
 
           <UFormField label="Descripción del Producto" name="description">
             <UTextarea v-model="formState.description"
-              placeholder="Detalles de tela, confección, materiales o especificaciones..." rows="3" class="w-full" />
+              placeholder="Detalles de tela, confección, materiales o especificaciones..." :rows="3" class="w-full" />
           </UFormField>
 
           <div class="flex items-center justify-between pt-2">

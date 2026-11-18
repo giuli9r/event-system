@@ -534,7 +534,7 @@ onMounted(async () => {
           <UFormField label="Notas Operativas" name="notes"
             help="Detalles de bodega, aire acondicionado, habilitación CNRT...">
             <UTextarea v-model="formState.notes"
-              placeholder="Habilitación CNRT vigente, calefacción, bodegas amplias..." rows="3" class="w-full" />
+              placeholder="Habilitación CNRT vigente, calefacción, bodegas amplias..." :rows="3" class="w-full" />
           </UFormField>
 
           <div class="flex items-center justify-end gap-3 pt-4 border-t border-[#2A2A38]">

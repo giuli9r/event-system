@@ -161,10 +161,63 @@ export function useMerch() {
     loading.value = true
     error.value = null
 
-    const newItem: MerchItem = {
+    // Generar slug limpio
+    const slug = payload.slug || payload.name.toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+
+    // Payload para Supabase: NO incluir 'id' para que Postgres use gen_random_uuid()
+    const dbPayload: Record<string, any> = {
+      name: payload.name,
+      slug,
+      category: payload.category,
+      description: payload.description || null,
+      price: payload.price,
+      stock: payload.stock,
+      sizes: payload.sizes || null,
+      image_url: payload.image_url || null,
+      is_active: payload.is_active ?? true
+    }
+
+    // Si viene un ID y es un UUID válido, lo conservamos
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (payload.id && isUuid.test(payload.id)) {
+      dbPayload.id = payload.id
+    }
+
+    try {
+      // Intentar persistencia remota en Supabase
+      const { data, error: err } = await (supabase as any)
+        .from('merchandise')
+        .insert([dbPayload])
+        .select()
+        .single()
+
+      if (!err && data) {
+        merchItems.value.unshift(data)
+        isDbReady.value = true
+        lastFetched.value = Date.now()
+        loading.value = false
+        return { data, error: null }
+      }
+
+      if (err) {
+        console.error('Error insertando merchandise en Supabase:', err)
+        error.value = err.message || 'Error de base de datos'
+        loading.value = false
+        return { data: null, error: err }
+      }
+    } catch (e: any) {
+      console.warn('Excepción de conexión con Supabase merchandise:', e)
+    }
+
+    // Fallback en memoria si la base de datos está offline
+    const fallbackItem: MerchItem = {
       id: payload.id || `merch-${Date.now()}`,
       name: payload.name,
-      slug: payload.slug || payload.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      slug,
       category: payload.category,
       description: payload.description || null,
       price: payload.price,
@@ -176,26 +229,10 @@ export function useMerch() {
       updated_at: new Date().toISOString()
     }
 
-    try {
-      // Intentar persistencia remota
-      const { data, error: err } = await (supabase as any)
-        .from('merchandise')
-        .insert([newItem])
-        .select()
-        .single()
-
-      if (!err && data) {
-        merchItems.value.unshift(data)
-        return { data, error: null }
-      }
-    } catch {
-      // Supabase aún sin tabla: persistir localmente en el estado reactivo
-    }
-
-    merchItems.value.unshift(newItem)
+    merchItems.value.unshift(fallbackItem)
     lastFetched.value = Date.now()
     loading.value = false
-    return { data: newItem, error: null }
+    return { data: fallbackItem, error: null }
   }
 
   /**
@@ -206,12 +243,25 @@ export function useMerch() {
     error.value = null
 
     try {
-      await (supabase as any)
-        .from('merchandise')
-        .update(updates)
-        .eq('id', id)
-    } catch {
-      // Ignorar error si no está migrado
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      if (isUuid.test(id)) {
+        const { error: err } = await (supabase as any)
+          .from('merchandise')
+          .update({
+            ...updates,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', id)
+
+        if (err) {
+          console.error('Error actualizando merchandise en Supabase:', err)
+          error.value = err.message || 'Error al actualizar en base de datos'
+          loading.value = false
+          return { error: err }
+        }
+      }
+    } catch (e: any) {
+      console.warn('Excepción al actualizar merchandise en Supabase:', e)
     }
 
     const index = merchItems.value.findIndex(item => item.id === id)
@@ -235,12 +285,22 @@ export function useMerch() {
     error.value = null
 
     try {
-      await (supabase as any)
-        .from('merchandise')
-        .delete()
-        .eq('id', id)
-    } catch {
-      // Ignorar error si no está migrado
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      if (isUuid.test(id)) {
+        const { error: err } = await (supabase as any)
+          .from('merchandise')
+          .delete()
+          .eq('id', id)
+
+        if (err) {
+          console.error('Error eliminando merchandise en Supabase:', err)
+          error.value = err.message || 'Error al eliminar en base de datos'
+          loading.value = false
+          return { error: err }
+        }
+      }
+    } catch (e: any) {
+      console.warn('Excepción al eliminar merchandise en Supabase:', e)
     }
 
     merchItems.value = merchItems.value.filter(item => item.id !== id)

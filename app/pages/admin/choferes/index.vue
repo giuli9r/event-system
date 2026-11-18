@@ -491,7 +491,7 @@ onMounted(() => {
             <UTextarea
               v-model="formState.notes"
               placeholder="Disponibilidad horaria, referencias, observaciones de contingente..."
-              rows="3"
+              :rows="3"
               class="w-full"
             />
           </UFormField>

@@ -234,6 +234,7 @@ export type Database = {
           image_url: string | null
           status: EventStatusEnum
           is_featured: boolean
+          has_merchandise: boolean
         }
         Insert: {
           id?: string
@@ -254,6 +255,7 @@ export type Database = {
           image_url?: string | null
           status?: EventStatusEnum
           is_featured?: boolean
+          has_merchandise?: boolean
         }
         Update: {
           id?: string
@@ -274,6 +276,7 @@ export type Database = {
           image_url?: string | null
           status?: EventStatusEnum
           is_featured?: boolean
+          has_merchandise?: boolean
         }
         Relationships: []
       }
@@ -475,6 +478,93 @@ export type Database = {
         }
         Relationships: []
       }
+      merchandise: {
+        Row: {
+          id: string
+          created_at: string
+          updated_at: string
+          name: string
+          slug: string
+          category: string
+          description: string | null
+          price: number
+          stock: number
+          sizes: string[] | null
+          image_url: string | null
+          is_active: boolean
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          name: string
+          slug: string
+          category: string
+          description?: string | null
+          price?: number
+          stock?: number
+          sizes?: string[] | null
+          image_url?: string | null
+          is_active?: boolean
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          name?: string
+          slug?: string
+          category?: string
+          description?: string | null
+          price?: number
+          stock?: number
+          sizes?: string[] | null
+          image_url?: string | null
+          is_active?: boolean
+        }
+        Relationships: []
+      }
+      event_merchandise: {
+        Row: {
+          id: string
+          created_at: string
+          updated_at: string
+          event_id: string
+          merchandise_id: string
+          is_active: boolean
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          event_id: string
+          merchandise_id: string
+          is_active?: boolean
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          event_id?: string
+          merchandise_id?: string
+          is_active?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_merchandise_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_merchandise_merchandise_id_fkey"
+            columns: ["merchandise_id"]
+            isOneToOne: false
+            referencedRelation: "merchandise"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -502,3 +592,11 @@ export type CustomerUpdate = Database['public']['Tables']['customers']['Update']
 export type SaleRow = Database['public']['Tables']['sales']['Row']
 export type SaleInsert = Database['public']['Tables']['sales']['Insert']
 export type SaleUpdate = Database['public']['Tables']['sales']['Update']
+
+export type MerchandiseRow = Database['public']['Tables']['merchandise']['Row']
+export type MerchandiseInsert = Database['public']['Tables']['merchandise']['Insert']
+export type MerchandiseUpdate = Database['public']['Tables']['merchandise']['Update']
+
+export type EventMerchandiseRow = Database['public']['Tables']['event_merchandise']['Row']
+export type EventMerchandiseInsert = Database['public']['Tables']['event_merchandise']['Insert']
+export type EventMerchandiseUpdate = Database['public']['Tables']['event_merchandise']['Update']

@@ -1,10 +1,12 @@
 import type { Database } from '~/types/database.types'
 import type { Venue } from '~/composables/useVenues'
 import type { PackageTier, Event as DbEvent } from '~/composables/useEvents'
+import type { MerchItem } from '~/composables/useMerch'
 
 export interface PublicFeaturedEvent extends DbEvent {
   venue: Venue | null
   package_tiers: PackageTier[]
+  merchandise?: MerchItem[]
 }
 
 const PUBLIC_CACHE_TTL_MS = 1 * 60 * 1000 // 1 minuto de caché en cliente
@@ -172,10 +174,10 @@ export function usePublicEvents() {
       return cachedEvent.value
     }
 
-    // Si ya tenemos el evento cargado en la lista general de memoria, usarlo como primer fallback
+    // Si ya tenemos el evento cargado en la lista general de memoria (y no requiere merch o ya lo tiene), usarlo como fallback
     if (!options.force && allEvents.value.length > 0) {
       const foundInList = allEvents.value.find(e => e.slug === slug)
-      if (foundInList) {
+      if (foundInList && (!foundInList.has_merchandise || foundInList.merchandise !== undefined)) {
         cachedEvent.value = foundInList
         cachedTimestamp.value = Date.now()
         return foundInList
@@ -193,7 +195,35 @@ export function usePublicEvents() {
       if (err) throw err
 
       if (data) {
-        cachedEvent.value = data as unknown as PublicFeaturedEvent
+        const publicEvent = data as unknown as PublicFeaturedEvent
+
+        // Si el viaje tiene merchandising asignado, traer únicamente los productos activos vinculados
+        if (publicEvent.has_merchandise) {
+          try {
+            const { data: merchData, error: merchErr } = await (supabase as any)
+              .from('event_merchandise')
+              .select(`
+                is_active,
+                merchandise:merchandise(*)
+              `)
+              .eq('event_id', publicEvent.id)
+              .eq('is_active', true)
+
+            if (!merchErr && merchData) {
+              publicEvent.merchandise = (merchData as any[])
+                .map(item => item.merchandise)
+                .filter((m: any): m is MerchItem => Boolean(m && m.is_active))
+            } else {
+              publicEvent.merchandise = []
+            }
+          } catch {
+            publicEvent.merchandise = []
+          }
+        } else {
+          publicEvent.merchandise = []
+        }
+
+        cachedEvent.value = publicEvent
         cachedTimestamp.value = Date.now()
         return cachedEvent.value
       }
